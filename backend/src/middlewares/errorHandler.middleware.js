@@ -1,5 +1,5 @@
 const errorHandler = (err, req, res, next) => {
-  if (process.env.NODE_ENV === 'development') console.error('Erreur:', err);
+  console.error('Erreur:', err);
 
   if (err.isOperational) {
     return res.status(err.statusCode).json({
