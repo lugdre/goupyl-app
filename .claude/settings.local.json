@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx prisma:*)",
+      "Bash(node -e \"require\\('./src/app.js'\\); console.log\\('app ok'\\)\")",
+      "Bash(node -e \"require\\('./src/app.js'\\); console.log\\('backend ok'\\)\")"
+    ]
+  }
+}

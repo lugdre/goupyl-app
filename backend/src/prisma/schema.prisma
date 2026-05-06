@@ -1,0 +1,362 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  CLIENT
+  INTERVENANT
+  ENTREPRISE
+  ADMIN
+}
+
+enum Level {
+  DEBUTANT
+  INTERMEDIAIRE
+  AVANCE
+  ELITE
+}
+
+enum ServiceCategory {
+  SPORT
+  NUTRITION
+  MENTAL
+  BIENETRE
+}
+
+enum AppointmentStatus {
+  PENDING
+  CONFIRMED
+  DONE
+  CANCELLED
+}
+
+enum SubscriptionPlan {
+  ESSENTIELLE
+  PERFORMANCE
+  ELITE
+  ZEN_ENTREPRISE
+  PULSE_ENTREPRISE
+  BOOST_ENTREPRISE
+}
+
+enum BillingCycle {
+  MONTHLY
+  YEARLY
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  CANCELLED
+  EXPIRED
+}
+
+enum VerificationStatus {
+  PENDING
+  VERIFIED
+  REJECTED
+}
+
+enum SessionType {
+  SOLO
+  DUO
+  GROUP
+}
+
+enum ResourceType {
+  ARTICLE
+  VIDEO
+}
+
+enum ResourceAccess {
+  ZEN
+  PULSE
+  BOOST
+}
+
+enum Gender {
+  HOMME
+  FEMME
+}
+
+model User {
+  id                 Int                @id @default(autoincrement())
+  email              String             @unique
+  passwordHash       String             @map("password_hash")
+  role               Role               @default(CLIENT)
+  firstName          String             @map("first_name")
+  lastName           String             @map("last_name")
+  phone              String?
+  companyName        String?            @map("company_name")
+  siret              String?
+  avatarUrl          String?            @map("avatar_url")
+  gender             Gender?
+  isActive           Boolean            @default(true) @map("is_active")
+  verificationStatus VerificationStatus @default(PENDING) @map("verification_status")
+  verificationNote   String?            @map("verification_note")
+  joinCode           String?            @unique @map("join_code")
+  employerCompanyId  Int?               @map("employer_company_id")
+  emailVerifiedAt    DateTime?          @map("email_verified_at")
+  acceptedTermsAt    DateTime?          @map("accepted_terms_at")
+  createdAt          DateTime           @default(now()) @map("created_at")
+  updatedAt          DateTime           @updatedAt @map("updated_at")
+
+  stripeAccountId    String?            @map("stripe_account_id")
+  stripeAccountStatus String?           @map("stripe_account_status") @default("pending")
+
+  profile                 Profile?
+  clientAppointments      Appointment[]  @relation("ClientAppointments")
+  intervenantAppointments Appointment[]  @relation("IntervenantAppointments")
+  subscriptions           Subscription[]
+  sessionReports          SessionReport[]
+  documents               Document[]
+  sentInvites             CompanyInvite[]
+  employerCompany         User?          @relation("EmployeeCompany", fields: [employerCompanyId], references: [id])
+  employees               User[]         @relation("EmployeeCompany")
+  clientReviews           Review[]       @relation("ClientReviews")
+  intervenantReviews      Review[]       @relation("IntervenantReviews")
+  coachServices           CoachService[] @relation("CoachServices")
+  passkeys                Passkey[]
+  notifications           Notification[]
+
+  @@map("users")
+}
+
+model Passkey {
+  id             Int      @id @default(autoincrement())
+  userId         Int      @map("user_id")
+  credentialId   String   @unique @map("credential_id")
+  publicKey      Bytes    @map("public_key")
+  counter        BigInt   @default(0)
+  transports     String?
+  deviceType     String?  @map("device_type")
+  backedUp       Boolean  @default(false) @map("backed_up")
+  nickname       String?
+  lastUsedAt     DateTime? @map("last_used_at")
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("passkeys")
+}
+
+model CompanyInvite {
+  id        Int       @id @default(autoincrement())
+  companyId Int       @map("company_id")
+  email     String
+  token     String    @unique
+  usedAt    DateTime? @map("used_at")
+  expiresAt DateTime  @map("expires_at")
+  createdAt DateTime  @default(now()) @map("created_at")
+
+  company User @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@map("company_invites")
+}
+
+model Document {
+  id           Int      @id @default(autoincrement())
+  userId       Int      @map("user_id")
+  type         String
+  storedName   String   @map("stored_name")
+  originalName String   @map("original_name")
+  mimeType     String   @map("mime_type")
+  sizeBytes    Int      @map("size_bytes")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("documents")
+}
+
+model Profile {
+  id          Int      @id @default(autoincrement())
+  userId      Int      @unique @map("user_id")
+  level       Level    @default(DEBUTANT)
+  objectives  Json?
+  sportType   String?  @map("sport_type")
+  constraints String?
+  bio         String?
+  specialties Json?
+  experience  Int?
+  diplomas    Json?
+  hourlyRate  Decimal? @map("hourly_rate") @db.Decimal(10, 2)
+  city             String?
+  courseLocations   String[]  @default([]) @map("course_locations")
+  typicalSession   String?   @db.Text @map("typical_session")
+  serviceAgreement Boolean?  @map("service_agreement")
+  createdAt        DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("profiles")
+}
+
+model Service {
+  id               Int             @id @default(autoincrement())
+  name             String
+  description      String?
+  category         ServiceCategory
+  durationMinutes  Int             @map("duration_minutes")
+  price            Decimal         @db.Decimal(10, 2)
+  availableInPlans Json?           @map("available_in_plans")
+  isActive         Boolean         @default(true) @map("is_active")
+  createdAt        DateTime        @default(now()) @map("created_at")
+  updatedAt        DateTime        @updatedAt @map("updated_at")
+
+  appointments Appointment[]
+
+  @@map("services")
+}
+
+model Appointment {
+  id              Int               @id @default(autoincrement())
+  clientId        Int               @map("client_id")
+  intervenantId   Int               @map("intervenant_id")
+  serviceId       Int?              @map("service_id")
+  coachServiceId  Int?              @map("coach_service_id")
+  scheduledAt     DateTime          @map("scheduled_at")
+  durationMinutes Int               @map("duration_minutes")
+  status          AppointmentStatus @default(PENDING)
+  notes           String?
+  cancelledBy     String?           @map("cancelled_by")
+  cancelReason    String?           @map("cancel_reason")
+  createdAt       DateTime          @default(now()) @map("created_at")
+  updatedAt       DateTime          @updatedAt @map("updated_at")
+
+  paymentStatus String?           @default("unpaid") @map("payment_status")
+
+  client        User           @relation("ClientAppointments", fields: [clientId], references: [id])
+  intervenant   User           @relation("IntervenantAppointments", fields: [intervenantId], references: [id])
+  service       Service?       @relation(fields: [serviceId], references: [id])
+  coachService  CoachService?  @relation("CoachServiceAppointments", fields: [coachServiceId], references: [id])
+  sessionReport SessionReport?
+  payment       Payment?
+  review        Review?
+
+  @@map("appointments")
+}
+
+model Subscription {
+  id           Int                @id @default(autoincrement())
+  userId       Int                @map("user_id")
+  plan         SubscriptionPlan
+  billingCycle BillingCycle       @default(MONTHLY) @map("billing_cycle")
+  startDate    DateTime           @map("start_date") @db.Date
+  endDate      DateTime           @map("end_date") @db.Date
+  status       SubscriptionStatus @default(ACTIVE)
+  createdAt    DateTime           @default(now()) @map("created_at")
+  updatedAt    DateTime           @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("subscriptions")
+}
+
+model SessionReport {
+  id               Int      @id @default(autoincrement())
+  appointmentId    Int      @unique @map("appointment_id")
+  intervenantId    Int      @map("intervenant_id")
+  notes            String
+  objectivesUpdate String?  @map("objectives_update")
+  rating           Int?
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
+
+  appointment Appointment @relation(fields: [appointmentId], references: [id])
+  intervenant User        @relation(fields: [intervenantId], references: [id])
+
+  @@map("session_reports")
+}
+
+model Resource {
+  id          Int            @id @default(autoincrement())
+  title       String
+  description String
+  content     String?        @db.Text
+  videoUrl    String?        @map("video_url")
+  type        ResourceType
+  category    ServiceCategory
+  access      ResourceAccess @default(ZEN)
+  published   Boolean        @default(true)
+  createdAt   DateTime       @default(now()) @map("created_at")
+  updatedAt   DateTime       @updatedAt @map("updated_at")
+
+  @@map("resources")
+}
+
+model Payment {
+  id                    String   @id @default(cuid())
+  appointmentId         Int      @unique @map("appointment_id")
+  stripePaymentIntentId String   @unique @map("stripe_payment_intent_id")
+  amount                Int
+  platformFee           Int      @map("platform_fee")
+  intervenantShare      Int      @map("intervenant_share")
+  currency              String   @default("eur")
+  status                String   @default("pending")
+  refundAmount          Int?     @map("refund_amount")
+  refundStripeId        String?  @map("refund_stripe_id")
+  refundStatus          String?  @map("refund_status")
+  createdAt             DateTime @default(now()) @map("created_at")
+  updatedAt             DateTime @updatedAt @map("updated_at")
+
+  appointment Appointment @relation(fields: [appointmentId], references: [id])
+
+  @@map("payments")
+}
+
+model Review {
+  id              Int       @id @default(autoincrement())
+  appointmentId   Int       @unique @map("appointment_id")
+  clientId        Int       @map("client_id")
+  intervenantId   Int       @map("intervenant_id")
+  rating          Int
+  comment         String?   @db.Text
+  coachReply      String?   @db.Text @map("coach_reply")
+  coachRepliedAt  DateTime? @map("coach_replied_at")
+  createdAt       DateTime  @default(now()) @map("created_at")
+
+  appointment   Appointment @relation(fields: [appointmentId], references: [id])
+  client        User        @relation("ClientReviews", fields: [clientId], references: [id])
+  intervenant   User        @relation("IntervenantReviews", fields: [intervenantId], references: [id])
+
+  @@map("reviews")
+}
+
+model Notification {
+  id        Int       @id @default(autoincrement())
+  userId    Int       @map("user_id")
+  type      String
+  title     String
+  body      String?
+  readAt    DateTime? @map("read_at")
+  createdAt DateTime  @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("notifications")
+}
+
+model CoachService {
+  id              Int             @id @default(autoincrement())
+  intervenantId   Int             @map("intervenant_id")
+  intervenant     User            @relation("CoachServices", fields: [intervenantId], references: [id], onDelete: Cascade)
+  name            String
+  description     String?
+  durationMinutes Int             @map("duration_minutes")
+  price           Decimal         @db.Decimal(10, 2)
+  category        ServiceCategory
+  sessionType     SessionType     @default(SOLO) @map("session_type")
+  maxParticipants Int?            @map("max_participants")
+  active          Boolean         @default(true)
+  createdAt       DateTime        @default(now()) @map("created_at")
+  updatedAt       DateTime        @updatedAt @map("updated_at")
+  appointments    Appointment[]   @relation("CoachServiceAppointments")
+
+  @@map("coach_services")
+}
