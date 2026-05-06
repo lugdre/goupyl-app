@@ -1,0 +1,49 @@
+{
+  "name": "goupyl-sport-backend",
+  "version": "1.0.0",
+  "description": "API REST Goupyl Sport",
+  "main": "src/server.js",
+  "scripts": {
+    "dev": "nodemon src/server.js",
+    "start": "node src/server.js",
+    "db:migrate": "npx prisma migrate dev --schema=src/prisma/schema.prisma",
+    "db:seed": "node src/prisma/seed.js",
+    "db:studio": "npx prisma studio --schema=src/prisma/schema.prisma",
+    "db:generate": "npx prisma generate --schema=src/prisma/schema.prisma",
+    "test": "jest --verbose",
+    "lint": "eslint src/"
+  },
+  "prisma": {
+    "schema": "src/prisma/schema.prisma"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "testMatch": [
+      "**/tests/**/*.test.js"
+    ]
+  },
+  "dependencies": {
+    "@prisma/client": "^5.22.0",
+    "@simplewebauthn/server": "^13.3.0",
+    "bcryptjs": "^3.0.3",
+    "cors": "^2.8.6",
+    "dotenv": "^17.3.1",
+    "express": "^5.2.1",
+    "express-rate-limit": "^8.3.1",
+    "helmet": "^8.1.0",
+    "ioredis": "^5.10.1",
+    "jsonwebtoken": "^9.0.3",
+    "morgan": "^1.10.1",
+    "multer": "^2.1.1",
+    "prisma": "^5.22.0",
+    "resend": "^6.10.0",
+    "stripe": "^21.0.1",
+    "uuid": "^13.0.0",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "jest": "^30.3.0",
+    "nodemon": "^3.1.14",
+    "supertest": "^7.2.2"
+  }
+}
