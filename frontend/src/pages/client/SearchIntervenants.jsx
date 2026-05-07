@@ -281,7 +281,8 @@ export default function SearchIntervenants() {
             display: 'inline-flex', alignItems: 'center', gap: 8,
             fontFamily: '"JetBrains Mono", monospace', fontSize: 11,
             letterSpacing: '.14em', textTransform: 'uppercase',
-            color: '#555', textDecoration: 'none', marginBottom: 40,
+            color: '#555', textDecoration: 'none', marginBottom: 20,
+            marginTop: 20,
           }}>
             ← Retour
           </Link>
