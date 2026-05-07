@@ -94,24 +94,28 @@ export default function Sidebar() {
         className="lg:hidden fixed bottom-0 left-0 right-0 z-50 flex items-stretch bg-sidebar"
         style={{ borderTop: '1px solid var(--border-sidebar)', height: 60 }}
       >
-        {(items.length <= 5 ? items : [...items.slice(0, 3), ...items.slice(-2)]).map((item) => (
+        {items.map((item) => (
           <NavLink
             key={item.to}
             to={item.to}
             end={END_ROUTES.has(item.to)}
             className={({ isActive }) =>
               cn(
-                'flex flex-1 flex-col items-center justify-center gap-0.5 text-[10px] font-medium transition-colors',
-                isActive
-                  ? 'text-primary-400'
-                  : 'text-gray-500'
+                'flex flex-1 flex-col items-center justify-center gap-0.5 font-medium transition-colors',
+                isActive ? 'text-primary-400' : 'text-gray-500'
               )
             }
           >
             {({ isActive }) => (
               <>
-                <item.icon className={cn('w-5 h-5 shrink-0', isActive ? 'opacity-100' : 'opacity-60')} />
-                <span>{item.label}</span>
+                <item.icon className={cn(
+                  'shrink-0',
+                  items.length > 5 ? 'w-[18px] h-[18px]' : 'w-5 h-5',
+                  isActive ? 'opacity-100' : 'opacity-60'
+                )} />
+                {items.length <= 5 && (
+                  <span className="text-[10px]">{item.label}</span>
+                )}
               </>
             )}
           </NavLink>
