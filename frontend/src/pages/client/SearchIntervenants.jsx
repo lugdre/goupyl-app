@@ -275,6 +275,13 @@ export default function SearchIntervenants() {
       <style>{SI_CSS}</style>
       <PublicNavbar transparent={false} />
       <div style={{ maxWidth: 1280, margin: '0 auto', padding: '64px 32px 80px' }}>
+        {/* Back to home — unauthenticated only */}
+        {!user && (
+          <Link to="/" className="si-btn si-btn-ghost si-btn-sm" style={{ marginBottom: 40, gap: 6 }}>
+            ← Accueil
+          </Link>
+        )}
+
         {/* Hero — only for unauthenticated */}
         {!user ? (
           <div style={{ marginBottom: 48 }}>
