@@ -50,7 +50,7 @@ export default function DashboardLayout() {
       <VerificationBanner />
       <div className="flex">
         <Sidebar />
-        <main className="flex-1 p-6 lg:p-8 min-w-0 max-w-full">
+        <main className="flex-1 p-6 lg:p-8 min-w-0 max-w-full pb-20 lg:pb-8">
           <Outlet />
         </main>
       </div>
