@@ -36,8 +36,8 @@ export default function Navbar() {
       <div style={{ maxWidth: 1280, margin: '0 auto', padding: '0 24px' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 56 }}>
           {/* Logo */}
-          <Link to="/" style={{ display: 'flex', alignItems: 'center', textDecoration: 'none', flexShrink: 0 }}>
-            <img src={logo} alt="Goupyl Sport" style={{ height: 100, width: 'auto' }} />
+          <Link to={isAuthenticated ? '/dashboard' : '/'} style={{ display: 'flex', alignItems: 'center', textDecoration: 'none', flexShrink: 0 }}>
+            <img src={logo} alt="Goupyl Sport" style={{ height: 36, width: 'auto' }} />
           </Link>
 
           {/* Right section */}
