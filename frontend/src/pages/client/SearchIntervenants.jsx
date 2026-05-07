@@ -277,8 +277,13 @@ export default function SearchIntervenants() {
       <div style={{ maxWidth: 1280, margin: '0 auto', padding: '64px 32px 80px' }}>
         {/* Back to home — unauthenticated only */}
         {!user && (
-          <Link to="/" className="si-btn si-btn-ghost si-btn-sm" style={{ marginBottom: 40, gap: 6 }}>
-            ← Accueil
+          <Link to="/" style={{
+            display: 'inline-flex', alignItems: 'center', gap: 8,
+            fontFamily: '"JetBrains Mono", monospace', fontSize: 11,
+            letterSpacing: '.14em', textTransform: 'uppercase',
+            color: '#555', textDecoration: 'none', marginBottom: 40,
+          }}>
+            ← Retour
           </Link>
         )}
 
