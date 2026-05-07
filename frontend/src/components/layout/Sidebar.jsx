@@ -94,7 +94,7 @@ export default function Sidebar() {
         className="lg:hidden fixed bottom-0 left-0 right-0 z-50 flex items-stretch bg-sidebar"
         style={{ borderTop: '1px solid var(--border-sidebar)', height: 60 }}
       >
-        {items.slice(0, 5).map((item) => (
+        {(items.length <= 5 ? items : [...items.slice(0, 3), ...items.slice(-2)]).map((item) => (
           <NavLink
             key={item.to}
             to={item.to}
