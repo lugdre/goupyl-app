@@ -15,7 +15,12 @@ router.use(authenticate);
 
 router.get('/me', userController.getMe);
 router.put('/me', validate(updateProfileSchema), userController.updateMe);
-router.post('/me/avatar', avatarUpload.single('avatar'), userController.uploadAvatar);
+router.post('/me/avatar', (req, res, next) => {
+  avatarUpload.single('avatar')(req, res, (err) => {
+    if (err) return res.status(400).json({ message: err.message || 'Fichier invalide.' });
+    next();
+  });
+}, userController.uploadAvatar);
 router.delete('/me', userController.deleteMe);
 router.get('/', authorize('ADMIN'), userController.getAllUsers);
 router.patch('/:id/deactivate', authorize('ADMIN'), userController.deactivateUser);
