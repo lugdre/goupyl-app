@@ -11,5 +11,5 @@ export const userApi = {
   getPendingVerifications: () => api.get('/users/verifications/pending'),
   verifyUser: (id, status, note) => api.patch(`/users/${id}/verify`, { status, note }),
   deleteMe: () => api.delete('/users/me'),
-  uploadAvatar: (formData) => api.post('/users/me/avatar', formData, { headers: { 'Content-Type': 'multipart/form-data' } }),
+  uploadAvatar: (formData) => api.post('/users/me/avatar', formData),
 };
