@@ -1,19 +1,15 @@
-import { createContext, useContext, useEffect, useState } from 'react';
+import { createContext, useContext, useEffect } from 'react';
 
 const ThemeContext = createContext(null);
 
 export function ThemeProvider({ children }) {
-  const [theme, setTheme] = useState(
-    () => localStorage.getItem('goupyl-theme') || 'light'
-  );
-
   useEffect(() => {
-    document.documentElement.setAttribute('data-theme', theme);
-    localStorage.setItem('goupyl-theme', theme);
-  }, [theme]);
+    localStorage.removeItem('goupyl-theme');
+    document.documentElement.setAttribute('data-theme', 'light');
+  }, []);
 
   return (
-    <ThemeContext.Provider value={{ theme, isDark: theme === 'dark', toggle: () => setTheme(t => t === 'dark' ? 'light' : 'dark') }}>
+    <ThemeContext.Provider value={{ theme: 'light', isDark: false, toggle: () => {} }}>
       {children}
     </ThemeContext.Provider>
   );
