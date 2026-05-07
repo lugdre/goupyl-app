@@ -31,10 +31,16 @@ const addDays = (date, n) => {
 };
 
 const STATUS_COLORS = {
-  PENDING:   'bg-amber-500/15 border-amber-500/30 text-amber-300',
-  CONFIRMED: 'bg-green-500/15 border-green-500/30 text-green-300',
-  DONE:      'bg-white/[0.05] border-white/[0.08] text-gray-400',
-  CANCELLED: 'bg-red-500/10 border-red-500/20 text-red-400 line-through opacity-50',
+  PENDING:   'border text-[#92400e]',
+  CONFIRMED: 'border text-[#4A7C59]',
+  DONE:      'border text-[#555]',
+  CANCELLED: 'border text-[#dc2626] line-through opacity-50',
+};
+const STATUS_BG = {
+  PENDING:   { background: 'rgba(217,119,6,0.10)', borderColor: 'rgba(217,119,6,0.25)' },
+  CONFIRMED: { background: 'rgba(74,124,89,0.10)', borderColor: 'rgba(74,124,89,0.25)' },
+  DONE:      { background: 'rgba(0,0,0,0.04)',     borderColor: 'rgba(0,0,0,0.12)' },
+  CANCELLED: { background: 'rgba(220,38,38,0.08)', borderColor: 'rgba(220,38,38,0.20)' },
 };
 
 export default function MyAgenda() {
@@ -140,38 +146,38 @@ export default function MyAgenda() {
           <h1 className="text-2xl font-semibold text-gray-900">Mon agenda</h1>
           <p className="text-gray-500 mt-1">Tous vos rendez-vous</p>
         </div>
-        <div className="flex items-center gap-1 bg-white/[0.05] border border-white/[0.08] rounded-lg p-1">
-          <button
-            onClick={() => setView('week')}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
-              view === 'week' ? 'bg-primary-600 text-white' : 'text-gray-500 hover:bg-white/[0.05] hover:text-gray-300'
-            }`}
-          >
-            <LayoutGrid className="w-4 h-4" />
-            Semaine
-          </button>
-          <button
-            onClick={() => setView('list')}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
-              view === 'list' ? 'bg-primary-600 text-white' : 'text-gray-500 hover:bg-white/[0.05] hover:text-gray-300'
-            }`}
-          >
-            <List className="w-4 h-4" />
-            Liste
-          </button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 4, border: '1px solid rgba(0,0,0,0.10)', borderRadius: 6, padding: 4, background: '#f4f4f2' }}>
+          {[['week', LayoutGrid, 'Semaine'], ['list', List, 'Liste']].map(([v, Icon, label]) => (
+            <button
+              key={v}
+              onClick={() => setView(v)}
+              style={{
+                display: 'flex', alignItems: 'center', gap: 6,
+                padding: '6px 12px', borderRadius: 4, fontSize: 13, fontWeight: 500,
+                border: 'none', cursor: 'pointer', transition: 'background .15s, color .15s',
+                background: view === v ? '#252d62' : 'transparent',
+                color: view === v ? '#fff' : '#555',
+              }}
+            >
+              <Icon style={{ width: 14, height: 14 }} />
+              {label}
+            </button>
+          ))}
         </div>
       </div>
 
-      <div className="flex flex-wrap gap-2">
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
         {STATUS_FILTERS.map((s) => (
           <button
             key={s}
             onClick={() => setStatusFilter(s)}
-            className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
-              statusFilter === s
-                ? 'bg-primary-600 text-white'
-                : 'bg-white/[0.05] border border-white/[0.08] text-gray-500 hover:bg-white/[0.08] hover:text-gray-300'
-            }`}
+            style={{
+              padding: '6px 14px', borderRadius: 999, fontSize: 13, fontWeight: 500,
+              border: '1px solid', cursor: 'pointer', transition: 'background .15s, color .15s, border-color .15s',
+              background: statusFilter === s ? '#252d62' : 'transparent',
+              color: statusFilter === s ? '#fff' : '#555',
+              borderColor: statusFilter === s ? '#252d62' : 'rgba(0,0,0,0.14)',
+            }}
           >
             {s ? STATUS_LABELS[s] : 'Tous'}
           </button>
@@ -208,11 +214,11 @@ export default function MyAgenda() {
                 {weekDays.map((day, idx) => {
                   const isToday = day.toDateString() === new Date().toDateString();
                   return (
-                    <div key={idx} className={`px-2 py-2 text-center ${isToday ? 'bg-primary-600/20' : 'bg-[#14152A]'}`}>
-                      <p className="text-xs font-medium text-gray-500 uppercase">
+                    <div key={idx} style={{ padding: '8px 4px', textAlign: 'center', background: isToday ? 'rgba(37,45,98,0.10)' : '#ebebe7' }}>
+                      <p style={{ fontSize: 10, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '.10em', color: '#888', margin: 0, fontFamily: '"JetBrains Mono", monospace' }}>
                         {DAY_LABELS_SHORT[idx]}
                       </p>
-                      <p className={`text-sm font-semibold ${isToday ? 'text-primary-400' : 'text-gray-700'}`}>
+                      <p style={{ fontSize: 14, fontWeight: 700, color: isToday ? '#252d62' : '#0a0a0a', margin: '2px 0 0' }}>
                         {day.getDate()}
                       </p>
                     </div>
@@ -260,8 +266,8 @@ export default function MyAgenda() {
                           <button
                             key={appt.id}
                             onClick={() => openModal(appt)}
-                            className={`absolute left-1 right-1 rounded-md border px-1.5 py-1 text-left text-[10px] overflow-hidden shadow-sm hover:shadow-md transition-shadow ${color}`}
-                            style={{ top, height: Math.max(height - 2, 20) }}
+                            className={`absolute left-1 right-1 px-1.5 py-1 text-left text-[10px] overflow-hidden transition-shadow hover:opacity-90 ${color}`}
+                            style={{ top, height: Math.max(height - 2, 20), borderRadius: 3, ...STATUS_BG[appt.status] }}
                           >
                             <p className="font-semibold truncate">
                               {new Date(appt.scheduledAt).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
@@ -357,7 +363,7 @@ export default function MyAgenda() {
           onClick={() => setSelected(null)}
         >
           <div
-            className="bg-[#14152A] border border-white/[0.08] rounded-xl shadow-xl max-w-md w-full p-6"
+            style={{ background: '#fff', border: '1px solid rgba(0,0,0,0.10)', borderRadius: 8, boxShadow: '0 8px 40px rgba(0,0,0,0.15)', maxWidth: 448, width: '100%', padding: 24 }}
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-start justify-between mb-4">
@@ -384,7 +390,7 @@ export default function MyAgenda() {
               {' '}({selected.durationMinutes} min)
             </p>
             {selected.notes && (
-              <p className="text-sm text-gray-500 mb-4 p-3 bg-white/[0.04] rounded-lg">
+              <p className="text-sm text-gray-500 mb-4 p-3 rounded" style={{ background: 'rgba(0,0,0,0.04)', border: '1px solid rgba(0,0,0,0.07)' }}>
                 <span className="font-medium text-gray-400">Notes client : </span>
                 {selected.notes}
               </p>
@@ -392,7 +398,7 @@ export default function MyAgenda() {
 
             {/* Review section — visible on DONE appointments */}
             {selected.status === 'DONE' && (
-              <div className="mb-4 p-4 bg-white/[0.04] rounded-xl border border-white/[0.07]">
+              <div className="mb-4 p-4 rounded" style={{ background: 'rgba(0,0,0,0.03)', border: '1px solid rgba(0,0,0,0.08)' }}>
                 <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Avis du client</p>
                 {reviewLoading ? (
                   <p className="text-sm text-gray-400">Chargement…</p>
@@ -424,12 +430,12 @@ export default function MyAgenda() {
                           onChange={(e) => setReplyText(e.target.value)}
                           rows={2}
                           placeholder="Répondre à cet avis (une seule fois)…"
-                          className="w-full text-sm bg-white/[0.05] border border-white/[0.08] text-gray-700 placeholder:text-gray-500 rounded-lg px-3 py-2 resize-none focus:outline-none focus:ring-2 focus:ring-primary-500/30"
+                          style={{ width: '100%', fontSize: 13, background: '#fff', border: '1px solid rgba(0,0,0,0.14)', borderRadius: 4, padding: '8px 12px', resize: 'none', outline: 'none', color: '#0a0a0a' }}
                         />
                         <button
                           onClick={handleReply}
                           disabled={replyLoading || !replyText.trim()}
-                          className="mt-1.5 text-xs font-medium text-white bg-primary-600 hover:bg-primary-700 disabled:opacity-40 px-3 py-1.5 rounded-lg transition-colors"
+                          style={{ marginTop: 6, fontSize: 12, fontWeight: 600, color: '#fff', background: '#252d62', border: 'none', borderRadius: 999, padding: '6px 14px', cursor: 'pointer', opacity: (replyLoading || !replyText.trim()) ? 0.4 : 1 }}
                         >
                           {replyLoading ? 'Envoi…' : 'Publier la réponse'}
                         </button>
@@ -442,7 +448,7 @@ export default function MyAgenda() {
               </div>
             )}
 
-            <div className="flex gap-2 justify-end pt-3 border-t border-white/[0.06]">
+            <div className="flex gap-2 justify-end pt-3" style={{ borderTop: '1px solid rgba(0,0,0,0.08)' }}>
               {selected.status === 'PENDING' && (
                 <>
                   <Button size="sm" variant="danger" onClick={() => handleAction(selected.id, 'CANCELLED')}>
