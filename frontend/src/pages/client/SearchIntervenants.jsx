@@ -11,6 +11,54 @@ import avatarFemale from '../../assets/avatar-default-female.svg';
 
 const CATEGORIES = ['Tous', 'SPORT', 'NUTRITION', 'MENTAL', 'BIENETRE'];
 
+const SI_CSS = `
+  :root{
+    --bg:#f4f4f2;--bg-soft:#ebebe7;--bg-dark:#0a0a0a;
+    --ink:#0a0a0a;--ink-2:#2a2a2a;--ink-3:#555;--ink-4:#888;
+    --line:rgba(0,0,0,.10);--line-2:rgba(0,0,0,.06);
+    --accent:#252d62;--on-accent:#fff;
+  }
+  *{box-sizing:border-box}
+  .si-eyebrow{font-family:"JetBrains Mono",monospace;font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--ink-3)}
+  .si-display{font-family:"Archivo Narrow","Archivo",sans-serif;font-weight:800;text-transform:uppercase;letter-spacing:-.015em;line-height:.95;margin:0}
+  .si-lede{color:var(--ink-2);font-size:16px;max-width:600px;margin:0}
+  .si-btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:44px;padding:0 22px;font-family:"Inter Tight",sans-serif;font-weight:600;font-size:13.5px;letter-spacing:.02em;border-radius:999px;border:1px solid transparent;cursor:pointer;text-decoration:none;transition:transform .15s ease,background .2s ease,color .2s ease,border-color .2s ease;white-space:nowrap;background:transparent}
+  .si-btn:hover{transform:translateY(-1px)}
+  .si-btn-primary{background:var(--ink);color:var(--bg)}
+  .si-btn-primary:hover{background:var(--ink-2)}
+  .si-btn-ghost{background:transparent;color:var(--ink);border-color:var(--line)}
+  .si-btn-ghost:hover{border-color:var(--ink)}
+  .si-btn-sm{height:36px;padding:0 16px;font-size:12.5px}
+  .si-btn-lg{height:52px;padding:0 28px;font-size:14.5px}
+  .si-btn-on-dark{background:#fff;color:#000;border-color:transparent}
+  .si-btn-active{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+  .si-searchbar{background:#fff;border:1px solid var(--line);display:flex;gap:4px;padding:6px;max-width:680px;align-items:center}
+  .si-searchbar input{border:none;outline:none;background:transparent;font-family:"Inter Tight",sans-serif;font-size:14px;padding:8px 12px;color:var(--ink);flex:1}
+  .si-searchbar input::placeholder{color:var(--ink-4)}
+  .si-searchbar-sep{width:1px;background:var(--line);margin:4px 0;align-self:stretch}
+  .si-count{font-family:"JetBrains Mono",monospace;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3);margin:0 0 18px}
+  .si-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line);border:1px solid var(--line)}
+  @media(max-width:980px){.si-grid{grid-template-columns:repeat(2,1fr)}}
+  @media(max-width:640px){.si-grid{grid-template-columns:1fr}}
+  .si-card{background:var(--bg);padding:24px;display:flex;gap:16px;align-items:flex-start;text-decoration:none;color:inherit;transition:background .2s}
+  .si-card:hover{background:var(--bg-soft)}
+  .si-card-avatar{width:56px;height:56px;border-radius:50%;background:var(--bg-soft);border:1px solid var(--line);flex-shrink:0;overflow:hidden}
+  .si-card-avatar img{width:100%;height:100%;object-fit:cover;filter:grayscale(30%)}
+  .si-card-name{font-weight:600;font-size:14.5px;color:var(--ink)}
+  .si-card-role{font-size:12px;color:var(--ink-3);margin-top:2px}
+  .si-card-stats{margin-top:10px;display:flex;gap:14px;font-family:"JetBrains Mono",monospace;font-size:11px;color:var(--ink-3)}
+  .si-card-stats strong{color:var(--ink);font-weight:600}
+  .si-card-pill{display:inline-block;padding:3px 8px;font-size:10.5px;border:1px solid var(--line);margin-top:10px;font-family:"JetBrains Mono",monospace;letter-spacing:.08em;text-transform:uppercase}
+  .si-banner{background:var(--ink);color:var(--bg);padding:48px;display:grid;grid-template-columns:1.5fr auto;gap:32px;align-items:center;border:1px solid var(--ink)}
+  .si-banner h3{margin:0;font-size:36px;font-family:"Archivo Narrow",sans-serif;font-weight:700;text-transform:uppercase;letter-spacing:-.01em}
+  .si-banner p{margin:8px 0 0;color:#bbb;font-size:14.5px;max-width:520px}
+  .si-empty{padding:80px 32px;text-align:center;border:1px solid var(--line);background:var(--bg)}
+  .si-empty-text{font-family:"JetBrains Mono",monospace;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3);margin:0}
+  .si-spinner{width:36px;height:36px;border:1.5px solid var(--line);border-top-color:var(--ink);border-radius:50%;animation:si-spin 0.8s linear infinite}
+  @keyframes si-spin{to{transform:rotate(360deg)}}
+  @media(max-width:640px){.si-banner{grid-template-columns:1fr;gap:20px}}
+`;
+
 export default function SearchIntervenants() {
   const { user } = useAuth();
   const [searchParams] = useSearchParams();
@@ -135,53 +183,7 @@ export default function SearchIntervenants() {
   if (isPublic) {
     const publicContent = (
       <>
-        <style>{`
-          :root{
-            --bg:#f4f4f2;--bg-soft:#ebebe7;--bg-dark:#0a0a0a;
-            --ink:#0a0a0a;--ink-2:#2a2a2a;--ink-3:#555;--ink-4:#888;
-            --line:rgba(0,0,0,.10);--line-2:rgba(0,0,0,.06);
-            --accent:#252d62;--on-accent:#fff;
-          }
-          *{box-sizing:border-box}
-          .si-eyebrow{font-family:"JetBrains Mono",monospace;font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--ink-3)}
-          .si-display{font-family:"Archivo Narrow","Archivo",sans-serif;font-weight:800;text-transform:uppercase;letter-spacing:-.015em;line-height:.95;margin:0}
-          .si-lede{color:var(--ink-2);font-size:16px;max-width:600px;margin:0}
-          .si-btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:44px;padding:0 22px;font-family:"Inter Tight",sans-serif;font-weight:600;font-size:13.5px;letter-spacing:.02em;border-radius:999px;border:1px solid transparent;cursor:pointer;text-decoration:none;transition:transform .15s ease,background .2s ease,color .2s ease,border-color .2s ease;white-space:nowrap;background:transparent}
-          .si-btn:hover{transform:translateY(-1px)}
-          .si-btn-primary{background:var(--ink);color:var(--bg)}
-          .si-btn-primary:hover{background:var(--ink-2)}
-          .si-btn-ghost{background:transparent;color:var(--ink);border-color:var(--line)}
-          .si-btn-ghost:hover{border-color:var(--ink)}
-          .si-btn-sm{height:36px;padding:0 16px;font-size:12.5px}
-          .si-btn-lg{height:52px;padding:0 28px;font-size:14.5px}
-          .si-btn-on-dark{background:#fff;color:#000;border-color:transparent}
-          .si-btn-active{background:var(--ink);color:var(--bg);border-color:var(--ink)}
-          .si-searchbar{background:#fff;border:1px solid var(--line);display:flex;gap:4px;padding:6px;max-width:680px;align-items:center}
-          .si-searchbar input{border:none;outline:none;background:transparent;font-family:"Inter Tight",sans-serif;font-size:14px;padding:8px 12px;color:var(--ink);flex:1}
-          .si-searchbar input::placeholder{color:var(--ink-4)}
-          .si-searchbar-sep{width:1px;background:var(--line);margin:4px 0;align-self:stretch}
-          .si-count{font-family:"JetBrains Mono",monospace;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3);margin:0 0 18px}
-          .si-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line);border:1px solid var(--line)}
-          @media(max-width:980px){.si-grid{grid-template-columns:repeat(2,1fr)}}
-          @media(max-width:640px){.si-grid{grid-template-columns:1fr}}
-          .si-card{background:var(--bg);padding:24px;display:flex;gap:16px;align-items:flex-start;text-decoration:none;color:inherit;transition:background .2s}
-          .si-card:hover{background:var(--bg-soft)}
-          .si-card-avatar{width:56px;height:56px;border-radius:50%;background:var(--bg-soft);border:1px solid var(--line);flex-shrink:0;overflow:hidden}
-          .si-card-avatar img{width:100%;height:100%;object-fit:cover;filter:grayscale(30%)}
-          .si-card-name{font-weight:600;font-size:14.5px;color:var(--ink)}
-          .si-card-role{font-size:12px;color:var(--ink-3);margin-top:2px}
-          .si-card-stats{margin-top:10px;display:flex;gap:14px;font-family:"JetBrains Mono",monospace;font-size:11px;color:var(--ink-3)}
-          .si-card-stats strong{color:var(--ink);font-weight:600}
-          .si-card-pill{display:inline-block;padding:3px 8px;font-size:10.5px;border:1px solid var(--line);margin-top:10px;font-family:"JetBrains Mono",monospace;letter-spacing:.08em;text-transform:uppercase}
-          .si-banner{background:var(--ink);color:var(--bg);padding:48px;display:grid;grid-template-columns:1.5fr auto;gap:32px;align-items:center;border:1px solid var(--ink)}
-          .si-banner h3{margin:0;font-size:36px;font-family:"Archivo Narrow",sans-serif;font-weight:700;text-transform:uppercase;letter-spacing:-.01em}
-          .si-banner p{margin:8px 0 0;color:#bbb;font-size:14.5px;max-width:520px}
-          .si-empty{padding:80px 32px;text-align:center;border:1px solid var(--line);background:var(--bg)}
-          .si-empty-text{font-family:"JetBrains Mono",monospace;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3);margin:0}
-          .si-spinner{width:36px;height:36px;border:1.5px solid var(--line);border-top-color:var(--ink);border-radius:50%;animation:si-spin 0.8s linear infinite}
-          @keyframes si-spin{to{transform:rotate(360deg)}}
-          @media(max-width:640px){.si-banner{grid-template-columns:1fr;gap:20px}}
-        `}</style>
+        <style>{SI_CSS}</style>
 
         {/* Hero */}
         <div style={{ marginBottom: 48 }}>
@@ -321,5 +323,10 @@ export default function SearchIntervenants() {
     );
   }
 
-  return <div className="max-w-5xl">{dashboardContent}</div>;
+  return (
+    <>
+      <style>{SI_CSS}</style>
+      <div className="max-w-5xl">{dashboardContent}</div>
+    </>
+  );
 }
