@@ -3,7 +3,7 @@ import { Link, useSearchParams } from 'react-router-dom';
 import { userApi } from '../../services/user.api';
 import { useAuth } from '../../hooks/useAuth';
 import Spinner from '../../components/ui/Spinner';
-import { MapPin, Star, Search, SlidersHorizontal, ChevronRight } from 'lucide-react';
+import { MapPin, Search } from 'lucide-react';
 import { CATEGORY_LABELS } from '../../utils/constants';
 import PublicNavbar from '../../components/layout/PublicNavbar';
 import avatarMale from '../../assets/avatar-default-male.svg';
@@ -58,131 +58,73 @@ export default function SearchIntervenants() {
   // ── Dashboard (authenticated) ──────────────────────────────────────
   const dashboardContent = (
     <>
-      <div className="mb-8">
-        <h1 className="text-2xl font-extrabold text-white">Nos professionnels</h1>
-        <p className="mt-1 text-sm text-white/60">
-          Coachs sportifs, nutritionnistes, psychologues du sport et praticiens bien-être sélectionnés et certifiés.
+      <div style={{ marginBottom: 24 }}>
+        <h1 className="display" style={{ fontSize: 'clamp(28px,3.5vw,48px)', color: '#0a0a0a' }}>Nos professionnels</h1>
+        <p style={{ color: '#555', fontSize: 14, marginTop: 6 }}>
+          Coachs sportifs, nutritionnistes, psychologues du sport et praticiens bien-être.
         </p>
       </div>
 
-      <div className="rounded-2xl p-4 mb-6 flex flex-col sm:flex-row gap-3 bg-white/[0.07] border border-white/20">
-        <div className="flex items-center gap-2 flex-1 rounded-xl px-4 h-11 bg-white/[0.06]">
-          <Search className="w-4 h-4 shrink-0 text-white/40" />
-          <input
-            type="text"
-            placeholder="Nom, spécialité, sport..."
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            className="flex-1 bg-transparent text-sm text-white placeholder-white/40 outline-none"
-          />
-        </div>
-        <div className="flex items-center gap-2 rounded-xl px-4 h-11 bg-white/[0.06]">
-          <MapPin className="w-4 h-4 shrink-0 text-white/40" />
-          <input
-            type="text"
-            placeholder="Ville..."
-            value={city}
-            onChange={(e) => setCity(e.target.value)}
-            className="w-28 bg-transparent text-sm text-white placeholder-white/40 outline-none"
-          />
-        </div>
-        <button
-          onClick={fetchIntervenants}
-          className="h-11 px-5 bg-primary-500 hover:bg-primary-400 text-white font-semibold text-sm rounded-xl transition-colors flex items-center gap-2 shrink-0"
-        >
-          <SlidersHorizontal className="w-4 h-4" />
-          Filtrer
-        </button>
-      </div>
+      <form onSubmit={(e) => { e.preventDefault(); fetchIntervenants(); }} className="si-searchbar" style={{ marginBottom: 20 }}>
+        <Search size={16} style={{ color: '#888', flexShrink: 0, marginLeft: 8 }} />
+        <input type="text" placeholder="Nom, spécialité, sport..." value={query} onChange={(e) => setQuery(e.target.value)} />
+        <div className="si-searchbar-sep" />
+        <MapPin size={16} style={{ color: '#888', flexShrink: 0 }} />
+        <input type="text" placeholder="Ville" value={city} onChange={(e) => setCity(e.target.value)} style={{ width: 90 }} />
+        <button type="submit" className="si-btn si-btn-primary si-btn-sm" style={{ borderRadius: 4 }}>Rechercher</button>
+      </form>
 
-      <div className="flex gap-2 flex-wrap mb-6">
-        {CATEGORIES.map((cat) => (
-          <button
-            key={cat}
-            onClick={() => setActiveCategory(cat)}
-            className={`px-4 py-2 rounded-full text-sm font-medium transition-all border ${activeCategory === cat
-              ? 'bg-primary-500 text-white border-primary-500'
-              : 'bg-white/[0.05] text-white/70 border-white/10 hover:border-white/30 hover:text-white'
-              }`}
-          >
-            {cat === 'Tous' ? 'Tous' : CATEGORY_LABELS?.[cat] || cat}
-          </button>
-        ))}
+      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 28 }}>
+        {CATEGORIES.map((cat) => {
+          const active = activeCategory === cat;
+          return (
+            <button key={cat} onClick={() => setActiveCategory(cat)} className={`si-btn si-btn-sm ${active ? 'si-btn-active' : 'si-btn-ghost'}`}>
+              {cat === 'Tous' ? 'Tous' : CATEGORY_LABELS?.[cat] || cat}
+            </button>
+          );
+        })}
       </div>
 
       {loading ? (
-        <div className="flex justify-center py-16"><Spinner size="lg" /></div>
+        <div style={{ display: 'flex', justifyContent: 'center', padding: '64px 0' }}>
+          <Spinner />
+        </div>
       ) : filtered.length === 0 ? (
-        <div className="rounded-2xl py-16 text-center bg-white/[0.06] border border-white/20">
-          <Search className="w-12 h-12 mx-auto mb-4 text-white/20" />
-          <p className="text-white/50 font-medium">Aucun professionnel trouvé</p>
-          <p className="text-sm mt-1 text-white/30">Essayez de modifier vos critères de recherche</p>
+        <div className="si-empty">
+          <p className="si-empty-text">// Aucun professionnel trouvé</p>
+          <p className="si-empty-text" style={{ color: '#888', marginTop: 10 }}>Essayez de modifier vos critères</p>
         </div>
       ) : (
         <>
-          <p className="text-sm mb-4 text-white/50">
-            {filtered.length} professionnel{filtered.length > 1 ? 's' : ''} trouvé{filtered.length > 1 ? 's' : ''}
-          </p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {filtered.map((intervenant) => (
-              <Link
-                key={intervenant.id}
-                to={`/coaches/${intervenant.id}`}
-                className="rounded-2xl border p-5 hover:-translate-y-0.5 transition-all text-left w-full group bg-white/[0.07] border-white/[0.18] hover:bg-white/[0.11] hover:border-white/30"
-              >
-                <div className="flex items-start gap-4">
-                  <img
-                    src={intervenant.avatarUrl || (intervenant.gender === 'FEMME' ? avatarFemale : avatarMale)}
-                    alt={intervenant.firstName}
-                    className="w-14 h-14 rounded-2xl object-cover shrink-0"
-                  />
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-start justify-between gap-2">
-                      <div>
-                        <p className="font-bold text-white group-hover:text-primary-400 transition-colors">
-                          {intervenant.firstName} {intervenant.lastName}
-                        </p>
-                        {intervenant.profile?.city && (
-                          <p className="text-xs flex items-center gap-1 mt-0.5 text-white/40">
-                            <MapPin className="w-3 h-3" />{intervenant.profile.city}
-                          </p>
-                        )}
+          <p className="si-count">{String(filtered.length).padStart(2, '0')} professionnel{filtered.length > 1 ? 's' : ''} trouvé{filtered.length > 1 ? 's' : ''}</p>
+          <div className="si-grid">
+            {filtered.map((intervenant) => {
+              const specialty = intervenant.profile?.specialties?.[0]
+                ? CATEGORY_LABELS[intervenant.profile.specialties[0]] || intervenant.profile.specialties[0]
+                : null;
+              const avatarSrc = intervenant.avatarUrl || (intervenant.gender === 'FEMME' ? avatarFemale : avatarMale);
+              return (
+                <Link key={intervenant.id} to={`/coaches/${intervenant.id}`} className="si-card">
+                  <div className="si-card-avatar"><img src={avatarSrc} alt={intervenant.firstName} /></div>
+                  <div>
+                    <div className="si-card-name">{intervenant.firstName} {intervenant.lastName}</div>
+                    {specialty && <div className="si-card-role">{specialty}</div>}
+                    {intervenant.profile?.city && (
+                      <div className="si-card-role" style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 4 }}>
+                        <MapPin size={11} /> {intervenant.profile.city}
                       </div>
-                      {intervenant.profile?.experience != null && (
-                        <div className="text-right shrink-0">
-                          <span className="text-sm font-semibold text-white">{intervenant.profile.experience} ans</span>
-                          <p className="text-xs text-white/40">d'expérience</p>
-                        </div>
-                      )}
+                    )}
+                    <div className="si-card-stats">
+                      {intervenant.averageRating != null && <span><strong>★ {Number(intervenant.averageRating).toFixed(1)}</strong></span>}
+                      {intervenant.reviewCount > 0 && <span><strong>{intervenant.reviewCount}</strong> avis</span>}
+                      {intervenant.sessionsDone > 0 && <span><strong>{intervenant.sessionsDone}</strong> séances</span>}
+                      {!intervenant.averageRating && !intervenant.sessionsDone && <span>Nouveau</span>}
                     </div>
-                    {intervenant.averageRating != null ? (
-                      <div className="flex items-center gap-1 mt-1">
-                        <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
-                        <span className="text-xs font-medium text-amber-400">{intervenant.averageRating}</span>
-                        <span className="text-xs text-white/40">({intervenant.reviewCount} avis)</span>
-                      </div>
-                    ) : intervenant.sessionsDone > 0 ? (
-                      <span className="text-xs mt-1 block text-white/40">{intervenant.sessionsDone} séance{intervenant.sessionsDone > 1 ? 's' : ''}</span>
-                    ) : (
-                      <span className="text-xs mt-1 block text-white/40">Nouveau</span>
-                    )}
-                    {intervenant.profile?.bio && (
-                      <p className="text-sm mt-2 line-clamp-2 leading-relaxed text-white/50">{intervenant.profile.bio}</p>
-                    )}
-                    {intervenant.profile?.specialties?.length > 0 && (
-                      <div className="flex flex-wrap gap-1.5 mt-3">
-                        {intervenant.profile.specialties.slice(0, 3).map((s) => (
-                          <span key={s} className="text-xs px-2.5 py-0.5 rounded-full font-medium bg-primary-500/20 text-primary-300 border border-primary-500/30">{s}</span>
-                        ))}
-                      </div>
-                    )}
-                    <div className="mt-3 flex items-center gap-1 text-xs font-semibold text-primary-400">
-                      Voir le profil <ChevronRight className="w-3.5 h-3.5" />
-                    </div>
+                    {specialty && <div className="si-card-pill">{specialty}</div>}
                   </div>
-                </div>
-              </Link>
-            ))}
+                </Link>
+              );
+            })}
           </div>
         </>
       )}
