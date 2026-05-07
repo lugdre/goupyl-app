@@ -1,28 +1,28 @@
-import { cn } from '../../utils/cn';
-
-export default function Input({ label, error, id, className = '', ...props }) {
+export default function Input({ label, error, id, className = '', style: propStyle = {}, ...props }) {
   return (
-    <div className="space-y-1.5">
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
       {label && (
-        <label htmlFor={id} className="block text-sm font-medium text-white">
+        <label htmlFor={id} style={{ fontSize: 12, fontWeight: 600, letterSpacing: '.08em', textTransform: 'uppercase', fontFamily: '"JetBrains Mono", monospace', color: '#555' }}>
           {label}
         </label>
       )}
       <input
         id={id}
-        className={cn(
-          'w-full h-11 px-3.5 rounded-xl text-[15px] transition-all duration-150',
-          'bg-white/[0.05] border border-white/[0.08]',
-          'placeholder:text-gray-500 text-white',
-          'focus:outline-none focus:bg-white/[0.08] focus:border-primary-500 focus:ring-3 focus:ring-primary-500/15',
-          error
-            ? 'bg-red-500/10 border-red-400 focus:ring-red-400/15 focus:border-red-400'
-            : 'hover:bg-white/[0.07]',
-          className
-        )}
+        className={className}
+        style={{
+          width: '100%', height: 42, padding: '0 14px',
+          fontSize: 14, fontFamily: "'Inter Tight', sans-serif",
+          background: '#ffffff',
+          border: error ? '1px solid #dc2626' : '1px solid rgba(0,0,0,0.14)',
+          borderRadius: 4, color: '#0a0a0a',
+          outline: 'none', transition: 'border-color .15s',
+          ...propStyle,
+        }}
+        onFocus={e => { e.currentTarget.style.borderColor = error ? '#dc2626' : '#252d62'; e.currentTarget.style.boxShadow = error ? '0 0 0 3px rgba(220,38,38,0.08)' : '0 0 0 3px rgba(37,45,98,0.08)'; }}
+        onBlur={e => { e.currentTarget.style.borderColor = error ? '#dc2626' : 'rgba(0,0,0,0.14)'; e.currentTarget.style.boxShadow = 'none'; }}
         {...props}
       />
-      {error && <p className="text-[13px] text-red-400 font-medium">{error}</p>}
+      {error && <p style={{ fontSize: 12, color: '#dc2626', fontWeight: 500 }}>{error}</p>}
     </div>
   );
 }

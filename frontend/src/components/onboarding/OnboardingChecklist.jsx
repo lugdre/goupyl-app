@@ -1,13 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { CheckCircle, Circle, ChevronDown, ChevronUp, X, Sparkles } from 'lucide-react';
+import { CheckCircle, ChevronDown, ChevronUp, X } from 'lucide-react';
 
-/**
- * steps: Array<{ id, label, description, to, done }>
- * storageKey: string — localStorage key to remember dismissal
- * title: string
- * subtitle: string
- */
 export default function OnboardingChecklist({ steps, storageKey, title, subtitle }) {
   const [dismissed, setDismissed] = useState(
     () => localStorage.getItem(storageKey) === 'true'
@@ -16,6 +10,7 @@ export default function OnboardingChecklist({ steps, storageKey, title, subtitle
 
   const completedCount = steps.filter((s) => s.done).length;
   const allDone = completedCount === steps.length;
+  const progress = Math.round((completedCount / steps.length) * 100);
 
   const handleDismiss = () => {
     localStorage.setItem(storageKey, 'true');
@@ -24,83 +19,95 @@ export default function OnboardingChecklist({ steps, storageKey, title, subtitle
 
   if (dismissed) return null;
 
-  const progress = Math.round((completedCount / steps.length) * 100);
-
   return (
-    <div className="rounded-2xl border border-primary-500/20 bg-gradient-to-br from-primary-600/10 to-[#14152A] overflow-hidden mb-6">
+    <div style={{
+      background: '#ffffff',
+      border: '1px solid rgba(0,0,0,0.09)',
+      borderRadius: 4,
+      overflow: 'hidden',
+      marginBottom: 24,
+    }}>
       {/* Header */}
-      <div className="flex items-center justify-between px-5 py-4">
-        <div className="flex items-center gap-3">
-          <div className="w-9 h-9 bg-primary-500/15 rounded-xl flex items-center justify-center shrink-0">
-            <Sparkles className="w-5 h-5 text-primary-400" />
-          </div>
-          <div>
-            <p className="font-semibold text-white">{title}</p>
-            <p className="text-sm text-gray-500">{subtitle}</p>
-          </div>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px' }}>
+        <div>
+          <p style={{ fontFamily: "'Archivo Narrow', sans-serif", fontWeight: 700, fontSize: 16, color: '#0a0a0a', margin: 0 }}>{title}</p>
+          <p style={{ fontSize: 13, color: '#555', marginTop: 2 }}>{subtitle}</p>
         </div>
-        <div className="flex items-center gap-2">
-          <span className="text-sm font-medium text-primary-300 hidden sm:block">
-            {completedCount}/{steps.length} étapes
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          <span style={{ fontSize: 11, fontFamily: '"JetBrains Mono", monospace', color: '#555', letterSpacing: '.08em' }}>
+            {completedCount}/{steps.length}
           </span>
           <button
-            onClick={() => setCollapsed((c) => !c)}
-            className="p-1.5 rounded-lg hover:bg-white/[0.05] text-gray-500 transition-colors"
+            onClick={() => setCollapsed(c => !c)}
+            style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 28, height: 28, borderRadius: 4, border: '1px solid rgba(0,0,0,0.10)', background: 'transparent', cursor: 'pointer', color: '#555' }}
           >
-            {collapsed ? <ChevronDown className="w-4 h-4" /> : <ChevronUp className="w-4 h-4" />}
+            {collapsed ? <ChevronDown size={14} /> : <ChevronUp size={14} />}
           </button>
           <button
             onClick={handleDismiss}
-            className="p-1.5 rounded-lg hover:bg-red-500/10 text-gray-500 hover:text-red-400 transition-colors"
             title="Masquer ce guide"
+            style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 28, height: 28, borderRadius: 4, border: '1px solid rgba(0,0,0,0.10)', background: 'transparent', cursor: 'pointer', color: '#888' }}
           >
-            <X className="w-4 h-4" />
+            <X size={14} />
           </button>
         </div>
       </div>
 
       {/* Progress bar */}
-      <div className="h-1.5 bg-white/[0.05] mx-5 rounded-full overflow-hidden mb-1">
-        <div
-          className="h-full bg-primary-500 rounded-full transition-all duration-500"
-          style={{ width: `${progress}%` }}
-        />
+      <div style={{ height: 2, background: 'rgba(0,0,0,0.06)', margin: '0 20px 4px' }}>
+        <div style={{ height: '100%', background: '#252d62', width: `${progress}%`, transition: 'width .5s ease' }} />
       </div>
-      <p className="text-xs text-primary-400 font-medium px-5 pb-3">
-        {allDone ? 'Tout est configuré !' : `${progress}% complété`}
+      <p style={{ fontSize: 11, color: '#888', fontFamily: '"JetBrains Mono", monospace', letterSpacing: '.08em', padding: '0 20px 12px' }}>
+        {allDone ? 'TOUT EST CONFIGURÉ' : `${progress}% COMPLÉTÉ`}
       </p>
 
       {/* Steps */}
       {!collapsed && (
-        <div className="px-5 pb-5 space-y-2">
+        <div style={{ padding: '0 20px 20px', display: 'flex', flexDirection: 'column', gap: 6 }}>
           {steps.map((step, i) => (
             <div
               key={step.id}
-              className={`flex items-start gap-3 p-3 rounded-xl transition-colors ${
-                step.done ? 'bg-green-500/5' : 'bg-white/[0.03] border border-white/[0.07] hover:border-primary-500/30'
-              }`}
+              style={{
+                display: 'flex', alignItems: 'flex-start', gap: 12, padding: '12px 14px',
+                background: step.done ? 'rgba(74,124,89,0.05)' : '#f8f8f6',
+                border: step.done ? '1px solid rgba(74,124,89,0.15)' : '1px solid rgba(0,0,0,0.07)',
+                borderRadius: 3,
+              }}
             >
-              <div className="shrink-0 mt-0.5">
+              <div style={{ flexShrink: 0, marginTop: 1 }}>
                 {step.done ? (
-                  <CheckCircle className="w-5 h-5 text-green-400" />
+                  <CheckCircle style={{ width: 16, height: 16, color: '#4A7C59' }} />
                 ) : (
-                  <div className="w-5 h-5 rounded-full border-2 border-gray-500 flex items-center justify-center">
-                    <span className="text-[10px] font-bold text-gray-500">{i + 1}</span>
+                  <div style={{
+                    width: 16, height: 16, borderRadius: '50%',
+                    border: '1.5px solid rgba(0,0,0,0.25)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  }}>
+                    <span style={{ fontSize: 9, fontWeight: 700, color: '#888', fontFamily: '"JetBrains Mono", monospace' }}>{i + 1}</span>
                   </div>
                 )}
               </div>
-              <div className="flex-1 min-w-0">
-                <p className={`text-sm font-medium ${step.done ? 'text-green-400 line-through' : 'text-white'}`}>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <p style={{
+                  fontSize: 13, fontWeight: 600, margin: 0, color: step.done ? '#4A7C59' : '#0a0a0a',
+                  textDecoration: step.done ? 'line-through' : 'none',
+                }}>
                   {step.label}
                 </p>
                 {!step.done && step.description && (
-                  <p className="text-xs text-gray-500 mt-0.5">{step.description}</p>
+                  <p style={{ fontSize: 12, color: '#888', marginTop: 3 }}>{step.description}</p>
                 )}
               </div>
               {!step.done && step.to && (
                 <Link
                   to={step.to}
-                  className="shrink-0 text-xs font-semibold text-primary-400 hover:text-primary-300 bg-primary-500/10 hover:bg-primary-500/15 px-3 py-1.5 rounded-lg transition-colors"
+                  style={{
+                    flexShrink: 0, fontSize: 11, fontWeight: 600, fontFamily: '"JetBrains Mono", monospace',
+                    letterSpacing: '.08em', textTransform: 'uppercase', textDecoration: 'none',
+                    color: '#252d62', background: 'rgba(37,45,98,0.08)',
+                    padding: '5px 10px', borderRadius: 999,
+                    border: '1px solid rgba(37,45,98,0.15)',
+                  }}
                 >
                   Commencer
                 </Link>

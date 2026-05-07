@@ -1,19 +1,37 @@
-import { cn } from '../../utils/cn';
 import { Loader2 } from 'lucide-react';
+import { cn } from '../../utils/cn';
 
 const variants = {
-  primary: 'bg-primary-500 text-white hover:bg-primary-400 active:bg-primary-300 shadow-[0_1px_2px_rgba(0,0,0,0.3)]',
-  secondary: 'bg-white/[0.06] text-primary-300 hover:bg-white/[0.10] border border-white/[0.10]',
-  success: 'bg-nature-700 text-white hover:opacity-90 active:opacity-80',
-  accent: 'bg-accent-600 text-white hover:opacity-90 active:opacity-80',
-  ghost: 'bg-transparent text-gray-500 border border-white/[0.10] hover:bg-white/[0.05] active:bg-white/[0.08]',
-  danger: 'bg-red-600 text-white hover:bg-red-500 active:bg-red-400',
+  primary: {
+    style: { background: '#252d62', color: '#ffffff', borderColor: '#252d62' },
+    hover: { background: '#1a2050', borderColor: '#1a2050' },
+  },
+  secondary: {
+    style: { background: 'transparent', color: '#0a0a0a', borderColor: 'rgba(0,0,0,0.18)' },
+    hover: { borderColor: '#0a0a0a' },
+  },
+  success: {
+    style: { background: '#4A7C59', color: '#ffffff', borderColor: '#4A7C59' },
+    hover: { opacity: 0.9 },
+  },
+  accent: {
+    style: { background: '#252d62', color: '#ffffff', borderColor: '#252d62' },
+    hover: { background: '#1a2050' },
+  },
+  ghost: {
+    style: { background: 'transparent', color: '#555555', borderColor: 'rgba(0,0,0,0.12)' },
+    hover: { color: '#0a0a0a', borderColor: 'rgba(0,0,0,0.30)' },
+  },
+  danger: {
+    style: { background: '#dc2626', color: '#ffffff', borderColor: '#dc2626' },
+    hover: { background: '#b91c1c' },
+  },
 };
 
 const sizes = {
-  sm: 'px-3.5 py-1.5 text-[13px] font-medium',
-  md: 'px-5 py-2.5 text-[15px] font-medium',
-  lg: 'px-6 py-3 text-base font-medium',
+  sm: { height: 32, padding: '0 14px', fontSize: 12, letterSpacing: '.02em' },
+  md: { height: 40, padding: '0 20px', fontSize: 13.5, letterSpacing: '.02em' },
+  lg: { height: 48, padding: '0 26px', fontSize: 14, letterSpacing: '.02em' },
 };
 
 export default function Button({
@@ -23,23 +41,42 @@ export default function Button({
   loading = false,
   disabled = false,
   className = '',
+  style: propStyle = {},
   ...props
 }) {
+  const v = variants[variant] || variants.primary;
+  const s = sizes[size] || sizes.md;
+
   return (
     <button
-      className={cn(
-        'inline-flex items-center justify-center rounded-xl transition-all duration-150',
-        'focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0E0F18]',
-        'disabled:opacity-40 disabled:cursor-not-allowed',
-        'select-none',
-        variants[variant],
-        sizes[size],
-        className
-      )}
+      className={cn('select-none', className)}
       disabled={disabled || loading}
+      style={{
+        display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 7,
+        height: s.height, padding: s.padding, fontSize: s.fontSize,
+        fontFamily: "'Inter Tight', sans-serif", fontWeight: 600,
+        letterSpacing: s.letterSpacing,
+        borderRadius: 999, border: '1px solid transparent',
+        cursor: disabled || loading ? 'not-allowed' : 'pointer',
+        opacity: disabled || loading ? 0.45 : 1,
+        transition: 'background .15s, border-color .15s, color .15s',
+        whiteSpace: 'nowrap',
+        ...v.style,
+        ...propStyle,
+      }}
+      onMouseOver={e => {
+        if (!disabled && !loading && v.hover) {
+          Object.assign(e.currentTarget.style, v.hover);
+        }
+      }}
+      onMouseOut={e => {
+        if (!disabled && !loading) {
+          Object.assign(e.currentTarget.style, v.style, propStyle);
+        }
+      }}
       {...props}
     >
-      {loading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+      {loading && <Loader2 style={{ width: 14, height: 14, animation: 'spin 1s linear infinite' }} />}
       {children}
     </button>
   );

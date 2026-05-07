@@ -5,7 +5,6 @@ import {
   Users, Package, Building2, ShieldCheck, FileText,
   BarChart2, BookOpen, Euro, Star,
 } from 'lucide-react';
-import { cn } from '../../utils/cn';
 
 const BASE_CLIENT_ITEMS = [
   { to: '/dashboard/client', icon: LayoutDashboard, label: 'Accueil' },
@@ -65,56 +64,87 @@ export default function Sidebar() {
 
   return (
     <>
-      {/* Sidebar desktop */}
-      <aside className="w-56 min-h-screen hidden lg:block shrink-0 bg-sidebar" style={{ borderRight: '1px solid var(--border-sidebar)' }}>
-        <nav className="p-2.5 space-y-0.5 sticky top-14">
+      {/* Desktop sidebar */}
+      <aside
+        className="hidden lg:block shrink-0"
+        style={{
+          width: 216, minHeight: '100vh',
+          background: 'var(--color-sidebar)',
+          borderRight: '1px solid var(--border-sidebar)',
+        }}
+      >
+        <nav style={{ padding: '12px 10px', position: 'sticky', top: 56 }}>
           {items.map((item) => (
             <NavLink
               key={item.to}
               to={item.to}
               end={END_ROUTES.has(item.to)}
-              className={({ isActive }) =>
-                cn(
-                  'flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13.5px] font-medium transition-all duration-150',
-                  isActive
-                    ? 'bg-primary-600/80 text-white'
-                    : 'text-gray-500 hover:bg-white/[0.05] hover:text-gray-300'
-                )
-              }
             >
-              <item.icon className="w-[17px] h-[17px] shrink-0 opacity-80" />
-              {item.label}
+              {({ isActive }) => (
+                <div
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: 10,
+                    padding: '8px 12px', marginBottom: 2,
+                    borderRadius: 4,
+                    fontSize: 13, fontWeight: 500, letterSpacing: '.01em',
+                    background: isActive ? '#252d62' : 'transparent',
+                    color: isActive ? '#ffffff' : '#555555',
+                    cursor: 'pointer',
+                    transition: 'background .15s, color .15s',
+                  }}
+                  onMouseOver={e => {
+                    if (!isActive) {
+                      e.currentTarget.style.background = 'rgba(0,0,0,0.05)';
+                      e.currentTarget.style.color = '#0a0a0a';
+                    }
+                  }}
+                  onMouseOut={e => {
+                    if (!isActive) {
+                      e.currentTarget.style.background = 'transparent';
+                      e.currentTarget.style.color = '#555555';
+                    }
+                  }}
+                >
+                  <item.icon style={{ width: 15, height: 15, flexShrink: 0, opacity: 0.85 }} />
+                  {item.label}
+                </div>
+              )}
             </NavLink>
           ))}
         </nav>
       </aside>
 
-      {/* Bottom nav mobile */}
+      {/* Mobile bottom nav */}
       <nav
-        className="lg:hidden fixed bottom-0 left-0 right-0 z-50 flex items-stretch bg-sidebar"
-        style={{ borderTop: '1px solid var(--border-sidebar)', height: 60 }}
+        className="lg:hidden fixed bottom-0 left-0 right-0 z-50 flex items-stretch"
+        style={{
+          background: 'var(--color-sidebar)',
+          borderTop: '1px solid var(--border-sidebar)',
+          height: 60,
+        }}
       >
         {items.map((item) => (
           <NavLink
             key={item.to}
             to={item.to}
             end={END_ROUTES.has(item.to)}
-            className={({ isActive }) =>
-              cn(
-                'flex flex-1 flex-col items-center justify-center gap-0.5 font-medium transition-colors',
-                isActive ? 'text-primary-400' : 'text-gray-500'
-              )
-            }
+            style={({ isActive }) => ({
+              display: 'flex', flex: 1, flexDirection: 'column',
+              alignItems: 'center', justifyContent: 'center',
+              gap: 3, textDecoration: 'none', fontWeight: 500,
+              color: isActive ? '#252d62' : '#888',
+              transition: 'color .15s',
+            })}
           >
             {({ isActive }) => (
               <>
-                <item.icon className={cn(
-                  'shrink-0',
-                  items.length > 5 ? 'w-[18px] h-[18px]' : 'w-5 h-5',
-                  isActive ? 'opacity-100' : 'opacity-60'
-                )} />
+                <item.icon style={{
+                  width: items.length > 5 ? 17 : 20,
+                  height: items.length > 5 ? 17 : 20,
+                  flexShrink: 0, opacity: isActive ? 1 : 0.6,
+                }} />
                 {items.length <= 5 && (
-                  <span className="text-[10px]">{item.label}</span>
+                  <span style={{ fontSize: 10, letterSpacing: '.02em' }}>{item.label}</span>
                 )}
               </>
             )}

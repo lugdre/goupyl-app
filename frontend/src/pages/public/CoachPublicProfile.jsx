@@ -10,8 +10,6 @@ import avatarMale from '../../assets/avatar-default-male.svg';
 import avatarFemale from '../../assets/avatar-default-female.svg';
 import PublicNavbar from '../../components/layout/PublicNavbar';
 
-const ACCENT = 'oklch(0.62 0.16 240)';
-
 const SESSION_TYPE_CONFIG = {
   SOLO: { label: 'Individuel', Icon: User },
   DUO: { label: 'Duo', Icon: Users },
@@ -129,7 +127,7 @@ export default function CoachPublicProfile() {
         :root{
           --bg:#f4f4f2;--bg-soft:#ebebe7;--ink:#0a0a0a;--ink-2:#2a2a2a;--ink-3:#555;--ink-4:#888;
           --line:rgba(0,0,0,.10);--line-2:rgba(0,0,0,.06);
-          --accent:oklch(0.62 0.16 240);--accent-soft:oklch(0.62 0.16 240 / 0.12);--on-accent:#fff;
+          --accent:#252d62;--accent-soft:rgba(37,45,98,.12);--on-accent:#fff;
         }
         .cpp-container{max-width:1200px;margin:0 auto;padding:0 32px}
         .cpp-eyebrow{font-family:"JetBrains Mono",monospace;font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--ink-3)}
@@ -147,7 +145,7 @@ export default function CoachPublicProfile() {
         .cpp-avatar{width:96px;height:96px;border-radius:8px;object-fit:cover;border:1px solid var(--line);background:#fff;filter:grayscale(40%)}
         .cpp-avatar-tag{position:absolute;bottom:-8px;right:-8px;font-family:"JetBrains Mono",monospace;font-size:10px;font-weight:600;letter-spacing:.05em;background:var(--accent);color:var(--on-accent);padding:4px 8px;border-radius:3px;display:inline-flex;align-items:center;gap:3px}
 
-        .cpp-name{margin:0;font-size:clamp(48px,6vw,86px)}
+        .cpp-name{margin:0;font-size:clamp(52px,7vw,96px)}
         .cpp-tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:18px}
         .cpp-tag{font-family:"JetBrains Mono",monospace;font-size:10px;letter-spacing:.14em;text-transform:uppercase;padding:5px 10px;border:1px solid var(--line);color:var(--ink-3);background:transparent}
         .cpp-meta-row{display:flex;flex-wrap:wrap;gap:16px;align-items:center;margin-top:18px;font-family:"JetBrains Mono",monospace;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3)}

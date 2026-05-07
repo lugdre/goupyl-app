@@ -4,7 +4,7 @@ const ThemeContext = createContext(null);
 
 export function ThemeProvider({ children }) {
   const [theme, setTheme] = useState(
-    () => localStorage.getItem('goupyl-theme') || 'dark'
+    () => localStorage.getItem('goupyl-theme') || 'light'
   );
 
   useEffect(() => {

@@ -1,109 +1,97 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
-import { LogOut, Menu, X } from 'lucide-react';
-import { useState } from 'react';
-import Badge from '../ui/Badge';
+import { LogOut } from 'lucide-react';
 import NotificationBell from '../NotificationBell';
-import logo from '../../assets/logo-goupyl-sport-white.png';
+import logo from '../../assets/logo-goupyl-sport.png';
 import avatarMale from '../../assets/avatar-default-male.svg';
 import avatarFemale from '../../assets/avatar-default-female.svg';
 
 const ROLE_LABELS = { CLIENT: 'Client', INTERVENANT: 'Pro', ADMIN: 'Admin', ENTREPRISE: 'Entreprise' };
 
+const ROLE_COLORS = {
+  CLIENT: { bg: 'rgba(37,45,98,0.08)', color: '#252d62' },
+  INTERVENANT: { bg: 'rgba(74,124,89,0.12)', color: '#4A7C59' },
+  ADMIN: { bg: 'rgba(220,38,38,0.10)', color: '#dc2626' },
+  ENTREPRISE: { bg: 'rgba(196,149,106,0.15)', color: '#92400e' },
+};
+
 export default function Navbar() {
   const { user, isAuthenticated, logout } = useAuth();
   const navigate = useNavigate();
-  const [mobileOpen, setMobileOpen] = useState(false);
 
   const handleLogout = async () => {
     await logout();
     navigate('/login');
   };
 
+  const roleStyle = ROLE_COLORS[user?.role] || { bg: 'rgba(0,0,0,0.06)', color: '#555' };
+
   return (
-    <nav className="sticky top-0 z-50 backdrop-blur-xl" style={{ backgroundColor: 'var(--bg-navbar)', borderBottom: '1px solid var(--border-navbar)' }}>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6">
-        <div className="flex items-center justify-between h-14">
+    <nav style={{
+      position: 'sticky', top: 0, zIndex: 50,
+      background: 'var(--bg-navbar)',
+      backdropFilter: 'saturate(150%) blur(14px)',
+      borderBottom: '1px solid var(--border-navbar)',
+    }}>
+      <div style={{ maxWidth: 1280, margin: '0 auto', padding: '0 24px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 56 }}>
           {/* Logo */}
-          <Link to="/" className="flex items-center shrink-0">
-            <img src={logo} alt="Goupyl Sport" className="h-25 w-auto" />
+          <Link to="/" style={{ display: 'flex', alignItems: 'center', textDecoration: 'none', flexShrink: 0 }}>
+            <img src={logo} alt="Goupyl Sport" style={{ height: 36, width: 'auto' }} />
           </Link>
 
-          {/* Desktop right */}
-          <div className="hidden md:flex items-center gap-2">
+          {/* Right section */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             {isAuthenticated ? (
               <>
                 <img
                   src={user.avatarUrl || (user.gender === 'FEMME' ? avatarFemale : avatarMale)}
                   alt="avatar"
-                  className="w-7 h-7 rounded-full object-cover shrink-0"
+                  style={{ width: 28, height: 28, borderRadius: '50%', objectFit: 'cover', flexShrink: 0, border: '1px solid rgba(0,0,0,0.10)' }}
                 />
-                <span className="text-sm text-gray-500 font-medium">
+                <span style={{ fontSize: 13, fontWeight: 500, color: 'var(--color-gray-700, #2a2a2a)', letterSpacing: '.01em' }}>
                   {user.role === 'ENTREPRISE' && user.companyName
                     ? user.companyName
                     : `${user.firstName} ${user.lastName}`}
                 </span>
-                <Badge variant={user.role}>{ROLE_LABELS[user.role] || user.role}</Badge>
+                <span style={{
+                  display: 'inline-flex', alignItems: 'center',
+                  padding: '2px 8px', borderRadius: 999,
+                  fontSize: 10, fontFamily: '"JetBrains Mono", monospace',
+                  fontWeight: 600, letterSpacing: '.10em', textTransform: 'uppercase',
+                  background: roleStyle.bg, color: roleStyle.color,
+                }}>
+                  {ROLE_LABELS[user.role] || user.role}
+                </span>
                 {user.role === 'INTERVENANT' && <NotificationBell />}
                 <button
                   onClick={handleLogout}
-                  className="ml-1 p-2 text-gray-500 hover:text-red-400 transition-colors rounded-xl hover:bg-red-500/10"
                   title="Se déconnecter"
+                  style={{
+                    display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                    width: 32, height: 32, borderRadius: 6, border: 'none',
+                    background: 'transparent', cursor: 'pointer', color: '#888',
+                    transition: 'color .15s, background .15s',
+                  }}
+                  onMouseOver={e => { e.currentTarget.style.color = '#dc2626'; e.currentTarget.style.background = 'rgba(220,38,38,0.06)'; }}
+                  onMouseOut={e => { e.currentTarget.style.color = '#888'; e.currentTarget.style.background = 'transparent'; }}
                 >
-                  <LogOut className="w-4 h-4" />
+                  <LogOut size={15} />
                 </button>
               </>
             ) : (
               <>
-                <Link
-                  to="/login"
-                  className="px-4 py-2 text-sm font-medium text-gray-400 hover:text-white transition-colors rounded-xl hover:bg-white/[0.05]"
-                >
+                <Link to="/login" style={{ fontSize: 13, fontWeight: 500, color: '#555', textDecoration: 'none', padding: '6px 14px', borderRadius: 999, border: '1px solid rgba(0,0,0,0.12)', transition: 'border-color .15s' }}>
                   Connexion
                 </Link>
-                <Link
-                  to="/register"
-                  className="px-4 py-2 text-sm font-semibold text-white bg-primary-600 hover:bg-primary-500 transition-colors rounded-xl"
-                >
+                <Link to="/register" style={{ fontSize: 13, fontWeight: 600, color: '#fff', background: '#252d62', textDecoration: 'none', padding: '6px 16px', borderRadius: 999, transition: 'background .15s' }}>
                   S'inscrire
                 </Link>
               </>
             )}
           </div>
-
-          {/* Mobile hamburger */}
-          <button
-            className="md:hidden p-2 rounded-xl text-gray-400 hover:bg-white/[0.05] transition-colors"
-            onClick={() => setMobileOpen(!mobileOpen)}
-          >
-            {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-          </button>
         </div>
       </div>
-
-      {/* Mobile menu */}
-      {mobileOpen && (
-        <div className="md:hidden px-4 py-4 space-y-3 backdrop-blur-xl" style={{ borderTop: '1px solid var(--border-navbar)', backgroundColor: 'var(--bg-navbar)' }}>
-          {isAuthenticated ? (
-            <>
-              <p className="text-sm font-semibold text-white">{user.firstName} {user.lastName}</p>
-              <Badge variant={user.role}>{ROLE_LABELS[user.role]}</Badge>
-              <button onClick={handleLogout} className="block text-sm text-red-400 font-medium mt-2">
-                Se déconnecter
-              </button>
-            </>
-          ) : (
-            <>
-              <Link to="/login" className="block text-[15px] font-medium text-gray-400" onClick={() => setMobileOpen(false)}>
-                Connexion
-              </Link>
-              <Link to="/register" className="block text-[15px] font-semibold text-primary-400" onClick={() => setMobileOpen(false)}>
-                S'inscrire
-              </Link>
-            </>
-          )}
-        </div>
-      )}
     </nav>
   );
 }

@@ -12,13 +12,13 @@ function VerificationBanner() {
 
   if (user?.verificationStatus === 'PENDING') {
     return (
-      <div className="bg-amber-500/10 backdrop-blur-sm border-b border-amber-500/20 px-6 py-2.5 flex items-center gap-3 text-sm">
-        <Clock className="w-4 h-4 text-amber-400 shrink-0" />
-        <span className="text-amber-300">
-          <span className="font-semibold">Compte en cours de vérification.</span>{' '}
+      <div style={{ background: 'rgba(245,158,11,0.08)', borderBottom: '1px solid rgba(245,158,11,0.20)', padding: '10px 24px', display: 'flex', alignItems: 'center', gap: 12, fontSize: 13 }}>
+        <Clock style={{ width: 15, height: 15, color: '#b45309', flexShrink: 0 }} />
+        <span style={{ color: '#92400e' }}>
+          <strong>Compte en cours de vérification.</strong>{' '}
           Votre profil sera visible des clients une fois validé.
         </span>
-        <Link to={docPath} className="ml-auto shrink-0 text-amber-300 hover:text-amber-200 font-semibold text-[13px] underline underline-offset-2">
+        <Link to={docPath} style={{ marginLeft: 'auto', flexShrink: 0, color: '#92400e', fontWeight: 600, fontSize: 12, textDecoration: 'underline', textUnderlineOffset: 2 }}>
           Envoyer mes documents
         </Link>
       </div>
@@ -27,13 +27,13 @@ function VerificationBanner() {
 
   if (user?.verificationStatus === 'REJECTED') {
     return (
-      <div className="bg-red-500/10 backdrop-blur-sm border-b border-red-500/20 px-6 py-2.5 flex items-center gap-3 text-sm">
-        <XCircle className="w-4 h-4 text-red-400 shrink-0" />
-        <span className="text-red-300">
-          <span className="font-semibold">Vérification refusée.</span>{' '}
+      <div style={{ background: 'rgba(239,68,68,0.08)', borderBottom: '1px solid rgba(239,68,68,0.20)', padding: '10px 24px', display: 'flex', alignItems: 'center', gap: 12, fontSize: 13 }}>
+        <XCircle style={{ width: 15, height: 15, color: '#dc2626', flexShrink: 0 }} />
+        <span style={{ color: '#991b1b' }}>
+          <strong>Vérification refusée.</strong>{' '}
           Contactez notre équipe ou soumettez de nouveaux documents.
         </span>
-        <Link to={docPath} className="ml-auto shrink-0 text-red-300 hover:text-red-200 font-semibold text-[13px] underline underline-offset-2">
+        <Link to={docPath} style={{ marginLeft: 'auto', flexShrink: 0, color: '#991b1b', fontWeight: 600, fontSize: 12, textDecoration: 'underline', textUnderlineOffset: 2 }}>
           Renvoyer des documents
         </Link>
       </div>
@@ -45,7 +45,7 @@ function VerificationBanner() {
 
 export default function DashboardLayout() {
   return (
-    <div className="layout-dark min-h-screen bg-page">
+    <div className="min-h-screen bg-page">
       <Navbar />
       <VerificationBanner />
       <div className="flex">
