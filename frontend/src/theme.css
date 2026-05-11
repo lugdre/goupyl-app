@@ -1,0 +1,175 @@
+/* ============================================================
+   GOUPYL SPORT — Design System Harmonization
+   All light-mode overrides, typography, color remapping
+   ============================================================ */
+
+/* ── 1. CSS VARIABLE OVERRIDES (light mode) ─────────────────
+   Extend [data-theme="light"] with tokens missing from index.css
+   ─────────────────────────────────────────────────────────── */
+[data-theme="light"] {
+  /* Primary palette → pure navy in light mode.
+     Dark mode kept lavender (#8B91F0) — these only apply under data-theme="light". */
+  --color-primary-50:  rgba(37, 45, 98, 0.05);
+  --color-primary-100: rgba(37, 45, 98, 0.09);
+  --color-primary-300: rgba(37, 45, 98, 0.35);
+  --color-primary-400: #252d62;
+  --color-primary-500: #252d62;
+
+  /* Brand tokens (same semantics as primary) */
+  --color-brand-50:  rgba(37, 45, 98, 0.05);
+  --color-brand-400: #252d62;
+}
+
+/* ── 2. TYPOGRAPHY ──────────────────────────────────────────
+   Archivo Narrow for all headings in light mode.
+   Inter Tight body already set on body{} in index.css.
+   ─────────────────────────────────────────────────────────── */
+[data-theme="light"] h1,
+[data-theme="light"] h2,
+[data-theme="light"] h3,
+[data-theme="light"] h4 {
+  font-family: 'Archivo Narrow', sans-serif;
+  font-weight: 700;
+  letter-spacing: -.01em;
+}
+
+/* Section-level headings using p/span with explicit font classes
+   remain Inter Tight — intentional, these are not structural headings. */
+
+/* Mono labels — applied via .eyebrow utility in index.css.
+   Also ensure badge/tag text uses mono when the class is present. */
+[data-theme="light"] .font-mono,
+[data-theme="light"] [class*="font-mono"] {
+  font-family: 'JetBrains Mono', monospace;
+}
+
+/* ── 3. COLOR REMAPPING — VIOLET → PRIMARY NAVY ─────────────
+   EntrepriseDashboard uses Tailwind violet-* (non-system).
+   Remap to navy accent in light mode.
+   ─────────────────────────────────────────────────────────── */
+[data-theme="light"] .text-violet-300,
+[data-theme="light"] .text-violet-400,
+[data-theme="light"] .text-violet-500,
+[data-theme="light"] .text-violet-600 { color: #252d62; }
+
+[data-theme="light"] .text-violet-500\/40 { color: rgba(37,45,98,.45); }
+
+[data-theme="light"] .bg-violet-400\/15,
+[data-theme="light"] .bg-violet-500\/15,
+[data-theme="light"] .bg-violet-500\/\[0\.07\],
+[data-theme="light"] .bg-violet-500\/\[0\.08\] { background-color: rgba(37,45,98,.08); }
+
+[data-theme="light"] .border-violet-400\/20,
+[data-theme="light"] .border-violet-500\/20,
+[data-theme="light"] .border-violet-500\/30 { border-color: rgba(37,45,98,.15); }
+
+[data-theme="light"] .border-violet-500\/40,
+[data-theme="light"] .hover\:border-violet-500\/40:hover { border-color: rgba(37,45,98,.22); }
+
+/* ── 4. COLOR REMAPPING — CATEGORY COLORS ───────────────────
+   IntervenantProfile CATEGORY_COLORS uses raw Tailwind:
+     SPORT     → blue-600 / bg-blue-50
+     NUTRITION → green-600 / bg-green-50
+     MENTAL    → purple-600 / bg-purple-50
+     BIENETRE  → orange-500 / bg-orange-50
+   Remap to design-system semantic tokens.
+   ─────────────────────────────────────────────────────────── */
+
+/* SPORT → primary navy */
+[data-theme="light"] .text-blue-600,
+[data-theme="light"] .text-blue-700 { color: #252d62; }
+[data-theme="light"] .bg-blue-50    { background-color: rgba(37,45,98,.07); }
+[data-theme="light"] .bg-blue-100   { background-color: rgba(37,45,98,.11); }
+
+/* NUTRITION → nature green */
+[data-theme="light"] .text-green-600,
+[data-theme="light"] .text-green-700 { color: #4A7C59; }
+[data-theme="light"] .bg-green-50    { background-color: rgba(74,124,89,.08); }
+[data-theme="light"] .bg-green-100   { background-color: rgba(74,124,89,.12); }
+
+/* MENTAL → mental purple */
+[data-theme="light"] .text-purple-600,
+[data-theme="light"] .text-purple-700 { color: #7B4A8C; }
+[data-theme="light"] .bg-purple-50    { background-color: rgba(123,74,140,.08); }
+[data-theme="light"] .bg-purple-100   { background-color: rgba(123,74,140,.12); }
+
+/* BIENETRE → accent warm */
+[data-theme="light"] .text-orange-500,
+[data-theme="light"] .text-orange-600 { color: #C4956A; }
+[data-theme="light"] .bg-orange-50    { background-color: rgba(196,149,106,.08); }
+[data-theme="light"] .bg-orange-100   { background-color: rgba(196,149,106,.12); }
+
+/* ── 5. BORDER COLORS ────────────────────────────────────────
+   Make subtle borders visible in light mode.
+   ─────────────────────────────────────────────────────────── */
+[data-theme="light"] .border-gray-200 { border-color: rgba(0,0,0,.10); }
+[data-theme="light"] .border-gray-300 { border-color: rgba(0,0,0,.14); }
+
+/* Focus rings — keep primary-400 → navy in light mode (from var override above)
+   so focus:ring-primary-400 renders as a navy ring. No explicit override needed. */
+
+/* ── 6. NATIVE FORM ELEMENTS ─────────────────────────────────
+   Inputs/textareas/selects that don't use the Input component
+   (profile pages use native elements with border-gray-300 rounded-lg).
+   Ensure white background + correct text color in light mode.
+   ─────────────────────────────────────────────────────────── */
+[data-theme="light"] input:not([type="checkbox"]):not([type="radio"]):not([type="submit"]):not([type="button"]):not([type="file"]):not([type="hidden"]):not([type="range"]),
+[data-theme="light"] textarea,
+[data-theme="light"] select {
+  background-color: #ffffff;
+  color: #0a0a0a;
+  border-color: rgba(0,0,0,.14);
+}
+
+[data-theme="light"] input:not([type="checkbox"]):not([type="radio"])::placeholder,
+[data-theme="light"] textarea::placeholder { color: #aaa; }
+
+/* Select arrow color in light mode */
+[data-theme="light"] select {
+  color-scheme: light;
+}
+
+/* Checkbox & radio styling */
+[data-theme="light"] input[type="checkbox"],
+[data-theme="light"] input[type="radio"] {
+  accent-color: #252d62;
+}
+
+/* ── 7. INTERACTIVE STATES ───────────────────────────────────
+   Hover backgrounds not already covered by index.css.
+   ─────────────────────────────────────────────────────────── */
+[data-theme="light"] .hover\:bg-gray-50:hover  { background-color: rgba(0,0,0,.025); }
+[data-theme="light"] .hover\:bg-gray-100:hover { background-color: rgba(0,0,0,.05); }
+[data-theme="light"] .hover\:bg-gray-200:hover { background-color: rgba(0,0,0,.08); }
+
+/* Focus visible outline — use brand navy */
+[data-theme="light"] :focus-visible {
+  outline-color: rgba(37,45,98,.5);
+}
+
+/* ── 8. SCROLLBAR ────────────────────────────────────────────
+   Style scrollbars to match the light page background.
+   ─────────────────────────────────────────────────────────── */
+[data-theme="light"] ::-webkit-scrollbar { width: 6px; height: 6px; }
+[data-theme="light"] ::-webkit-scrollbar-track { background: transparent; }
+[data-theme="light"] ::-webkit-scrollbar-thumb {
+  background: rgba(0,0,0,.18);
+  border-radius: 999px;
+}
+[data-theme="light"] ::-webkit-scrollbar-thumb:hover { background: rgba(0,0,0,.30); }
+
+/* ── 9. ADDITIONAL WHITE-ON-OPACITY OVERRIDES ────────────────
+   Extend index.css white-to-black opacity mappings.
+   ─────────────────────────────────────────────────────────── */
+[data-theme="light"] .bg-white\/10   { background-color: rgba(0,0,0,.07); }
+[data-theme="light"] .bg-white\/15   { background-color: rgba(0,0,0,.09); }
+[data-theme="light"] .bg-white\/20   { background-color: rgba(0,0,0,.11); }
+[data-theme="light"] .border-white\/10 { border-color: rgba(0,0,0,.10); }
+[data-theme="light"] .border-white\/15 { border-color: rgba(0,0,0,.12); }
+[data-theme="light"] .border-white\/20 { border-color: rgba(0,0,0,.14); }
+
+/* ── 10. SELECTION COLOR ─────────────────────────────────────*/
+[data-theme="light"] ::selection {
+  background-color: rgba(37,45,98,.15);
+  color: #0a0a0a;
+}
