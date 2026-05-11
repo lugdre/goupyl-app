@@ -184,7 +184,7 @@ export default function ManageEmployees() {
         <h2 className="text-base font-semibold text-gray-900 mb-4">Salariés actifs</h2>
         {employees.length === 0 ? (
           <div className="text-center py-8">
-            <Users className="w-10 h-10 text-gray-300 mx-auto mb-3" />
+            <Users className="w-10 h-10 text-gray-400 mx-auto mb-3" />
             <p className="text-gray-500 text-sm">Aucun salarié rattaché</p>
             <p className="text-gray-400 text-xs mt-1">Partagez le code ci-dessus ou envoyez des invitations</p>
           </div>

@@ -64,13 +64,13 @@ function CheckoutForm({ appointment, onSuccess }) {
       <PaymentElement />
 
       {error && (
-        <div className="flex items-center gap-2 p-3 bg-red-500/10 text-red-300 rounded-xl text-sm">
+        <div className="flex items-center gap-2 p-3 bg-red-500/10 text-red-600 rounded-xl text-sm">
           <AlertCircle className="w-4 h-4 shrink-0" />
           {error}
         </div>
       )}
 
-      <div className="p-3 bg-amber-500/10 text-amber-300 rounded-xl text-sm">
+      <div className="p-3 bg-amber-500/10 text-amber-700 rounded-xl text-sm">
         Mode test — utilisez la carte 4242 4242 4242 4242
       </div>
 
@@ -111,7 +111,7 @@ export default function PaymentModal({ appointment, onClose, onSuccess }) {
       <div className="relative w-full max-w-md bg-surface rounded-2xl border border-surface-border flex flex-col max-h-[90vh]" style={{ boxShadow: 'var(--shadow-modal)' }}>
         {/* Header */}
         <div className="flex items-center justify-between p-5 border-b border-surface-border shrink-0">
-          <h2 className="text-lg font-semibold text-white">Paiement</h2>
+          <h2 className="text-lg font-semibold text-gray-900">Paiement</h2>
           <button
             onClick={onClose}
             className="p-1.5 rounded-lg hover:bg-white/[0.05] transition-colors"
@@ -124,7 +124,7 @@ export default function PaymentModal({ appointment, onClose, onSuccess }) {
         <div className="p-5 space-y-5 overflow-y-auto">
           {/* Appointment summary */}
           <div className="space-y-2">
-            <p className="font-medium text-white">{serviceName}</p>
+            <p className="font-medium text-gray-900">{serviceName}</p>
             <p className="text-sm text-gray-500">
               Avec {appointment.intervenant?.firstName} {appointment.intervenant?.lastName}
             </p>
@@ -140,7 +140,7 @@ export default function PaymentModal({ appointment, onClose, onSuccess }) {
             </p>
             <div className="flex items-baseline justify-between pt-2 border-t border-surface-border">
               <span className="text-sm text-gray-500">Total</span>
-              <span className="text-xl font-semibold text-white">{price.toFixed(2)} &euro;</span>
+              <span className="text-xl font-semibold text-gray-900">{price.toFixed(2)} &euro;</span>
             </div>
           </div>
 
@@ -149,11 +149,11 @@ export default function PaymentModal({ appointment, onClose, onSuccess }) {
             <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Répartition</p>
             <div className="flex justify-between text-sm">
               <span className="text-gray-500">70% au professionnel</span>
-              <span className="font-medium text-white">{intervenantShare} &euro;</span>
+              <span className="font-medium text-gray-900">{intervenantShare} &euro;</span>
             </div>
             <div className="flex justify-between text-sm">
               <span className="text-gray-500">30% plateforme</span>
-              <span className="font-medium text-white">{platformFee} &euro;</span>
+              <span className="font-medium text-gray-900">{platformFee} &euro;</span>
             </div>
           </div>
 
@@ -161,7 +161,7 @@ export default function PaymentModal({ appointment, onClose, onSuccess }) {
           {paid ? (
             <div className="flex flex-col items-center gap-3 py-6">
               <CheckCircle className="w-12 h-12 text-green-400" />
-              <p className="font-medium text-white">Paiement réussi !</p>
+              <p className="font-medium text-gray-900">Paiement réussi !</p>
             </div>
           ) : (
             <Elements
@@ -172,11 +172,10 @@ export default function PaymentModal({ appointment, onClose, onSuccess }) {
                 amount: priceInCents,
                 paymentMethodTypes: ['card', 'klarna'],
                 appearance: {
-                  theme: 'night',
+                  theme: 'stripe',
                   variables: {
                     borderRadius: '12px',
-                    colorBackground: '#14152A',
-                    colorPrimary: '#6C73E8',
+                    colorPrimary: '#252d62',
                   },
                 },
               }}

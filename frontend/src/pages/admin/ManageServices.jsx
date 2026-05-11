@@ -169,7 +169,7 @@ export default function ManageServices() {
       ) : services.length === 0 ? (
         <Card>
           <div className="text-center py-8">
-            <Dumbbell className="w-10 h-10 text-gray-300 mx-auto mb-3" />
+            <Dumbbell className="w-10 h-10 text-gray-400 mx-auto mb-3" />
             <p className="text-gray-500">Aucun service</p>
           </div>
         </Card>

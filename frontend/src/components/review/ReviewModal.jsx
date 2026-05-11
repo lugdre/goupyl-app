@@ -46,7 +46,7 @@ export default function ReviewModal({ appointment, onClose, onSuccess }) {
 
       <div className="relative w-full max-w-md bg-surface rounded-2xl border border-surface-border overflow-hidden" style={{ boxShadow: 'var(--shadow-modal)' }}>
         <div className="flex items-center justify-between p-5 border-b border-surface-border">
-          <h2 className="text-lg font-semibold text-white">Laisser un avis</h2>
+          <h2 className="text-lg font-semibold text-gray-900">Laisser un avis</h2>
           <button
             onClick={onClose}
             className="p-1.5 rounded-lg hover:bg-white/[0.05] transition-colors"
@@ -58,7 +58,7 @@ export default function ReviewModal({ appointment, onClose, onSuccess }) {
         <div className="p-5 space-y-5">
           {/* Appointment summary */}
           <div className="space-y-1">
-            <p className="font-medium text-white">{appointment.service?.name}</p>
+            <p className="font-medium text-gray-900">{appointment.service?.name}</p>
             <p className="text-sm text-gray-500">
               Avec {appointment.intervenant?.firstName} {appointment.intervenant?.lastName}
             </p>
@@ -72,7 +72,7 @@ export default function ReviewModal({ appointment, onClose, onSuccess }) {
           {submitted ? (
             <div className="flex flex-col items-center gap-3 py-6">
               <CheckCircle className="w-12 h-12 text-green-400" />
-              <p className="font-medium text-white">Merci pour votre avis !</p>
+              <p className="font-medium text-gray-900">Merci pour votre avis !</p>
             </div>
           ) : (
             <form onSubmit={handleSubmit} className="space-y-4">
@@ -112,7 +112,7 @@ export default function ReviewModal({ appointment, onClose, onSuccess }) {
                   maxLength={500}
                   rows={3}
                   placeholder="Partagez votre experience..."
-                  className="w-full px-4 py-3 bg-white/[0.05] border border-white/[0.08] rounded-xl text-sm text-white placeholder-gray-500 outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-500/15 transition-all resize-none"
+                  className="w-full px-4 py-3 bg-white/[0.05] border border-white/[0.08] rounded-xl text-sm text-gray-900 placeholder-gray-400 outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-500/15 transition-all resize-none"
                 />
                 <p className="text-xs text-gray-500 mt-1 text-right">{comment.length}/500</p>
               </div>

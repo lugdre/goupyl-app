@@ -149,7 +149,7 @@ export default function EntrepriseDashboard() {
         <Card className="border-dashed border-violet-500/30">
           <div className="text-center py-4">
             <CreditCard className="w-10 h-10 text-violet-500/40 mx-auto mb-3" />
-            <p className="font-medium text-gray-300">Aucun abonnement actif</p>
+            <p className="font-medium text-gray-400">Aucun abonnement actif</p>
             <p className="text-sm text-gray-500 mt-1">Choisissez une formule adaptée à votre équipe</p>
             <Link to="/dashboard/entreprise/subscription">
               <Button variant="primary" size="sm" className="mt-4">Choisir une formule</Button>

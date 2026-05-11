@@ -123,7 +123,7 @@ export default function ResourcesLibrary() {
       {filtered.length === 0 && (
         <Card>
           <div className="py-10 text-center">
-            <Lock className="w-10 h-10 text-gray-300 mx-auto mb-3" />
+            <Lock className="w-10 h-10 text-gray-400 mx-auto mb-3" />
             <p className="font-medium text-gray-700">Aucune ressource disponible</p>
             <p className="text-sm text-gray-500 mt-1">
               {user?.role === 'CLIENT'

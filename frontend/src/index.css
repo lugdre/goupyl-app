@@ -125,7 +125,12 @@ body {
 }
 
 /* ===== LIGHT THEME — placeholder color ===== */
-[data-theme="light"] input::placeholder { color: #aaa; }
+[data-theme="light"] input::placeholder,
+[data-theme="light"] textarea::placeholder { color: #aaa; }
+
+/* ===== LIGHT THEME — divide colors ===== */
+[data-theme="light"] .divide-white\/\[0\.05\] > :not(:last-child) { border-color: rgba(0,0,0,0.06); }
+[data-theme="light"] .divide-white\/\[0\.06\] > :not(:last-child) { border-color: rgba(0,0,0,0.08); }
 
 /* ===== LIGHT THEME — inner surfaces used in modals/forms ===== */
 [data-theme="light"] .bg-white\/\[0\.03\] { background-color: rgba(0, 0, 0, 0.025); }
