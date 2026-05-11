@@ -142,7 +142,7 @@ export default function ClientDashboard() {
         {upcomingRdv.length === 0 ? (
           <Card>
             <div className="text-center py-6">
-              <Calendar className="w-10 h-10 text-gray-300 mx-auto mb-3" />
+              <Calendar className="w-10 h-10 text-gray-400 mx-auto mb-3" />
               <p className="text-gray-500">Aucun rendez-vous a venir</p>
               <Link to="/dashboard/client/search">
                 <Button variant="secondary" size="sm" className="mt-3">

@@ -45,7 +45,7 @@ function VerificationBanner() {
 
 export default function DashboardLayout() {
   return (
-    <div className="min-h-screen bg-page">
+    <div className="min-h-screen bg-page" data-theme="light">
       <Navbar />
       <VerificationBanner />
       <div className="flex">

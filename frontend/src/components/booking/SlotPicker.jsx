@@ -155,7 +155,7 @@ export default function SlotPicker({
                 </div>
                 <div className="px-1.5 py-2 space-y-1">
                   {availableCount === 0 ? (
-                    <p className="text-[10px] text-gray-300 text-center pt-2">—</p>
+                    <p className="text-[10px] text-gray-400 text-center pt-2">—</p>
                   ) : (
                     slots.map((slot) => {
                       if (slot.disabled) return null;

@@ -10,7 +10,7 @@ function PaymentsTable({ rows, emptyText }) {
     return (
       <Card>
         <div className="text-center py-8">
-          <Euro className="w-10 h-10 text-gray-300 mx-auto mb-3" />
+          <Euro className="w-10 h-10 text-gray-400 mx-auto mb-3" />
           <p className="text-gray-500">{emptyText}</p>
         </div>
       </Card>

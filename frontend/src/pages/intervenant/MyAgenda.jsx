@@ -291,7 +291,7 @@ export default function MyAgenda() {
       ) : appointments.length === 0 ? (
         <Card>
           <div className="text-center py-8">
-            <Calendar className="w-10 h-10 text-gray-300 mx-auto mb-3" />
+            <Calendar className="w-10 h-10 text-gray-400 mx-auto mb-3" />
             <p className="text-gray-500">Aucun rendez-vous</p>
           </div>
         </Card>
@@ -409,7 +409,7 @@ export default function MyAgenda() {
                       {Array.from({ length: 5 }, (_, i) => (
                         <Star
                           key={i}
-                          className={`w-4 h-4 ${i < selectedReview.rating ? 'fill-amber-400 text-amber-400' : 'text-gray-300'}`}
+                          className={`w-4 h-4 ${i < selectedReview.rating ? 'fill-amber-400 text-amber-400' : 'text-gray-400'}`}
                         />
                       ))}
                       <span className="ml-1.5 text-sm font-semibold text-gray-700">{selectedReview.rating}/5</span>

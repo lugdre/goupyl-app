@@ -45,7 +45,7 @@ export default function CancellationModal({ appointment, onClose, onSuccess }) {
         <div className="flex items-center justify-between p-5 border-b border-surface-border">
           <div className="flex items-center gap-2.5">
             <AlertTriangle className="w-5 h-5 text-amber-400" />
-            <h2 className="text-lg font-semibold text-white">Annuler le rendez-vous</h2>
+            <h2 className="text-lg font-semibold text-gray-900">Annuler le rendez-vous</h2>
           </div>
           <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-white/[0.05] transition-colors">
             <X className="w-5 h-5 text-gray-500" />
@@ -55,7 +55,7 @@ export default function CancellationModal({ appointment, onClose, onSuccess }) {
         <div className="p-5 space-y-4">
           {/* Appointment summary */}
           <div className="p-4 bg-white/[0.03] rounded-xl space-y-1 border border-white/[0.06]">
-            <p className="font-medium text-white">{serviceName}</p>
+            <p className="font-medium text-gray-900">{serviceName}</p>
             <p className="text-sm text-gray-500">
               Avec {appointment.intervenant?.firstName} {appointment.intervenant?.lastName}
             </p>
@@ -72,8 +72,8 @@ export default function CancellationModal({ appointment, onClose, onSuccess }) {
             <div className="flex items-start gap-3 p-4 bg-red-500/10 border border-red-500/20 rounded-xl">
               <Clock className="w-5 h-5 text-red-400 shrink-0 mt-0.5" />
               <div>
-                <p className="text-sm font-semibold text-red-300">Annulation impossible</p>
-                <p className="text-xs text-red-400/80 mt-0.5">
+                <p className="text-sm font-semibold text-red-600">Annulation impossible</p>
+                <p className="text-xs text-red-500 mt-0.5">
                   La séance commence dans moins de 48h. Le délai d'annulation est dépassé.
                 </p>
               </div>
@@ -106,7 +106,7 @@ export default function CancellationModal({ appointment, onClose, onSuccess }) {
                   <div className="space-y-2">
                     <div className="flex justify-between text-sm">
                       <span className="text-green-400 font-medium">35% remboursé (vous)</span>
-                      <span className="text-white font-semibold">{refundAmount} €</span>
+                      <span className="text-gray-900 font-semibold">{refundAmount} €</span>
                     </div>
                     <div className="flex justify-between text-sm">
                       <span className="text-gray-500">30% au professionnel</span>
@@ -118,11 +118,11 @@ export default function CancellationModal({ appointment, onClose, onSuccess }) {
                     </div>
                     <div className="border-t border-white/[0.06] pt-2 flex justify-between text-sm">
                       <span className="text-gray-500">Total payé</span>
-                      <span className="text-white">{price.toFixed(2)} €</span>
+                      <span className="text-gray-900">{price.toFixed(2)} €</span>
                     </div>
                   </div>
                   <p className="text-xs text-gray-500">
-                    Le remboursement de <span className="text-white font-medium">{refundAmount} €</span> sera
+                    Le remboursement de <span className="text-gray-900 font-medium">{refundAmount} €</span> sera
                     crédité sur votre moyen de paiement sous 5-10 jours ouvrés.
                   </p>
                 </div>
@@ -146,7 +146,7 @@ export default function CancellationModal({ appointment, onClose, onSuccess }) {
                   onChange={(e) => setReason(e.target.value)}
                   placeholder="Indiquez un motif si vous le souhaitez..."
                   rows={2}
-                  className="w-full bg-white/[0.04] border border-white/[0.08] rounded-xl px-3 py-2 text-sm text-gray-300 placeholder-gray-600 resize-none focus:outline-none focus:border-primary-500/50 focus:ring-1 focus:ring-primary-500/20 transition-colors"
+                  className="w-full bg-white/[0.04] border border-white/[0.08] rounded-xl px-3 py-2 text-sm text-gray-900 placeholder-gray-400 resize-none focus:outline-none focus:border-primary-500/50 focus:ring-1 focus:ring-primary-500/20 transition-colors"
                 />
               </div>
             </>

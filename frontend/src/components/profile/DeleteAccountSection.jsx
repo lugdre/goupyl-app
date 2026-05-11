@@ -35,7 +35,7 @@ export default function DeleteAccountSection() {
           <AlertTriangle className="w-6 h-6 text-red-400" />
         </div>
         <div className="flex-1 min-w-0">
-          <h2 className="text-lg font-semibold text-white">Zone de danger : Supprimer mon compte</h2>
+          <h2 className="text-lg font-semibold text-gray-900">Zone de danger : Supprimer mon compte</h2>
           <p className="text-sm text-gray-500 mt-1 mb-5">
             La suppression de votre compte est définitive. Toutes vos données personnelles, vos documents et votre historique de rendez-vous seront effacés. Cette action est irréversible (conformément au RGPD).
           </p>
@@ -50,7 +50,7 @@ export default function DeleteAccountSection() {
             </Button>
           ) : (
             <div className="bg-white/[0.03] p-4.5 rounded-xl border border-white/[0.07] mt-2">
-              <label className="block text-sm font-medium text-white mb-2">
+              <label className="block text-sm font-medium text-gray-900 mb-2">
                 Pour confirmer la suppression, veuillez taper <strong>SUPPRIMER</strong> ci-dessous :
               </label>
               <input
@@ -58,7 +58,7 @@ export default function DeleteAccountSection() {
                 value={confirmText}
                 onChange={(e) => setConfirmText(e.target.value)}
                 placeholder="SUPPRIMER"
-                className="w-full px-3 py-2.5 bg-white/[0.05] border border-white/[0.08] rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 mb-4 transition-shadow text-sm text-white placeholder-gray-500"
+                className="w-full px-3 py-2.5 bg-white/[0.05] border border-white/[0.08] rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 mb-4 transition-shadow text-sm text-gray-900 placeholder-gray-400"
               />
               <div className="flex gap-2">
                 <Button

@@ -247,7 +247,7 @@ export default function UploadDocuments() {
 
       {/* Summary + CTA */}
       <div className={`rounded-2xl p-5 mb-6 flex items-center gap-3 ${hasIdCard ? 'bg-green-50 border border-green-200' : 'bg-gray-50 border border-gray-200'}`}>
-        <CheckCircle className={`w-5 h-5 shrink-0 ${hasIdCard ? 'text-green-500' : 'text-gray-300'}`} />
+        <CheckCircle className={`w-5 h-5 shrink-0 ${hasIdCard ? 'text-green-500' : 'text-gray-400'}`} />
         <p className={`text-sm font-medium ${hasIdCard ? 'text-green-800' : 'text-gray-500'}`}>
           {hasIdCard
             ? `${documents.length} document${documents.length > 1 ? 's' : ''} envoyé${documents.length > 1 ? 's' : ''} — votre dossier est complet`
