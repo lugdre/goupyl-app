@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Archivo+Narrow:wght@400;500;600;700;800&family=Inter+Tight:wght@300;400;500;600;700&family=JetBrains+Mono:wght@300;400;500;600&family=Inter:ital,wght@0,400;0,500;0,600;0,700;0,800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Archivo+Narrow:wght@700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
 @import "tailwindcss";
 
 @theme {
@@ -44,7 +44,7 @@
   --color-accent-600: #C4956A;
   --color-accent-100: rgba(196, 149, 106, 0.15);
 
-  --font-family-sans: 'Inter Tight', 'Inter', system-ui, sans-serif;
+  --font-family-sans: 'DM Sans', system-ui, sans-serif;
 }
 
 /* ===== NON-TAILWIND THEME VARIABLES ===== */
@@ -88,7 +88,7 @@
 
 body {
   margin: 0;
-  font-family: 'Inter Tight', 'Inter', system-ui, sans-serif;
+  font-family: 'DM Sans', system-ui, sans-serif;
   background-color: var(--color-page);
   color: var(--color-gray-900);
 }
@@ -116,12 +116,12 @@ body {
 /* ===== ANIMATIONS ===== */
 @keyframes spin { to { transform: rotate(360deg); } }
 
-/* ===== LIGHT THEME — headings use Archivo Narrow ===== */
+/* ===== LIGHT THEME — headings use DM Sans ===== */
 [data-theme="light"] h1,
 [data-theme="light"] h2 {
-  font-family: 'Archivo Narrow', sans-serif;
+  font-family: 'DM Sans', system-ui, sans-serif;
   font-weight: 700;
-  letter-spacing: -.01em;
+  letter-spacing: -.02em;
 }
 
 /* ===== LIGHT THEME — placeholder color ===== */

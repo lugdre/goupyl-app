@@ -28,9 +28,9 @@
 [data-theme="light"] h2,
 [data-theme="light"] h3,
 [data-theme="light"] h4 {
-  font-family: 'Archivo Narrow', sans-serif;
+  font-family: 'DM Sans', system-ui, sans-serif;
   font-weight: 700;
-  letter-spacing: -.01em;
+  letter-spacing: -.02em;
 }
 
 /* Section-level headings using p/span with explicit font classes
