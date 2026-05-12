@@ -158,6 +158,7 @@ async function main() {
       companyName: 'Acme Corp',
       siret: '12345678901234',
       verificationStatus: 'VERIFIED',
+      joinCode: 'ACME-2026',
     },
   });
 
@@ -171,6 +172,7 @@ async function main() {
       companyName: 'TechStart SAS',
       siret: '98765432109876',
       verificationStatus: 'VERIFIED',
+      joinCode: 'TECH-2026',
     },
   });
 
@@ -184,6 +186,7 @@ async function main() {
       companyName: 'Industria SA',
       siret: '11223344556677',
       verificationStatus: 'VERIFIED',
+      joinCode: 'INDU-2026',
     },
   });
 
