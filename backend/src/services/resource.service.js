@@ -12,15 +12,14 @@ const getAll = async ({ category, type, plan } = {}) => {
   const where = { published: true };
   if (category) where.category = category;
   if (type) where.type = type;
-  if (plan) {
-    const allowedAccess = PLAN_ACCESS_LEVEL[plan] || ['ZEN'];
-    where.access = { in: allowedAccess };
-  }
 
-  return prisma.resource.findMany({
+  const resources = await prisma.resource.findMany({
     where,
     orderBy: [{ access: 'asc' }, { createdAt: 'desc' }],
   });
+
+  const allowedAccess = plan ? (PLAN_ACCESS_LEVEL[plan] || []) : [];
+  return resources.map((r) => ({ ...r, isLocked: !allowedAccess.includes(r.access) }));
 };
 
 const getById = async (id) => {
