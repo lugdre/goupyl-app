@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { resourcesApi } from '../../services/resources.api';
 import { useAuth } from '../../hooks/useAuth';
 import Card from '../../components/ui/Card';
-import Badge from '../../components/ui/Badge';
 import Spinner from '../../components/ui/Spinner';
-import { BookOpen, Play, Lock, ChevronRight, X, Filter } from 'lucide-react';
+import { BookOpen, Play, Lock, ChevronRight, X, Filter, Sparkles } from 'lucide-react';
 
 const CATEGORY_LABELS = { SPORT: 'Sport', NUTRITION: 'Nutrition', MENTAL: 'Mental', BIENETRE: 'Bien-être' };
 const CATEGORY_COLORS = {
@@ -20,7 +20,6 @@ const ACCESS_COLORS = {
   BOOST: 'bg-yellow-100 text-yellow-700',
 };
 
-// Décode le HTML markdown-like (simple)
 function renderContent(content) {
   if (!content) return null;
   return content.split('\n').map((line, i) => {
@@ -32,7 +31,6 @@ function renderContent(content) {
       return <li key={i} className="ml-4 text-gray-700 list-decimal">{line.replace(/^\d+\. /, '')}</li>;
     }
     if (line === '') return <div key={i} className="h-2" />;
-    // Inline bold
     const parts = line.split(/\*\*(.*?)\*\*/g);
     return (
       <p key={i} className="text-gray-700 leading-relaxed my-1">
@@ -40,6 +38,112 @@ function renderContent(content) {
       </p>
     );
   });
+}
+
+function NoPlanBanner({ isClient }) {
+  return (
+    <div className="rounded-2xl border border-primary-300/30 bg-primary-50 p-6 flex flex-col sm:flex-row items-start sm:items-center gap-4">
+      <div className="w-12 h-12 rounded-xl bg-primary-400/10 flex items-center justify-center shrink-0">
+        <Lock className="w-6 h-6 text-primary-500" />
+      </div>
+      <div className="flex-1 min-w-0">
+        <p className="font-semibold text-gray-900">Contenu verrouillé</p>
+        <p className="text-sm text-gray-500 mt-0.5">
+          {isClient
+            ? "Votre entreprise n'a pas d'abonnement actif. Contactez votre responsable RH pour débloquer les ressources."
+            : 'Souscrivez un abonnement pour accéder aux ressources santé et bien-être.'}
+        </p>
+      </div>
+      {!isClient && (
+        <Link
+          to="/dashboard/entreprise/subscription"
+          className="shrink-0 inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-primary-400 text-white text-sm font-medium hover:bg-primary-500 transition-colors"
+        >
+          <Sparkles className="w-4 h-4" />
+          Voir les offres
+        </Link>
+      )}
+    </div>
+  );
+}
+
+function LockedArticleCard({ article }) {
+  return (
+    <div className="relative rounded-xl border border-gray-200 bg-white p-4 overflow-hidden select-none">
+      <div className="space-y-3 opacity-40 grayscale pointer-events-none">
+        <div className="flex items-start justify-between gap-2">
+          <div className="flex gap-2 flex-wrap">
+            <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${CATEGORY_COLORS[article.category]}`}>
+              {CATEGORY_LABELS[article.category]}
+            </span>
+            <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${ACCESS_COLORS[article.access]}`}>
+              Plan {ACCESS_LABELS[article.access]}+
+            </span>
+          </div>
+          <ChevronRight className="w-4 h-4 text-gray-400 shrink-0 mt-0.5" />
+        </div>
+        <div>
+          <h3 className="font-semibold text-gray-900 leading-snug">{article.title}</h3>
+          <p className="text-sm text-gray-500 mt-1 line-clamp-2">{article.description}</p>
+        </div>
+        <div className="flex items-center gap-1 text-xs text-violet-600 font-medium">
+          <BookOpen className="w-3.5 h-3.5" />
+          Lire l'article
+        </div>
+      </div>
+      <div className="absolute inset-0 flex items-center justify-center">
+        <div className="flex flex-col items-center gap-1.5">
+          <div className="w-9 h-9 rounded-full bg-gray-900/10 backdrop-blur-sm flex items-center justify-center">
+            <Lock className="w-4 h-4 text-gray-700" />
+          </div>
+          <span className="text-xs font-semibold text-gray-600 bg-white/80 backdrop-blur-sm px-2 py-0.5 rounded-full">
+            Plan {ACCESS_LABELS[article.access]}
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function LockedVideoCard({ video }) {
+  return (
+    <div className="relative rounded-xl border border-gray-200 bg-white overflow-hidden select-none">
+      <div className="opacity-40 grayscale pointer-events-none">
+        {video.videoUrl && (
+          <div className="relative bg-gray-900 aspect-video flex items-center justify-center">
+            <img
+              src={`https://img.youtube.com/vi/${video.videoUrl.split('/embed/')[1]}/mqdefault.jpg`}
+              alt={video.title}
+              className="w-full h-full object-cover"
+              onError={(e) => { e.target.style.display = 'none'; }}
+            />
+          </div>
+        )}
+        <div className="p-4 space-y-2">
+          <div className="flex gap-2 flex-wrap">
+            <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${CATEGORY_COLORS[video.category]}`}>
+              {CATEGORY_LABELS[video.category]}
+            </span>
+            <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${ACCESS_COLORS[video.access]}`}>
+              Plan {ACCESS_LABELS[video.access]}+
+            </span>
+          </div>
+          <h3 className="font-semibold text-gray-900 text-sm leading-snug line-clamp-2">{video.title}</h3>
+          <p className="text-xs text-gray-500 line-clamp-2">{video.description}</p>
+        </div>
+      </div>
+      <div className="absolute inset-0 flex items-center justify-center">
+        <div className="flex flex-col items-center gap-1.5">
+          <div className="w-10 h-10 rounded-full bg-gray-900/15 backdrop-blur-sm flex items-center justify-center">
+            <Lock className="w-5 h-5 text-gray-700" />
+          </div>
+          <span className="text-xs font-semibold text-gray-700 bg-white/80 backdrop-blur-sm px-2 py-0.5 rounded-full">
+            Plan {ACCESS_LABELS[video.access]}
+          </span>
+        </div>
+      </div>
+    </div>
+  );
 }
 
 export default function ResourcesLibrary() {
@@ -66,6 +170,8 @@ export default function ResourcesLibrary() {
 
   const articles = filtered.filter((r) => r.type === 'ARTICLE');
   const videos = filtered.filter((r) => r.type === 'VIDEO');
+  const allLocked = resources.length > 0 && resources.every((r) => r.isLocked);
+  const isClient = user?.role === 'CLIENT';
 
   if (loading) return <div className="flex justify-center py-20"><Spinner /></div>;
 
@@ -76,6 +182,9 @@ export default function ResourcesLibrary() {
         <h1 className="text-2xl font-bold text-gray-900">Centre de ressources</h1>
         <p className="text-gray-500 mt-1">Articles, guides et vidéos pour prendre soin de votre santé au quotidien</p>
       </div>
+
+      {/* Banner aucun abonnement */}
+      {allLocked && <NoPlanBanner isClient={isClient} />}
 
       {/* Filtres */}
       <div className="flex flex-wrap gap-3 items-center">
@@ -89,7 +198,7 @@ export default function ResourcesLibrary() {
               onClick={() => setActiveType(t)}
               className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
                 activeType === t
-                  ? 'bg-violet-600 text-white'
+                  ? 'bg-primary-400 text-white'
                   : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
               }`}
             >
@@ -117,60 +226,55 @@ export default function ResourcesLibrary() {
 
       {/* Compteur */}
       <p className="text-sm text-gray-500">
-        {filtered.length} ressource{filtered.length > 1 ? 's' : ''} disponible{filtered.length > 1 ? 's' : ''}
+        {filtered.filter((r) => !r.isLocked).length} ressource{filtered.filter((r) => !r.isLocked).length !== 1 ? 's' : ''} disponible{filtered.filter((r) => !r.isLocked).length !== 1 ? 's' : ''}
+        {filtered.some((r) => r.isLocked) && (
+          <span className="ml-1 text-gray-400">
+            · {filtered.filter((r) => r.isLocked).length} verrouillée{filtered.filter((r) => r.isLocked).length !== 1 ? 's' : ''}
+          </span>
+        )}
       </p>
-
-      {filtered.length === 0 && (
-        <Card>
-          <div className="py-10 text-center">
-            <Lock className="w-10 h-10 text-gray-400 mx-auto mb-3" />
-            <p className="font-medium text-gray-700">Aucune ressource disponible</p>
-            <p className="text-sm text-gray-500 mt-1">
-              {user?.role === 'CLIENT'
-                ? 'Votre entreprise doit disposer d\'un abonnement actif pour accéder aux ressources.'
-                : 'Aucune ressource ne correspond à vos filtres ou votre plan ne donne pas encore accès à ce contenu.'}
-            </p>
-          </div>
-        </Card>
-      )}
 
       {/* Articles */}
       {articles.length > 0 && (activeType === 'ALL' || activeType === 'ARTICLE') && (
         <section>
           <h2 className="text-lg font-semibold text-gray-900 mb-3 flex items-center gap-2">
-            <BookOpen className="w-5 h-5 text-violet-600" />
+            <BookOpen className="w-5 h-5 text-primary-400" />
             Articles & Guides
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {articles.map((article) => (
-              <Card
-                key={article.id}
-                className="hover:border-violet-300 cursor-pointer transition-all hover:shadow-md"
-                onClick={() => setSelectedArticle(article)}
-              >
-                <div className="space-y-3">
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="flex gap-2 flex-wrap">
-                      <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${CATEGORY_COLORS[article.category]}`}>
-                        {CATEGORY_LABELS[article.category]}
-                      </span>
-                      <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${ACCESS_COLORS[article.access]}`}>
-                        Plan {ACCESS_LABELS[article.access]}+
-                      </span>
+            {articles.map((article) =>
+              article.isLocked ? (
+                <LockedArticleCard key={article.id} article={article} />
+              ) : (
+                <Card
+                  key={article.id}
+                  className="hover:border-primary-300/50 cursor-pointer transition-all hover:shadow-md"
+                  onClick={() => setSelectedArticle(article)}
+                >
+                  <div className="space-y-3">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex gap-2 flex-wrap">
+                        <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${CATEGORY_COLORS[article.category]}`}>
+                          {CATEGORY_LABELS[article.category]}
+                        </span>
+                        <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${ACCESS_COLORS[article.access]}`}>
+                          Plan {ACCESS_LABELS[article.access]}+
+                        </span>
+                      </div>
+                      <ChevronRight className="w-4 h-4 text-gray-400 shrink-0 mt-0.5" />
                     </div>
-                    <ChevronRight className="w-4 h-4 text-gray-400 shrink-0 mt-0.5" />
+                    <div>
+                      <h3 className="font-semibold text-gray-900 leading-snug">{article.title}</h3>
+                      <p className="text-sm text-gray-500 mt-1 line-clamp-2">{article.description}</p>
+                    </div>
+                    <div className="flex items-center gap-1 text-xs text-primary-400 font-medium">
+                      <BookOpen className="w-3.5 h-3.5" />
+                      Lire l'article
+                    </div>
                   </div>
-                  <div>
-                    <h3 className="font-semibold text-gray-900 leading-snug">{article.title}</h3>
-                    <p className="text-sm text-gray-500 mt-1 line-clamp-2">{article.description}</p>
-                  </div>
-                  <div className="flex items-center gap-1 text-xs text-violet-600 font-medium">
-                    <BookOpen className="w-3.5 h-3.5" />
-                    Lire l'article
-                  </div>
-                </div>
-              </Card>
-            ))}
+                </Card>
+              )
+            )}
           </div>
         </section>
       )}
@@ -179,46 +283,49 @@ export default function ResourcesLibrary() {
       {videos.length > 0 && (activeType === 'ALL' || activeType === 'VIDEO') && (
         <section>
           <h2 className="text-lg font-semibold text-gray-900 mb-3 flex items-center gap-2">
-            <Play className="w-5 h-5 text-violet-600" />
+            <Play className="w-5 h-5 text-primary-400" />
             Vidéos
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {videos.map((video) => (
-              <Card
-                key={video.id}
-                className="hover:border-violet-300 cursor-pointer transition-all hover:shadow-md overflow-hidden p-0"
-                onClick={() => setSelectedVideo(video)}
-              >
-                {/* Thumbnail YouTube */}
-                {video.videoUrl && (
-                  <div className="relative bg-gray-900 aspect-video flex items-center justify-center">
-                    <img
-                      src={`https://img.youtube.com/vi/${video.videoUrl.split('/embed/')[1]}/mqdefault.jpg`}
-                      alt={video.title}
-                      className="w-full h-full object-cover opacity-80"
-                      onError={(e) => { e.target.style.display = 'none'; }}
-                    />
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <div className="w-12 h-12 bg-white bg-opacity-90 rounded-full flex items-center justify-center shadow-lg">
-                        <Play className="w-5 h-5 text-violet-700 ml-0.5" />
+            {videos.map((video) =>
+              video.isLocked ? (
+                <LockedVideoCard key={video.id} video={video} />
+              ) : (
+                <Card
+                  key={video.id}
+                  className="hover:border-primary-300/50 cursor-pointer transition-all hover:shadow-md overflow-hidden p-0"
+                  onClick={() => setSelectedVideo(video)}
+                >
+                  {video.videoUrl && (
+                    <div className="relative bg-gray-900 aspect-video flex items-center justify-center">
+                      <img
+                        src={`https://img.youtube.com/vi/${video.videoUrl.split('/embed/')[1]}/mqdefault.jpg`}
+                        alt={video.title}
+                        className="w-full h-full object-cover opacity-80"
+                        onError={(e) => { e.target.style.display = 'none'; }}
+                      />
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <div className="w-12 h-12 bg-white bg-opacity-90 rounded-full flex items-center justify-center shadow-lg">
+                          <Play className="w-5 h-5 text-primary-400 ml-0.5" />
+                        </div>
                       </div>
                     </div>
+                  )}
+                  <div className="p-4 space-y-2">
+                    <div className="flex gap-2 flex-wrap">
+                      <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${CATEGORY_COLORS[video.category]}`}>
+                        {CATEGORY_LABELS[video.category]}
+                      </span>
+                      <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${ACCESS_COLORS[video.access]}`}>
+                        Plan {ACCESS_LABELS[video.access]}+
+                      </span>
+                    </div>
+                    <h3 className="font-semibold text-gray-900 text-sm leading-snug line-clamp-2">{video.title}</h3>
+                    <p className="text-xs text-gray-500 line-clamp-2">{video.description}</p>
                   </div>
-                )}
-                <div className="p-4 space-y-2">
-                  <div className="flex gap-2 flex-wrap">
-                    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${CATEGORY_COLORS[video.category]}`}>
-                      {CATEGORY_LABELS[video.category]}
-                    </span>
-                    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${ACCESS_COLORS[video.access]}`}>
-                      Plan {ACCESS_LABELS[video.access]}+
-                    </span>
-                  </div>
-                  <h3 className="font-semibold text-gray-900 text-sm leading-snug line-clamp-2">{video.title}</h3>
-                  <p className="text-xs text-gray-500 line-clamp-2">{video.description}</p>
-                </div>
-              </Card>
-            ))}
+                </Card>
+              )
+            )}
           </div>
         </section>
       )}
