@@ -26,6 +26,7 @@ const getJoinCode = async (companyId) => {
     select: { joinCode: true },
   });
   if (!company) throw ApiError.notFound('Entreprise non trouvée.');
+  if (!company.joinCode) return regenerateJoinCode(companyId);
   return { joinCode: company.joinCode };
 };
 
