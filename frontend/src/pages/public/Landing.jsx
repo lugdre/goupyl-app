@@ -2,7 +2,7 @@ import { useState, useEffect, Fragment } from 'react';
 import { Link } from 'react-router-dom';
 import PublicNavbar from '../../components/layout/PublicNavbar';
 import logo from '../../assets/logo-goupyl-sport.png';
-import { HumanBody3D } from "../../components/layout/body.jsx";
+import HumanBody3D from "../../components/layout/body.jsx";
 
 // ─── Icon primitives ───────────────────────────────────────────────
 const Icon = ({ d, size = 18, stroke = 1.6 }) => (
