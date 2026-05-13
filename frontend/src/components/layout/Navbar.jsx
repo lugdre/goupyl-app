@@ -3,8 +3,7 @@ import { useAuth } from '../../hooks/useAuth';
 import { LogOut } from 'lucide-react';
 import NotificationBell from '../NotificationBell';
 import logo from '../../assets/logo-goupyl-sport.png';
-import avatarMale from '../../assets/avatar-default-male.svg';
-import avatarFemale from '../../assets/avatar-default-female.svg';
+import AvatarFallback from '../ui/AvatarFallback';
 
 const ROLE_LABELS = { CLIENT: 'Client', INTERVENANT: 'Pro', ADMIN: 'Admin', ENTREPRISE: 'Entreprise' };
 
@@ -44,10 +43,10 @@ export default function Navbar() {
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             {isAuthenticated ? (
               <>
-                <img
-                  src={user.avatarUrl || (user.gender === 'FEMME' ? avatarFemale : avatarMale)}
-                  alt="avatar"
-                  style={{ width: 28, height: 28, borderRadius: '50%', objectFit: 'cover', flexShrink: 0, border: '1px solid rgba(0,0,0,0.10)' }}
+                <AvatarFallback
+                  user={user}
+                  size="sm"
+                  style={{ border: '1px solid rgba(0,0,0,0.10)' }}
                 />
                 <span style={{ fontSize: 13, fontWeight: 500, color: 'var(--color-gray-700, #2a2a2a)', letterSpacing: '.01em' }}>
                   {user.role === 'ENTREPRISE' && user.companyName

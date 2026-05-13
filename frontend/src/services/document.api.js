@@ -13,4 +13,6 @@ export const documentApi = {
   remove: (id) => api.delete(`/documents/${id}`),
   // Admin only
   download: (id) => api.get(`/documents/${id}/file`, { responseType: 'blob' }),
+  updateStatus: (id, payload) => api.patch(`/documents/${id}/status`, payload),
+  getForUser: (userId) => api.get(`/documents/user/${userId}`),
 };

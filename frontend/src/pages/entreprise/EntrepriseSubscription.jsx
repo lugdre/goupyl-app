@@ -16,20 +16,20 @@ const ENTERPRISE_PLANS = [
     value: 'ZEN_ENTREPRISE',
     priceMonthly: 540,
     priceYearly: 432,
-    features: ["Jusqu'à 10 salariés", '1 séance / semaine', 'Sport + Bien-être', 'Support dédié'],
+    features: ["Jusqu'à 10 collaborateurs", 'Remise en activité physique', 'Contenus santé & bien-être', 'Support dédié'],
   },
   {
     value: 'PULSE_ENTREPRISE',
     priceMonthly: 1060,
     priceYearly: 848,
     popular: true,
-    features: ["Jusqu'à 50 salariés", '2 séances / semaine', 'Tous les domaines', 'Account manager'],
+    features: ["Jusqu'à 50 collaborateurs", 'Coaching sportif structuré', 'Suivi nutritionnel', 'Account manager'],
   },
   {
     value: 'BOOST_ENTREPRISE',
     priceMonthly: 2199,
     priceYearly: 1759,
-    features: ["Jusqu'à 200 salariés", '4 séances / semaine', 'Tous les domaines', 'SLA garanti'],
+    features: ["Jusqu'à 200 collaborateurs", 'Suivi nutritionnel individualisé', 'Accompagnement mental', 'SLA garanti'],
   },
 ];
 
@@ -176,7 +176,7 @@ export default function EntrepriseSubscription() {
                 <p className="text-sm font-semibold text-gray-700">Utilisation ce mois-ci</p>
               </div>
               <UsageBar
-                label="Salariés"
+                label="Collaborateurs"
                 icon={Users}
                 used={usage.employeeCount}
                 max={usage.limits.maxEmployees}
@@ -260,7 +260,9 @@ export default function EntrepriseSubscription() {
             );
           })}
         </div>
-        <p className="text-xs text-gray-400 mt-4">Paiement sécurisé par Stripe · Carte de test : 4242 4242 4242 4242 · exp. 12/34 · CVC 123</p>
+        <p className="text-xs text-gray-400 mt-4">
+          Paiement sécurisé par Stripe{import.meta.env.DEV && ' · Carte de test : 4242 4242 4242 4242 · exp. 12/34 · CVC 123'}
+        </p>
       </div>
 
       {/* History */}
@@ -323,11 +325,11 @@ export default function EntrepriseSubscription() {
                   </li>
                   <li className="flex items-start gap-2">
                     <CheckCircle className="w-4 h-4 shrink-0 mt-0.5 text-amber-600" />
-                    Vos salariés conservent leur accès jusqu'à cette date
+                    Vos collaborateurs conservent leur accès jusqu'à cette date
                   </li>
                   <li className="flex items-start gap-2">
                     <X className="w-4 h-4 shrink-0 mt-0.5 text-red-500" />
-                    Après cette date, vous et vos salariés n'aurez plus accès à la plateforme
+                    Après cette date, vous et vos collaborateurs n'aurez plus accès à la plateforme
                   </li>
                   <li className="flex items-start gap-2">
                     <X className="w-4 h-4 shrink-0 mt-0.5 text-red-500" />

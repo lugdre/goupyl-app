@@ -5,10 +5,17 @@ import Card from '../../components/ui/Card';
 import Button from '../../components/ui/Button';
 import Spinner from '../../components/ui/Spinner';
 import toast from 'react-hot-toast';
-import { ShieldCheck, FileText, Building2, Download, CheckCircle, XCircle, ChevronDown, ChevronUp, Eye, X } from 'lucide-react';
+import { ShieldCheck, FileText, Building2, Download, CheckCircle, XCircle, ChevronDown, ChevronUp, Eye, X, Clock, AlertTriangle } from 'lucide-react';
 
 const ROLE_LABEL = { INTERVENANT: 'Coach / Intervenant', ENTREPRISE: 'Entreprise' };
-const TYPE_LABELS = { ID_CARD: "Pièce d'identité", DIPLOMA: 'Diplôme', OTHER: 'Autre' };
+const TYPE_LABELS = { ID_CARD: "Pièce d'identité", DIPLOMA: 'Diplôme', RC_PRO: 'RC Professionnelle', OTHER: 'Autre' };
+
+const DOC_STATUS_BADGE = {
+  PENDING:   { cls: 'bg-amber-100 text-amber-700',  label: 'En attente',  Icon: Clock },
+  VALIDATED: { cls: 'bg-green-100 text-green-700',  label: 'Validé',      Icon: CheckCircle },
+  REJECTED:  { cls: 'bg-red-100 text-red-700',      label: 'Refusé',      Icon: XCircle },
+  EXPIRED:   { cls: 'bg-gray-100 text-gray-500',    label: 'Expiré',      Icon: AlertTriangle },
+};
 
 function formatDate(d) {
   return new Date(d).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' });
@@ -79,6 +86,10 @@ function UserCard({ user, onDecision }) {
   const [processing, setProcessing] = useState(false);
   const [note, setNote] = useState('');
   const [previewDoc, setPreviewDoc] = useState(null);
+  const [docProcessing, setDocProcessing] = useState({});
+  const [docNotes, setDocNotes] = useState({});
+  const [docExpiries, setDocExpiries] = useState({});
+  const [docs, setDocs] = useState(user.documents || []);
 
   const handleDecision = async (status) => {
     setProcessing(true);
@@ -86,6 +97,23 @@ function UserCard({ user, onDecision }) {
       await onDecision(user.id, status, note);
     } finally {
       setProcessing(false);
+    }
+  };
+
+  const handleDocStatus = async (docId, status) => {
+    setDocProcessing((p) => ({ ...p, [docId]: true }));
+    try {
+      const { data } = await documentApi.updateStatus(docId, {
+        status,
+        adminNote: docNotes[docId] || undefined,
+        expiresAt: docExpiries[docId] || undefined,
+      });
+      setDocs((prev) => prev.map((d) => d.id === docId ? { ...d, ...data } : d));
+      toast.success(status === 'VALIDATED' ? 'Document validé' : 'Document refusé');
+    } catch {
+      toast.error('Erreur lors de la mise à jour');
+    } finally {
+      setDocProcessing((p) => ({ ...p, [docId]: false }));
     }
   };
 
@@ -153,36 +181,81 @@ function UserCard({ user, onDecision }) {
           )}
 
           {/* Documents */}
-          {user.documents.length === 0 ? (
+          {docs.length === 0 ? (
             <p className="text-sm text-gray-400 italic">Aucun document envoyé</p>
           ) : (
-            <div className="space-y-2">
+            <div className="space-y-3">
               <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Documents</p>
-              {user.documents.map((doc) => (
-                <div key={doc.id} className="flex items-center gap-3 bg-gray-50 rounded-xl p-3">
-                  <FileText className="w-4 h-4 text-gray-400 shrink-0" />
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm text-gray-700 font-medium">{TYPE_LABELS[doc.type] || doc.type}</p>
-                    <p className="text-xs text-gray-400 truncate">{doc.originalName} · {formatSize(doc.sizeBytes)}</p>
+              {docs.map((doc) => {
+                const badge = DOC_STATUS_BADGE[doc.status] || DOC_STATUS_BADGE.PENDING;
+                const BadgeIcon = badge.Icon;
+                return (
+                  <div key={doc.id} className="border border-gray-100 rounded-xl p-3 space-y-2">
+                    <div className="flex items-center gap-3">
+                      <FileText className="w-4 h-4 text-gray-400 shrink-0" />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm text-gray-700 font-medium">{TYPE_LABELS[doc.type] || doc.type}</p>
+                        <p className="text-xs text-gray-400 truncate">{doc.originalName} · {formatSize(doc.sizeBytes)}</p>
+                        {doc.expiresAt && (
+                          <p className="text-xs text-gray-400">Expire le {formatDate(doc.expiresAt)}</p>
+                        )}
+                        {doc.adminNote && (
+                          <p className="text-xs text-amber-600 mt-0.5 italic">Note : {doc.adminNote}</p>
+                        )}
+                      </div>
+                      <span className={`inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full ${badge.cls}`}>
+                        <BadgeIcon className="w-3 h-3" />{badge.label}
+                      </span>
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        <button onClick={() => setPreviewDoc(doc)} className="text-gray-400 hover:text-primary-600 transition-colors" title="Aperçu">
+                          <Eye className="w-4 h-4" />
+                        </button>
+                        <button onClick={() => handleDownload(doc.id, doc.originalName, doc.mimeType)} className="text-gray-400 hover:text-primary-600 transition-colors" title="Télécharger">
+                          <Download className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Per-document validation controls */}
+                    {doc.status !== 'VALIDATED' && (
+                      <div className="flex flex-col gap-2 pt-1 border-t border-gray-50">
+                        <div className="flex gap-2">
+                          <input
+                            type="text"
+                            placeholder="Note admin (optionnelle)"
+                            value={docNotes[doc.id] || ''}
+                            onChange={(e) => setDocNotes((n) => ({ ...n, [doc.id]: e.target.value }))}
+                            className="flex-1 px-2.5 py-1.5 border border-gray-200 rounded-lg text-xs focus:outline-none focus:ring-1 focus:ring-primary-400"
+                          />
+                          <input
+                            type="date"
+                            title="Date d'expiration (optionnelle)"
+                            value={docExpiries[doc.id] || ''}
+                            onChange={(e) => setDocExpiries((ex) => ({ ...ex, [doc.id]: e.target.value }))}
+                            className="px-2.5 py-1.5 border border-gray-200 rounded-lg text-xs focus:outline-none focus:ring-1 focus:ring-primary-400"
+                          />
+                        </div>
+                        <div className="flex gap-2">
+                          <button
+                            disabled={docProcessing[doc.id]}
+                            onClick={() => handleDocStatus(doc.id, 'VALIDATED')}
+                            className="flex-1 flex items-center justify-center gap-1.5 bg-green-600 hover:bg-green-700 text-white text-xs font-medium py-1.5 rounded-lg transition-colors disabled:opacity-50"
+                          >
+                            <CheckCircle className="w-3.5 h-3.5" />Valider
+                          </button>
+                          <button
+                            disabled={docProcessing[doc.id]}
+                            onClick={() => handleDocStatus(doc.id, 'REJECTED')}
+                            className="flex-1 flex items-center justify-center gap-1.5 bg-red-600 hover:bg-red-700 text-white text-xs font-medium py-1.5 rounded-lg transition-colors disabled:opacity-50"
+                          >
+                            <XCircle className="w-3.5 h-3.5" />Refuser
+                          </button>
+                        </div>
+                      </div>
+                    )}
                   </div>
-                  <div className="flex items-center gap-2 shrink-0">
-                    <button
-                      onClick={() => setPreviewDoc(doc)}
-                      className="text-gray-400 hover:text-primary-600 transition-colors"
-                      title="Aperçu"
-                    >
-                      <Eye className="w-4 h-4" />
-                    </button>
-                    <button
-                      onClick={() => handleDownload(doc.id, doc.originalName, doc.mimeType)}
-                      className="text-gray-400 hover:text-primary-600 transition-colors"
-                      title="Télécharger"
-                    >
-                      <Download className="w-4 h-4" />
-                    </button>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
 

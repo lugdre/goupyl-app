@@ -80,7 +80,7 @@ export default function EntrepriseDashboard() {
           },
           {
             id: 'employees',
-            label: 'Inviter vos salariés',
+            label: 'Inviter vos collaborateurs',
             description: "Ajoutez vos collaborateurs pour qu'ils puissent accéder à la plateforme.",
             to: '/dashboard/entreprise/employees',
             done: employeeCount > 0,
@@ -132,7 +132,7 @@ export default function EntrepriseDashboard() {
             <div className="grid grid-cols-3 gap-4 mt-4 pt-4 border-t border-violet-500/20">
               <div className="text-center">
                 <p className="text-2xl font-bold text-violet-400">{planInfo.employees}</p>
-                <p className="text-xs text-gray-400 mt-0.5">Salariés couverts</p>
+                <p className="text-xs text-gray-400 mt-0.5">Collaborateurs couverts</p>
               </div>
               <div className="text-center border-x border-violet-500/20">
                 <p className="text-2xl font-bold text-violet-400">{planInfo.sessions}</p>
@@ -170,7 +170,7 @@ export default function EntrepriseDashboard() {
                 </div>
                 <div className="min-w-0">
                   <p className="font-medium text-gray-900">Trouver un coach</p>
-                  <p className="text-sm text-gray-500">Réserver pour vos salariés</p>
+                  <p className="text-sm text-gray-500">Réserver pour vos collaborateurs</p>
                 </div>
                 <ArrowRight className="w-5 h-5 text-gray-500 ml-auto shrink-0" />
               </div>

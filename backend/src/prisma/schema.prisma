@@ -83,6 +83,13 @@ enum Gender {
   FEMME
 }
 
+enum DocumentStatus {
+  PENDING
+  VALIDATED
+  REJECTED
+  EXPIRED
+}
+
 model User {
   id                 Int                @id @default(autoincrement())
   email              String             @unique
@@ -122,6 +129,7 @@ model User {
   coachServices           CoachService[] @relation("CoachServices")
   passkeys                Passkey[]
   notifications           Notification[]
+  parqQuestionnaires      PARQQuestionnaire[]
 
   @@map("users")
 }
@@ -159,14 +167,18 @@ model CompanyInvite {
 }
 
 model Document {
-  id           Int      @id @default(autoincrement())
-  userId       Int      @map("user_id")
+  id           Int            @id @default(autoincrement())
+  userId       Int            @map("user_id")
   type         String
-  storedName   String   @map("stored_name")
-  originalName String   @map("original_name")
-  mimeType     String   @map("mime_type")
-  sizeBytes    Int      @map("size_bytes")
-  createdAt    DateTime @default(now()) @map("created_at")
+  storedName   String         @map("stored_name")
+  originalName String         @map("original_name")
+  mimeType     String         @map("mime_type")
+  sizeBytes    Int            @map("size_bytes")
+  status       DocumentStatus @default(PENDING)
+  adminNote    String?        @map("admin_note")
+  expiresAt    DateTime?      @map("expires_at")
+  createdAt    DateTime       @default(now()) @map("created_at")
+  updatedAt    DateTime       @updatedAt @map("updated_at")
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -319,6 +331,7 @@ model Review {
   comment         String?   @db.Text
   coachReply      String?   @db.Text @map("coach_reply")
   coachRepliedAt  DateTime? @map("coach_replied_at")
+  coachReplyEdits Int       @default(0) @map("coach_reply_edits")
   createdAt       DateTime  @default(now()) @map("created_at")
 
   appointment   Appointment @relation(fields: [appointmentId], references: [id])
@@ -359,4 +372,18 @@ model CoachService {
   appointments    Appointment[]   @relation("CoachServiceAppointments")
 
   @@map("coach_services")
+}
+
+model PARQQuestionnaire {
+  id           Int      @id @default(autoincrement())
+  userId       Int      @map("user_id")
+  answers      Json
+  hasRisk      Boolean  @default(false) @map("has_risk")
+  coachCleared Boolean  @default(false) @map("coach_cleared")
+  completedAt  DateTime @default(now()) @map("completed_at")
+  expiresAt    DateTime @map("expires_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("parq_questionnaires")
 }

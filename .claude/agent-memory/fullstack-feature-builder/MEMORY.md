@@ -1,0 +1,3 @@
+- [Review reply edit policy](project_review_reply_edits.md) — coach reply on a Review may be edited up to 3 times; limit constant lives in review.service.js
+- [Bash denied](feedback_bash_denied.md) — Bash mostly blocked; cannot run npm/prisma — instruct user to run them
+- [PARQ encryption key](project_parq_encryption_key.md) — PARQ answers encrypted with key derived from JWT_ACCESS_SECRET (or PARQ_ENCRYPTION_KEY)

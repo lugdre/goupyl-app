@@ -70,9 +70,11 @@ function CheckoutForm({ appointment, onSuccess }) {
         </div>
       )}
 
-      <div className="p-3 bg-amber-500/10 text-amber-700 rounded-xl text-sm">
-        Mode test — utilisez la carte 4242 4242 4242 4242
-      </div>
+      {import.meta.env.DEV && (
+        <div className="p-3 bg-amber-500/10 text-amber-700 rounded-xl text-sm">
+          Mode test — utilisez la carte 4242 4242 4242 4242
+        </div>
+      )}
 
       <Button
         type="submit"

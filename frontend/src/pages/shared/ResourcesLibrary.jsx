@@ -13,7 +13,7 @@ const CATEGORY_COLORS = {
   MENTAL: 'bg-purple-100 text-purple-700',
   BIENETRE: 'bg-orange-100 text-orange-700',
 };
-const ACCESS_LABELS = { ZEN: 'Zen', PULSE: 'Pulse', BOOST: 'Boost' };
+const ACCESS_LABELS = { ZEN: 'Essentiel', PULSE: 'Boost', BOOST: 'Ultra' };
 const ACCESS_COLORS = {
   ZEN: 'bg-violet-100 text-violet-700',
   PULSE: 'bg-indigo-100 text-indigo-700',

@@ -25,6 +25,7 @@ export default function CoachPublicProfile() {
   const [reviews, setReviews] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [avatarError, setAvatarError] = useState(false);
 
   useEffect(() => {
     Promise.all([
@@ -248,11 +249,31 @@ export default function CoachPublicProfile() {
           <div className="cpp-hero-row">
             {/* Avatar */}
             <div className="cpp-avatar-wrap">
-              <img
-                src={coach.avatarUrl || (coach.gender === 'FEMME' ? avatarFemale : avatarMale)}
-                alt={`${coach.firstName} ${coach.lastName}`}
-                className="cpp-avatar"
-              />
+              {avatarError ? (
+                <div
+                  className="cpp-avatar"
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontFamily: '"Archivo", sans-serif',
+                    fontWeight: 700,
+                    fontSize: 32,
+                    color: 'var(--ink-3)',
+                    background: 'var(--bg-soft)',
+                  }}
+                >
+                  {(coach.firstName?.[0] || '').toUpperCase()}
+                  {(coach.lastName?.[0] || '').toUpperCase() || '?'}
+                </div>
+              ) : (
+                <img
+                  src={coach.avatarUrl || (coach.gender === 'FEMME' ? avatarFemale : avatarMale)}
+                  alt={`${coach.firstName} ${coach.lastName}`}
+                  className="cpp-avatar"
+                  onError={() => setAvatarError(true)}
+                />
+              )}
               {avgRating != null && (
                 <div className="cpp-avatar-tag">
                   <Star size={9} fill="currentColor" strokeWidth={0} /> {avgRatingFmt}

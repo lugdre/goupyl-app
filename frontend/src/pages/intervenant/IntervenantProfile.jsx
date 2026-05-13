@@ -8,8 +8,7 @@ import Button from '../../components/ui/Button';
 import Badge from '../../components/ui/Badge';
 import Spinner from '../../components/ui/Spinner';
 import { Plus, Pencil, X, Clock, Zap, Leaf, Heart, Moon, Sun, Camera } from 'lucide-react';
-import avatarMale from '../../assets/avatar-default-male.svg';
-import avatarFemale from '../../assets/avatar-default-female.svg';
+import AvatarFallback from '../../components/ui/AvatarFallback';
 import toast from 'react-hot-toast';
 import DeleteAccountSection from '../../components/profile/DeleteAccountSection';
 import PasskeyManager from '../../components/PasskeyManager';
@@ -262,10 +261,15 @@ export default function IntervenantProfile() {
       <Card>
         <div className="flex items-center gap-4">
           <div className="relative shrink-0">
-            <img
-              src={avatarUrl || (form.gender === 'FEMME' ? avatarFemale : avatarMale)}
-              alt="Avatar"
-              className="w-16 h-16 rounded-full object-cover"
+            <AvatarFallback
+              user={{
+                firstName: form.firstName,
+                lastName: form.lastName,
+                avatarUrl,
+                gender: form.gender,
+              }}
+              size="lg"
+              title={`${form.firstName || ''} ${form.lastName || ''}`.trim() || 'Avatar'}
             />
             <button
               onClick={() => fileInputRef.current?.click()}
@@ -466,9 +470,9 @@ export default function IntervenantProfile() {
           </div>
         </Card>
 
-        {/* Caracteristiques & seance type */}
+        {/* Caractéristiques & séance type */}
         <Card>
-          <h2 className="text-base font-semibold text-gray-900 mb-4">Caracteristiques & seance type</h2>
+          <h2 className="text-base font-semibold text-gray-900 mb-4">Caractéristiques & séance type</h2>
           <div className="space-y-4">
             {/* Lieu du cours */}
             <div className="space-y-2">
@@ -503,11 +507,11 @@ export default function IntervenantProfile() {
 
             {/* Ma seance type */}
             <div className="space-y-1">
-              <label className="block text-sm font-medium text-gray-900">Decrivez le deroulement d'une seance typique</label>
+              <label className="block text-sm font-medium text-gray-900">Décrivez le déroulement d'une séance typique</label>
               <textarea
                 value={form.profile.typicalSession}
                 onChange={(e) => setProfileField('typicalSession', e.target.value)}
-                placeholder="Ex : Echauffement 10min → travail technique 30min → cardio 15min → etirements 5min"
+                placeholder="Ex : Échauffement 10min → travail technique 30min → cardio 15min → étirements 5min"
                 rows={4}
                 maxLength={800}
                 className="w-full px-3 py-2 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-primary-400 resize-none"

@@ -25,7 +25,7 @@ const menuItems = {
   ],
   ENTREPRISE: [
     { to: '/dashboard/entreprise', icon: LayoutDashboard, label: 'Accueil' },
-    { to: '/dashboard/entreprise/employees', icon: Users, label: 'Salariés' },
+    { to: '/dashboard/entreprise/employees', icon: Users, label: 'Collaborateurs' },
     { to: '/dashboard/entreprise/search', icon: Search, label: 'Coachs' },
     { to: '/dashboard/entreprise/analytics', icon: BarChart2, label: 'Stats' },
     { to: '/dashboard/entreprise/resources', icon: BookOpen, label: 'Ressources' },

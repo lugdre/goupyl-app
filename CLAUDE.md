@@ -33,14 +33,35 @@ npm run db:migrate    # npx prisma migrate dev --schema=src/prisma/schema.prisma
 npm run db:seed       # node src/prisma/seed.js
 npm run db:generate   # regenerate Prisma client after schema changes
 npm run db:studio     # open Prisma Studio GUI
-npm run test          # jest --verbose
+npm run test          # jest --verbose (all tests)
 npm run lint          # eslint src/
+```
+
+Run a single test file:
+```bash
+cd backend && npx jest tests/unit/auth.test.js --verbose
+```
+
+## Environment variables
+
+Required in `backend/.env`:
+
+```
+PORT=3000
+NODE_ENV=development
+DATABASE_URL="postgresql://YOUR_MACOS_USERNAME@localhost:5432/goupyl_sport"
+REDIS_URL="redis://localhost:6379"
+JWT_SECRET="..."
+JWT_REFRESH_SECRET="..."
+FRONTEND_URL="http://localhost:5173"
+RESEND_API_KEY="re_..."        # transactional emails via Resend
+STRIPE_SECRET_KEY="sk_test_..." # ENTREPRISE subscriptions + appointment payments
 ```
 
 ## Infrastructure requirements
 
 - **PostgreSQL**: local database `goupyl_sport`. For macOS with Homebrew, use the current OS user (superuser) to avoid permission issues: `DATABASE_URL="postgresql://YOUR_MACOS_USERNAME@localhost:5432/goupyl_sport"`. Create with `createdb goupyl_sport`.
-- **Redis**: `brew install redis && brew services start redis`. Default URL: `redis://localhost:6379`.
+- **Redis**: `brew install redis && brew services start redis`. Default URL: `redis://localhost:6379`. Stores refresh tokens (7-day TTL) and session challenge data for passkeys.
 
 ## Architecture
 
@@ -61,6 +82,10 @@ Key files:
 - `src/config/jwt.js` — access tokens (15 min) + refresh tokens (7 days stored in Redis)
 
 Backend uses **CommonJS** (`require`/`module.exports`).
+
+### Tests
+
+Tests live in `backend/tests/unit/` (Prisma + Redis mocked via `jest.mock`) and `backend/tests/integration/` (real DB required). Unit tests mock `../../src/config/database` and `../../src/config/redis` directly.
 
 ### Frontend — component and routing structure
 
@@ -95,6 +120,20 @@ Four roles with distinct dashboard paths:
 Appointments can reference either a B2B `Service` (platform-defined, `serviceId`) or a B2C `CoachService` (coach-defined, `coachServiceId`). Both fields are nullable — always use null-safe access: `appt.coachService?.name || appt.service?.name`. This applies everywhere an appointment's service name is displayed (frontend) or serialized (backend).
 
 `CoachService` has a `sessionType` enum (`SOLO` / `DUO` / `GROUP`) and optional `maxParticipants`.
+
+### Payment (Stripe)
+
+Two payment flows both use Stripe:
+1. **ENTREPRISE subscriptions** — Stripe Checkout sessions (`/api/payments/checkout`). Amounts in cents: ZEN 540€/mo, PULSE 1060€/mo, BOOST 2199€/mo. Webhook at `/api/payments/webhook` activates subscriptions.
+2. **Appointment payments** — PaymentIntent with platform fee split between platform and intervenant (`Payment` model stores `platformFee` + `intervenantShare`).
+
+### Resource access tiers
+
+`Resource` model has `access` enum (`ZEN` / `PULSE` / `BOOST`) matching ENTREPRISE subscription plans. Access gates content visibility by the client's company subscription tier.
+
+### Passkey / WebAuthn
+
+Routes at `/api/passkeys`. Uses `@simplewebauthn/server`. Registration challenge stored in Redis (short TTL). Passkey authentication returns same JWT token pair as password login; handled by `loginWithPasskey` in `AuthContext`.
 
 ### Document upload & verification flow
 

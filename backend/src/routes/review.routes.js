@@ -4,7 +4,7 @@ const reviewController = require('../controllers/review.controller');
 const authenticate = require('../middlewares/auth.middleware');
 const authorize = require('../middlewares/role.middleware');
 const validate = require('../middlewares/validate.middleware');
-const { createReviewSchema } = require('../validators/review.validator');
+const { createReviewSchema, replyReviewSchema } = require('../validators/review.validator');
 
 // Public — get reviews for an intervenant
 router.get('/intervenant/:intervenantId', reviewController.getIntervenantReviews);
@@ -33,11 +33,12 @@ router.get(
   reviewController.getReviewForAppointment
 );
 
-// INTERVENANT — reply to a review (once)
+// INTERVENANT — reply to a review (initial reply, then up to 3 edits)
 router.put(
   '/:id/reply',
   authenticate,
   authorize('INTERVENANT'),
+  validate(replyReviewSchema),
   reviewController.replyToReview
 );
 

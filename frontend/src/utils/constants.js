@@ -13,9 +13,9 @@ export const STATUS_LABELS = {
 };
 
 export const PLAN_LABELS = {
-  ZEN_ENTREPRISE: 'Zen Entreprise',
-  PULSE_ENTREPRISE: 'Pulse Entreprise',
-  BOOST_ENTREPRISE: 'Boost Entreprise',
+  ZEN_ENTREPRISE: 'Essentiel',
+  PULSE_ENTREPRISE: 'Boost',
+  BOOST_ENTREPRISE: 'Ultra',
 };
 
 export const BILLING_CYCLE_LABELS = {

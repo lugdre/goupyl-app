@@ -101,10 +101,10 @@ export default function ManageEmployees() {
       <div>
         <h1 className="text-2xl font-semibold text-gray-900 flex items-center gap-2">
           <Users className="w-6 h-6 text-primary-600" />
-          Mes salariés
+          Mes collaborateurs
         </h1>
         <p className="text-gray-500 mt-1 text-sm">
-          {employees.length} salarié{employees.length !== 1 ? 's' : ''} rattaché{employees.length !== 1 ? 's' : ''}
+          {employees.length} collaborateur{employees.length !== 1 ? 's' : ''} rattaché{employees.length !== 1 ? 's' : ''}
         </p>
       </div>
 
@@ -112,7 +112,7 @@ export default function ManageEmployees() {
       <Card>
         <h2 className="text-base font-semibold text-gray-900 mb-3">Code d'accès entreprise</h2>
         <p className="text-sm text-gray-500 mb-4">
-          Partagez ce code avec vos salariés pour qu'ils puissent rejoindre votre espace lors de leur inscription.
+          Partagez ce code avec vos collaborateurs pour qu'ils puissent rejoindre votre espace lors de leur inscription.
         </p>
         <div className="flex items-center gap-3">
           <div className="flex-1 bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 font-mono text-xl font-bold text-gray-900 tracking-widest text-center">
@@ -179,13 +179,13 @@ export default function ManageEmployees() {
         )}
       </Card>
 
-      {/* Liste des salariés */}
+      {/* Liste des collaborateurs */}
       <Card>
-        <h2 className="text-base font-semibold text-gray-900 mb-4">Salariés actifs</h2>
+        <h2 className="text-base font-semibold text-gray-900 mb-4">Collaborateurs actifs</h2>
         {employees.length === 0 ? (
           <div className="text-center py-8">
             <Users className="w-10 h-10 text-gray-400 mx-auto mb-3" />
-            <p className="text-gray-500 text-sm">Aucun salarié rattaché</p>
+            <p className="text-gray-500 text-sm">Aucun collaborateur rattaché</p>
             <p className="text-gray-400 text-xs mt-1">Partagez le code ci-dessus ou envoyez des invitations</p>
           </div>
         ) : (

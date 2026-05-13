@@ -14,5 +14,9 @@ router.delete('/:id', documentController.deleteDocument);
 
 // Admin only: download any document
 router.get('/:id/file', authorize('ADMIN'), documentController.downloadDocument);
+// Admin only: update per-document status (validate / reject / expire)
+router.patch('/:id/status', authorize('ADMIN'), documentController.updateDocumentStatus);
+// Admin only: get all documents for a user
+router.get('/user/:userId', authorize('ADMIN'), documentController.getDocumentsForUser);
 
 module.exports = router;

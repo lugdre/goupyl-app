@@ -119,9 +119,8 @@ export default function Login() {
         </div>
 
         <div className="auth-panel-stats">
-          <span><strong style={{ color: '#f4f4f2' }}>1&nbsp;200+</strong>&nbsp;PROS</span>
-          <span><strong style={{ color: '#f4f4f2' }}>50+</strong>&nbsp;DISCIPLINES</span>
-          <span><strong style={{ color: 'oklch(0.62 0.16 240)' }}>✓</strong>&nbsp;VÉRIFIÉ</span>
+          <span><strong style={{ color: '#f4f4f2' }}>Sport</strong>&nbsp;·&nbsp;Nutrition&nbsp;·&nbsp;Mental</span>
+          <span><strong style={{ color: 'oklch(0.62 0.16 240)' }}>✓</strong>&nbsp;PROS CERTIFIÉS</span>
         </div>
       </div>
 

@@ -22,25 +22,56 @@ const IcSpark = (p) => <Icon {...p} d={<><path d="M12 3v4" /><path d="M12 17v4" 
 const IcSearch = (p) => <Icon {...p} d={<><circle cx="11" cy="11" r="8" /><path d="M21 21l-4.35-4.35" /></>} />;
 const IcMapPin = (p) => <Icon {...p} d={<><path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0118 0z" /><circle cx="12" cy="10" r="3" /></>} />;
 
+// ─── Avatar with initials fallback ────────────────────────────────
+function CoachAvatar({ coach }) {
+  const [errored, setErrored] = useState(false);
+  const initials = `${(coach.firstName?.[0] || '').toUpperCase()}${(coach.lastName?.[0] || '').toUpperCase()}` || '?';
+  if (errored) {
+    return (
+      <div
+        style={{
+          width: '100%',
+          height: '100%',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          fontFamily: 'Inter, sans-serif',
+          fontWeight: 600,
+          fontSize: 18,
+          color: '#555',
+          background: 'var(--bg-soft)',
+        }}
+      >
+        {initials}
+      </div>
+    );
+  }
+  const src = coach.avatarUrl || (coach.gender === 'FEMME' ? avatarFemale : avatarMale);
+  return <img src={src} alt={coach.firstName} onError={() => setErrored(true)} />;
+}
+
 // ─── Enterprise plans ──────────────────────────────────────────────
 const ENTERPRISE_PLANS = [
   {
-    id: 'zen', tag: 'Essentiel', name: 'Zen', role: 'ENTREPRISE',
+    id: 'zen', tag: 'Entrée', name: 'Essentiel', role: 'ENTREPRISE',
     priceMonthly: 540, priceYearly: 432,
-    desc: "Jusqu'à 10 salariés",
-    cta: 'Commencer Zen',
+    desc: "Jusqu'à 10 collaborateurs",
+    cta: 'Commencer Essentiel',
+    features: ['Remise en activité physique', 'Contenus santé & bien-être', 'Suivi d\'engagement de base', 'Support dédié'],
   },
   {
-    id: 'pulse', tag: 'Recommandé', name: 'Pulse', role: 'ENTREPRISE',
+    id: 'pulse', tag: 'Recommandé', name: 'Boost', role: 'ENTREPRISE',
     priceMonthly: 1060, priceYearly: 848,
-    desc: "Jusqu'à 50 salariés",
-    cta: 'Choisir Pulse', reco: true,
+    desc: "Jusqu'à 50 collaborateurs",
+    cta: 'Choisir Boost', reco: true,
+    features: ['Coaching sportif structuré', 'Plans d\'entraînement personnalisés', 'Suivi nutritionnel', 'Account manager'],
   },
   {
-    id: 'boost', tag: 'Performance', name: 'Boost', role: 'ENTREPRISE',
+    id: 'boost', tag: 'Performance', name: 'Ultra', role: 'ENTREPRISE',
     priceMonthly: 2199, priceYearly: 1759,
-    desc: "Jusqu'à 200 salariés",
-    cta: 'Choisir Boost',
+    desc: "Jusqu'à 200 collaborateurs",
+    cta: 'Choisir Ultra',
+    features: ['Suivi nutritionnel individualisé', 'Accompagnement mental', 'Tests à l\'effort', 'SLA garanti'],
   },
 ];
 
@@ -66,7 +97,7 @@ const COMPARE_SECTIONS = [
   {
     head: 'Gestion entreprise', rows: [
       ['Espace VOD inclus', true, true, true],
-      ['Salariés inclus', '10', '50', '200'],
+      ['Collaborateurs inclus', '10', '50', '200'],
       ['Account manager dédié', false, true, true],
       ['SLA garanti', false, false, true],
     ]
@@ -82,7 +113,7 @@ const COMPARE_SECTIONS = [
 ];
 
 const FAQS = [
-  ["Comment fonctionne l'offre entreprise ?", "Souscrivez un abonnement mensuel ou annuel pour offrir à vos salariés un accès à nos professionnels certifiés. Les salariés créent leur compte via un lien d'invitation."],
+  ["Comment fonctionne l'offre entreprise ?", "Souscrivez un abonnement mensuel ou annuel pour offrir à vos collaborateurs un accès à nos professionnels certifiés. Les collaborateurs créent leur compte via un lien d'invitation."],
   ["Les professionnels sont-ils certifiés ?", "Oui. Chaque intervenant soumet ses diplômes lors de l'inscription. Notre équipe vérifie chaque dossier avant activation du profil."],
   ["Puis-je changer de plan ?", "Oui, à tout moment. Le prorata est calculé automatiquement. Annulation possible à tout moment, sans frais."],
   ["Comment réserver une séance en tant que particulier ?", "Créez un compte, trouvez un professionnel selon votre besoin, réservez un créneau et payez directement. Sans abonnement."],
@@ -360,16 +391,13 @@ export default function Landing() {
 
               <div className="hero-stats">
                 <div>
-                  <div className="stat-num num">2 400+</div>
-                  <div className="stat-label">Professionnels actifs</div>
+                  <div className="stat-label">Professionnels certifiés</div>
                 </div>
                 <div>
-                  <div className="stat-num num">45k</div>
-                  <div className="stat-label">Séances réalisées</div>
+                  <div className="stat-label">Tous les domaines sport-santé</div>
                 </div>
                 <div>
-                  <div className="stat-num num">4.8<span style={{ fontSize: 18, color: 'var(--ink-3)' }}>/5</span></div>
-                  <div className="stat-label">Note moyenne</div>
+                  <div className="stat-label">Déploiement en 48h</div>
                 </div>
               </div>
             </div>
@@ -457,11 +485,10 @@ export default function Landing() {
               const specialty = coach.profile?.specialties?.[0]
                 ? CATEGORY_LABELS[coach.profile.specialties[0]] || coach.profile.specialties[0]
                 : null;
-              const avatarSrc = coach.avatarUrl || (coach.gender === 'FEMME' ? avatarFemale : avatarMale);
               return (
                 <Link key={coach.id} to={`/coaches/${coach.id}`} className="pro-card">
                   <div className="pro-avatar">
-                    <img src={avatarSrc} alt={coach.firstName} />
+                    <CoachAvatar coach={coach} />
                   </div>
                   <div className="pro-info">
                     <div className="pro-name">{coach.firstName} {coach.lastName}</div>
@@ -564,7 +591,7 @@ export default function Landing() {
           </div>
 
           <div style={{ textAlign: 'center', marginTop: 32, color: 'var(--ink-3)', fontSize: 13, fontFamily: '"JetBrains Mono", monospace' }}>
-            Prix HT · Engagement minimum 10 mois · TVA incluse.
+            Prix HT · Engagement minimum 10 mois · TVA 20% en sus.
           </div>
         </div>
       </section>
