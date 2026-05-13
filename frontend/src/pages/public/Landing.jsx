@@ -402,28 +402,17 @@ export default function Landing() {
               </div>
             </div>
 
-            <div className="hero-visual">
-              <div className="hero-visual-grid" />
-              <div className="hero-visual-blob" />
-              <div className="hero-visual-rings">
-                <div className="hero-visual-ring" style={{ width: 160, height: 160 }} />
-                <div className="hero-visual-ring" style={{ width: 280, height: 280 }} />
-                <div className="hero-visual-ring" style={{ width: 400, height: 400 }} />
-                <div className="hero-visual-ring" style={{ width: 520, height: 520 }} />
-              </div>
-              <div className="hero-visual-tag">GOUPYL · B2B</div>
-              <div className="hero-pill-stack">
-                <span className="hero-pill">Sport</span>
-                <span className="hero-pill">Nutrition</span>
-                <span className="hero-pill">Mental</span>
-              </div>
-              <div className="hero-badge">
-                <div className="hero-badge-dot" />
-                <div>
-                  <div className="hero-badge-num">RGPD</div>
-                  <div className="hero-badge-label">Données EU · Anonymisées</div>
-                </div>
-              </div>
+            <div className="hero-media">
+              <HumanBody3D
+                width="100%"
+                height="100%"
+                background="transparent"
+                wireColor={0x1e40af}
+                fillOpacity={0.08}
+                showPoints={true}
+                showMeridians={true}
+                autoRotate={true}
+              />
             </div>
           </div>
         </div>
