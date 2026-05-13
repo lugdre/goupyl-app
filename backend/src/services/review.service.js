@@ -44,15 +44,28 @@ const createReview = async (clientId, { appointmentId, rating, comment }) => {
   return review;
 };
 
+const MAX_COACH_REPLY_EDITS = 3;
+
 const replyToReview = async (intervenantId, reviewId, reply) => {
   const review = await prisma.review.findUnique({ where: { id: reviewId } });
   if (!review) throw ApiError.notFound('Avis introuvable.');
   if (review.intervenantId !== intervenantId) throw ApiError.forbidden('Cet avis ne vous appartient pas.');
-  if (review.coachReply) throw ApiError.conflict('Vous avez deja repondu a cet avis.', 'REPLY_EXISTS');
+
+  const isEdit = Boolean(review.coachReply);
+  if (isEdit && review.coachReplyEdits >= MAX_COACH_REPLY_EDITS) {
+    throw ApiError.badRequest(
+      `Limite de modifications atteinte (${MAX_COACH_REPLY_EDITS} max)`,
+      'REPLY_EDIT_LIMIT'
+    );
+  }
 
   return prisma.review.update({
     where: { id: reviewId },
-    data: { coachReply: reply, coachRepliedAt: new Date() },
+    data: {
+      coachReply: reply,
+      coachRepliedAt: new Date(),
+      ...(isEdit ? { coachReplyEdits: { increment: 1 } } : {}),
+    },
     include: { client: { select: { firstName: true, lastName: true } } },
   });
 };

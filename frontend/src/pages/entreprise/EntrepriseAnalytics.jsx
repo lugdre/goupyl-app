@@ -92,14 +92,14 @@ export default function EntrepriseAnalytics() {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <StatCard
           icon={Users}
-          label="Salariés rattachés"
+          label="Collaborateurs rattachés"
           value={employees.total}
           sub="dans votre entreprise"
           color="violet"
         />
         <StatCard
           icon={UserCheck}
-          label="Salariés actifs"
+          label="Collaborateurs actifs"
           value={employees.active}
           sub="au moins 1 séance ce mois"
           color="green"
@@ -115,7 +115,7 @@ export default function EntrepriseAnalytics() {
           icon={Activity}
           label="Taux d'utilisation"
           value={employees.total > 0 ? `${Math.round((employees.active / employees.total) * 100)}%` : '—'}
-          sub="salariés actifs / total"
+          sub="collaborateurs actifs / total"
           color="orange"
         />
       </div>

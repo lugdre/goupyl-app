@@ -53,8 +53,8 @@ export default function StripeOnboarding() {
             <div>
               <h2 className="font-semibold text-gray-900">Compte de paiement actif</h2>
               <p className="text-sm text-gray-500 mt-1">
-                Votre compte Stripe est configure et pret a recevoir des paiements.
-                Les clients peuvent desormais payer leurs seances en ligne.
+                Votre compte Stripe est configuré et prêt à recevoir des paiements.
+                Les clients peuvent désormais payer leurs séances en ligne.
               </p>
               <div className="mt-3 flex gap-3 text-sm">
                 <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-green-50 text-green-700 rounded-full font-medium">
@@ -118,11 +118,11 @@ export default function StripeOnboarding() {
                   </li>
                   <li className="flex items-start gap-2">
                     <span className="w-5 h-5 bg-primary-100 text-primary-700 rounded-full flex items-center justify-center text-xs font-bold shrink-0 mt-0.5">2</span>
-                    Renseignez vos informations bancaires en toute securite
+                    Renseignez vos informations bancaires en toute sécurité
                   </li>
                   <li className="flex items-start gap-2">
                     <span className="w-5 h-5 bg-primary-100 text-primary-700 rounded-full flex items-center justify-center text-xs font-bold shrink-0 mt-0.5">3</span>
-                    Recevez 70% du montant de chaque seance directement sur votre compte
+                    Recevez 70% du montant de chaque séance directement sur votre compte
                   </li>
                 </ul>
               </div>

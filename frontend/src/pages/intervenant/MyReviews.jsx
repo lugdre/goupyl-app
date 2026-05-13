@@ -3,8 +3,10 @@ import { reviewApi } from '../../services/review.api';
 import { useAuth } from '../../hooks/useAuth';
 import Card from '../../components/ui/Card';
 import Spinner from '../../components/ui/Spinner';
-import { Star, MessageSquareReply } from 'lucide-react';
+import { Star, MessageSquareReply, Pencil, X } from 'lucide-react';
 import toast from 'react-hot-toast';
+
+const MAX_COACH_REPLY_EDITS = 3;
 
 const StarRow = ({ rating }) => (
   <div className="flex items-center gap-0.5">
@@ -23,6 +25,7 @@ export default function MyReviews() {
   const [loading, setLoading] = useState(true);
   const [replyDraft, setReplyDraft] = useState({}); // reviewId → text
   const [replying, setReplying] = useState(null); // reviewId being submitted
+  const [editingId, setEditingId] = useState(null); // reviewId currently being edited
 
   useEffect(() => {
     reviewApi
@@ -43,12 +46,23 @@ export default function MyReviews() {
         reviews: prev.reviews.map((r) => (r.id === reviewId ? { ...r, ...updated } : r)),
       }));
       setReplyDraft((d) => ({ ...d, [reviewId]: '' }));
-      toast.success('Réponse publiée');
+      setEditingId(null);
+      toast.success(editingId === reviewId ? 'Réponse modifiée' : 'Réponse publiée');
     } catch (err) {
       toast.error(err.response?.data?.message || 'Erreur');
     } finally {
       setReplying(null);
     }
+  };
+
+  const startEdit = (review) => {
+    setEditingId(review.id);
+    setReplyDraft((d) => ({ ...d, [review.id]: review.coachReply || '' }));
+  };
+
+  const cancelEdit = (reviewId) => {
+    setEditingId(null);
+    setReplyDraft((d) => ({ ...d, [reviewId]: '' }));
   };
 
   if (loading) return <Spinner />;
@@ -76,68 +90,135 @@ export default function MyReviews() {
         </Card>
       ) : (
         <div className="space-y-4">
-          {data.reviews.map((review) => (
-            <Card key={review.id}>
-              {/* Header */}
-              <div className="flex items-start justify-between gap-3 mb-3">
-                <div>
-                  <p className="font-medium text-gray-900">
-                    {review.client.firstName} {review.client.lastName}
-                  </p>
-                  <p className="text-xs text-gray-400 mt-0.5">
-                    {new Date(review.createdAt).toLocaleDateString('fr-FR', {
-                      day: 'numeric', month: 'long', year: 'numeric',
-                    })}
-                  </p>
-                </div>
-                <StarRow rating={review.rating} />
-              </div>
+          {data.reviews.map((review) => {
+            const editsUsed = review.coachReplyEdits || 0;
+            const editsRemaining = Math.max(0, MAX_COACH_REPLY_EDITS - editsUsed);
+            const canEdit = editsRemaining > 0;
+            const isEditing = editingId === review.id;
 
-              {/* Comment */}
-              {review.comment && (
-                <p className="text-sm text-gray-700 italic mb-3">"{review.comment}"</p>
-              )}
+            return (
+              <Card key={review.id}>
+                {/* Header */}
+                <div className="flex items-start justify-between gap-3 mb-3">
+                  <div>
+                    <p className="font-medium text-gray-900">
+                      {review.client.firstName} {review.client.lastName}
+                    </p>
+                    <p className="text-xs text-gray-400 mt-0.5">
+                      {new Date(review.createdAt).toLocaleDateString('fr-FR', {
+                        day: 'numeric', month: 'long', year: 'numeric',
+                      })}
+                    </p>
+                  </div>
+                  <StarRow rating={review.rating} />
+                </div>
 
-              {/* Existing reply */}
-              {review.coachReply ? (
-                <div className="pl-4 border-l-2 border-primary-300 mt-3">
-                  <p className="text-xs font-semibold text-primary-600 mb-0.5 flex items-center gap-1">
-                    <MessageSquareReply className="w-3.5 h-3.5" />
-                    Votre réponse
-                  </p>
-                  <p className="text-sm text-gray-700">{review.coachReply}</p>
-                  <p className="text-[11px] text-gray-400 mt-1">
-                    {new Date(review.coachRepliedAt).toLocaleDateString('fr-FR', {
-                      day: 'numeric', month: 'long', year: 'numeric',
-                    })}
-                  </p>
-                </div>
-              ) : (
-                <div className="mt-3 pt-3 border-t border-gray-100">
-                  <p className="text-xs text-gray-500 mb-1.5 flex items-center gap-1">
-                    <MessageSquareReply className="w-3.5 h-3.5" />
-                    Répondre (une seule fois)
-                  </p>
-                  <textarea
-                    rows={2}
-                    value={replyDraft[review.id] || ''}
-                    onChange={(e) =>
-                      setReplyDraft((d) => ({ ...d, [review.id]: e.target.value }))
-                    }
-                    placeholder="Votre réponse publique…"
-                    className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 resize-none focus:outline-none focus:ring-2 focus:ring-primary-400"
-                  />
-                  <button
-                    onClick={() => handleReply(review.id)}
-                    disabled={replying === review.id || !replyDraft[review.id]?.trim()}
-                    className="mt-1.5 text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 disabled:opacity-40 px-4 py-1.5 rounded-lg transition-colors"
-                  >
-                    {replying === review.id ? 'Envoi…' : 'Publier'}
-                  </button>
-                </div>
-              )}
-            </Card>
-          ))}
+                {/* Comment */}
+                {review.comment && (
+                  <p className="text-sm text-gray-700 italic mb-3">"{review.comment}"</p>
+                )}
+
+                {/* Existing reply (display mode) */}
+                {review.coachReply && !isEditing && (
+                  <div className="pl-4 border-l-2 border-primary-300 mt-3">
+                    <div className="flex items-center justify-between gap-2 mb-0.5">
+                      <p className="text-xs font-semibold text-primary-600 flex items-center gap-1">
+                        <MessageSquareReply className="w-3.5 h-3.5" />
+                        Votre réponse
+                      </p>
+                      <button
+                        type="button"
+                        onClick={() => startEdit(review)}
+                        disabled={!canEdit}
+                        className="inline-flex items-center gap-1 text-xs font-medium text-gray-500 hover:text-primary-600 disabled:opacity-40 disabled:hover:text-gray-500 transition-colors"
+                        title={canEdit ? 'Modifier votre réponse' : 'Limite de modifications atteinte'}
+                      >
+                        <Pencil className="w-3 h-3" />
+                        Modifier
+                      </button>
+                    </div>
+                    <p className="text-sm text-gray-700">{review.coachReply}</p>
+                    <p className="text-[11px] text-gray-400 mt-1">
+                      {new Date(review.coachRepliedAt).toLocaleDateString('fr-FR', {
+                        day: 'numeric', month: 'long', year: 'numeric',
+                      })}
+                      {editsUsed > 0 && (
+                        <span className="ml-2">
+                          · {editsUsed} modification{editsUsed > 1 ? 's' : ''} ({editsRemaining} restante{editsRemaining > 1 ? 's' : ''})
+                        </span>
+                      )}
+                    </p>
+                  </div>
+                )}
+
+                {/* Edit mode (existing reply) */}
+                {review.coachReply && isEditing && (
+                  <div className="mt-3 pt-3 border-t border-gray-100">
+                    <p className="text-xs text-gray-500 mb-1.5 flex items-center gap-1">
+                      <Pencil className="w-3.5 h-3.5" />
+                      Modifier votre réponse
+                    </p>
+                    <textarea
+                      rows={3}
+                      value={replyDraft[review.id] || ''}
+                      onChange={(e) =>
+                        setReplyDraft((d) => ({ ...d, [review.id]: e.target.value }))
+                      }
+                      placeholder="Votre réponse publique…"
+                      className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 resize-none focus:outline-none focus:ring-2 focus:ring-primary-400"
+                    />
+                    <p className="text-[11px] text-gray-400 mt-1">
+                      {editsRemaining} modification{editsRemaining > 1 ? 's' : ''} restante{editsRemaining > 1 ? 's' : ''}
+                    </p>
+                    <div className="flex items-center gap-2 mt-2">
+                      <button
+                        onClick={() => handleReply(review.id)}
+                        disabled={replying === review.id || !replyDraft[review.id]?.trim()}
+                        className="text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 disabled:opacity-40 px-4 py-1.5 rounded-lg transition-colors"
+                      >
+                        {replying === review.id ? 'Envoi…' : 'Enregistrer'}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => cancelEdit(review.id)}
+                        disabled={replying === review.id}
+                        className="inline-flex items-center gap-1 text-sm font-medium text-gray-500 hover:text-gray-700 disabled:opacity-40 px-3 py-1.5 rounded-lg transition-colors"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                        Annuler
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {/* Initial reply (no existing reply) */}
+                {!review.coachReply && (
+                  <div className="mt-3 pt-3 border-t border-gray-100">
+                    <p className="text-xs text-gray-500 mb-1.5 flex items-center gap-1">
+                      <MessageSquareReply className="w-3.5 h-3.5" />
+                      Répondre
+                    </p>
+                    <textarea
+                      rows={2}
+                      value={replyDraft[review.id] || ''}
+                      onChange={(e) =>
+                        setReplyDraft((d) => ({ ...d, [review.id]: e.target.value }))
+                      }
+                      placeholder="Votre réponse publique…"
+                      className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 resize-none focus:outline-none focus:ring-2 focus:ring-primary-400"
+                    />
+                    <button
+                      onClick={() => handleReply(review.id)}
+                      disabled={replying === review.id || !replyDraft[review.id]?.trim()}
+                      className="mt-1.5 text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 disabled:opacity-40 px-4 py-1.5 rounded-lg transition-colors"
+                    >
+                      {replying === review.id ? 'Envoi…' : 'Publier'}
+                    </button>
+                  </div>
+                )}
+              </Card>
+            );
+          })}
         </div>
       )}
     </div>

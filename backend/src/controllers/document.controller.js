@@ -41,4 +41,30 @@ const deleteDocument = async (req, res, next) => {
   }
 };
 
-module.exports = { uploadDocument, getMyDocuments, downloadDocument, deleteDocument };
+const updateDocumentStatus = async (req, res, next) => {
+  try {
+    const { status, adminNote, expiresAt } = req.body;
+    const doc = await documentService.updateDocumentStatus(parseInt(req.params.id), { status, adminNote, expiresAt });
+    res.status(200).json(doc);
+  } catch (e) {
+    next(e);
+  }
+};
+
+const getDocumentsForUser = async (req, res, next) => {
+  try {
+    const docs = await documentService.getDocumentsForUser(parseInt(req.params.userId));
+    res.status(200).json(docs);
+  } catch (e) {
+    next(e);
+  }
+};
+
+module.exports = {
+  uploadDocument,
+  getMyDocuments,
+  downloadDocument,
+  deleteDocument,
+  updateDocumentStatus,
+  getDocumentsForUser,
+};

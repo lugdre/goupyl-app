@@ -6,4 +6,12 @@ const createReviewSchema = z.object({
   comment: z.string().max(500).optional(),
 });
 
-module.exports = { createReviewSchema };
+const replyReviewSchema = z.object({
+  reply: z
+    .string({ message: 'La reponse est requise' })
+    .trim()
+    .min(1, 'La reponse ne peut etre vide')
+    .max(1000, 'La reponse ne peut depasser 1000 caracteres'),
+});
+
+module.exports = { createReviewSchema, replyReviewSchema };

@@ -143,10 +143,10 @@ export default function ClientDashboard() {
           <Card>
             <div className="text-center py-6">
               <Calendar className="w-10 h-10 text-gray-400 mx-auto mb-3" />
-              <p className="text-gray-500">Aucun rendez-vous a venir</p>
+              <p className="text-gray-500">Aucun rendez-vous à venir</p>
               <Link to="/dashboard/client/search">
                 <Button variant="secondary" size="sm" className="mt-3">
-                  Reserver une seance
+                  Réserver une séance
                 </Button>
               </Link>
             </div>

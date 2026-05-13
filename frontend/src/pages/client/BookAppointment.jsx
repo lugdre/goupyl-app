@@ -5,11 +5,13 @@ import { userApi } from '../../services/user.api';
 import { serviceApi } from '../../services/service.api';
 import { coachServiceApi } from '../../services/coachService.api';
 import { appointmentApi } from '../../services/appointment.api';
+import { parqApi } from '../../services/parq.api';
 import Card from '../../components/ui/Card';
 import Button from '../../components/ui/Button';
 import Spinner from '../../components/ui/Spinner';
 import SlotPicker from '../../components/booking/SlotPicker';
-import { MapPin, ArrowLeft, Building2, Euro, Clock, Zap, Leaf, Heart } from 'lucide-react';
+import PARQModal from '../../components/booking/PARQModal';
+import { MapPin, ArrowLeft, Building2, Euro, Clock, Zap, Leaf, Heart, ShieldAlert } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { CATEGORY_LABELS } from '../../utils/constants';
 
@@ -48,8 +50,14 @@ export default function BookAppointment() {
   const [scheduledAt, setScheduledAt] = useState('');
   const [notes, setNotes] = useState('');
 
+  // PARQ (health questionnaire) gating state.
+  // `parqStatus` is null while loading; afterwards it is the API response.
+  // `showParq` controls modal visibility.
+  const [parqStatus, setParqStatus] = useState(null);
+  const [showParq, setShowParq] = useState(false);
+
   useEffect(() => {
-    const promises = [userApi.getIntervenantById(intervenantId)];
+    const promises = [userApi.getIntervenantById(intervenantId), parqApi.getStatus()];
 
     if (isSalarie) {
       promises.push(serviceApi.getAll());
@@ -58,8 +66,9 @@ export default function BookAppointment() {
     }
 
     Promise.all(promises)
-      .then(([{ data: iv }, { data: svcs }]) => {
+      .then(([{ data: iv }, { data: parq }, { data: svcs }]) => {
         setIntervenant(iv);
+        setParqStatus(parq);
         if (isSalarie) {
           setPlatformServices(svcs);
           if (svcs.length > 0) setSelectedPlatformServiceId(svcs[0].id);
@@ -84,6 +93,19 @@ export default function BookAppointment() {
     }
     if (isSalarie && !selectedPlatformServiceId) {
       toast.error('Sélectionnez un service');
+      return;
+    }
+
+    // PARQ gate: questionnaire must be completed (and not expired) before any
+    // booking. If risk was declared, the coach must clear participation first.
+    if (!parqStatus || !parqStatus.completed || parqStatus.expired) {
+      setShowParq(true);
+      return;
+    }
+    if (parqStatus.hasRisk && !parqStatus.coachCleared) {
+      toast.error(
+        "Votre coach doit valider votre participation avant que vous puissiez réserver."
+      );
       return;
     }
 
@@ -287,11 +309,52 @@ export default function BookAppointment() {
                 rows={3}
               />
             </div>
+
+            {/* PARQ status banner — informs the client what will happen on submit */}
+            {parqStatus && (!parqStatus.completed || parqStatus.expired) && (
+              <div className="flex items-start gap-3 p-3 rounded-xl bg-primary-50 border border-primary-100 text-xs text-primary-700">
+                <ShieldAlert className="w-4 h-4 shrink-0 mt-0.5" />
+                <p>
+                  Un court questionnaire santé (PAR-Q) vous sera proposé avant
+                  la confirmation de cette première réservation.
+                </p>
+              </div>
+            )}
+            {parqStatus?.completed && !parqStatus.expired && parqStatus.hasRisk && !parqStatus.coachCleared && (
+              <div className="flex items-start gap-3 p-3 rounded-xl bg-amber-50 border border-amber-200 text-xs text-amber-700">
+                <ShieldAlert className="w-4 h-4 shrink-0 mt-0.5" />
+                <p>
+                  Votre questionnaire santé indique un risque potentiel. La
+                  réservation sera possible une fois que votre coach aura validé
+                  votre participation.
+                </p>
+              </div>
+            )}
+
             <Button type="submit" loading={booking} className="w-full">
               Confirmer la réservation
             </Button>
           </form>
         </Card>
+      )}
+
+      {showParq && (
+        <PARQModal
+          onClose={() => setShowParq(false)}
+          onComplete={({ canBook, hasRisk }) => {
+            // Refresh local PARQ status with what the user just submitted so we
+            // don't need a second round-trip. The backend record is the source
+            // of truth — but for UX we mirror it client-side.
+            setParqStatus({
+              completed: true,
+              expired: false,
+              hasRisk,
+              coachCleared: false,
+              canBook,
+            });
+            setShowParq(false);
+          }}
+        />
       )}
     </div>
   );

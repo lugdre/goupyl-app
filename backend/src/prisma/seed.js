@@ -372,6 +372,237 @@ async function main() {
 
   console.log('RDV et comptes-rendus crees');
 
+  // ============================================================
+  // --- DEMO DATA HR DASHBOARD (Acme Corp / rh@acmecorp.fr) ----
+  // ============================================================
+  // Objectif : alimenter le dashboard DRH avec 6 mois d'historique
+  // pour eviter les "0 / 0 / 0 / —" sur les ecrans Stats/Analytics.
+  // 30 collaborateurs Acme Corp + ~200 RDV repartis sur les 4 categories.
+  console.log('Seeding donnees demo DRH Acme Corp...');
+
+  // Pool de prenoms / noms pour 30 collaborateurs realistes
+  const demoFirstNames = [
+    'Lucas', 'Emma', 'Hugo', 'Chloe', 'Louis', 'Manon', 'Gabriel', 'Lea',
+    'Arthur', 'Camille', 'Raphael', 'Sarah', 'Jules', 'Ines', 'Adam', 'Lina',
+    'Maxime', 'Anais', 'Antoine', 'Julie', 'Theo', 'Clara', 'Nathan', 'Mathilde',
+    'Paul', 'Eva', 'Tom', 'Alice', 'Leo', 'Romane',
+  ];
+  const demoLastNames = [
+    'Dubois', 'Lefevre', 'Moreau', 'Laurent', 'Simon', 'Michel', 'Garcia',
+    'David', 'Bertrand', 'Roux', 'Vincent', 'Fournier', 'Morel', 'Girard',
+    'Andre', 'Mercier', 'Boyer', 'Lambert', 'Bonnet', 'Francois', 'Martinez',
+    'Legrand', 'Garnier', 'Faure', 'Rousseau', 'Blanc', 'Guerin', 'Muller',
+    'Henry', 'Roussel',
+  ];
+
+  // Cree 30 comptes collaborateurs Acme Corp
+  const demoEmployees = [];
+  for (let i = 0; i < 30; i++) {
+    const firstName = demoFirstNames[i];
+    const lastName = demoLastNames[i];
+    const objectivesPool = [
+      ['remise en forme', 'perte de poids'],
+      ['gestion du stress', 'mieux dormir'],
+      ['equilibre alimentaire'],
+      ['preparation marathon'],
+      ['renforcement musculaire', 'tonification'],
+      ['flexibilite', 'yoga'],
+      ['bien-etre general'],
+      ['nutrition sportive'],
+    ];
+    const sportTypePool = ['fitness', 'running', 'yoga', 'natation', 'cyclisme', 'crossfit', null];
+    const levelPool = ['DEBUTANT', 'INTERMEDIAIRE', 'AVANCE'];
+    const employee = await prisma.user.create({
+      data: {
+        email: `collaborateur${i + 1}@acmecorp.fr`,
+        passwordHash,
+        firstName,
+        lastName,
+        role: 'CLIENT',
+        verificationStatus: 'VERIFIED',
+        employerCompanyId: entreprise1.id,
+        emailVerifiedAt: new Date(),
+        acceptedTermsAt: new Date(),
+        profile: {
+          create: {
+            level: levelPool[i % levelPool.length],
+            objectives: objectivesPool[i % objectivesPool.length],
+            sportType: sportTypePool[i % sportTypePool.length],
+            city: 'Angers',
+          },
+        },
+      },
+    });
+    demoEmployees.push(employee);
+  }
+  console.log(`  ${demoEmployees.length} collaborateurs Acme Corp crees`);
+
+  // Categories et leur poids :
+  //   SPORT 45%, BIENETRE 25%, NUTRITION 20%, MENTAL 10%
+  // Mapping services[] (cf. plus haut) :
+  //   services[0] SPORT individuel, services[1] SPORT duo
+  //   services[2] NUTRITION bilan, services[6] NUTRITION coaching entreprise
+  //   services[3] MENTAL preparation mentale
+  //   services[4] BIENETRE yoga, services[5] BIENETRE atelier collectif
+  const categoryPlan = [
+    { service: services[0], category: 'SPORT', intervenant: coach, weight: 30 },
+    { service: services[1], category: 'SPORT', intervenant: coach, weight: 15 },
+    { service: services[4], category: 'BIENETRE', intervenant: psycho, weight: 15 },
+    { service: services[5], category: 'BIENETRE', intervenant: coach, weight: 10 },
+    { service: services[2], category: 'NUTRITION', intervenant: nutritionist, weight: 12 },
+    { service: services[6], category: 'NUTRITION', intervenant: nutritionist, weight: 8 },
+    { service: services[3], category: 'MENTAL', intervenant: psycho, weight: 10 },
+  ];
+  // Construit un tableau d'index pondere pour tirer une categorie
+  const weightedPool = [];
+  categoryPlan.forEach((entry, idx) => {
+    for (let w = 0; w < entry.weight; w++) weightedPool.push(idx);
+  });
+
+  // Generateur pseudo-aleatoire deterministe pour reproductibilite des demos
+  let seedState = 42;
+  const rnd = () => {
+    seedState = (seedState * 9301 + 49297) % 233280;
+    return seedState / 233280;
+  };
+  const pick = (arr) => arr[Math.floor(rnd() * arr.length)];
+  const pickInt = (min, max) => Math.floor(rnd() * (max - min + 1)) + min;
+
+  // Notes types pour comptes-rendus
+  const sessionNotesPool = {
+    SPORT: [
+      'Bonne energie aujourd\'hui, progression nette sur les squats. Charge augmentee de 5kg.',
+      'Travail cardio sur tapis, intervalles 30/30. Frequence cardiaque bien controlee.',
+      'Seance HIIT complete. Recuperation a travailler entre les series.',
+      'Focus gainage et stabilite. Bonne execution des planches laterales.',
+      'Course fractionnee. Sensations en amelioration constante.',
+    ],
+    BIENETRE: [
+      'Seance yoga vinyasa. Respiration de plus en plus posee.',
+      'Atelier collectif tres engageant, dynamique d\'equipe positive.',
+      'Travail sur la posture assise au bureau, etirements cibles dos/nuque.',
+      'Sequence yin yoga axee sur la detente du bassin et des hanches.',
+      'Pratique meditative guidee, 15 min de pleine conscience.',
+    ],
+    NUTRITION: [
+      'Bilan alimentaire complet. Ajustement protein/glucides discute.',
+      'Plan repas semaine etabli. Focus sur le batch cooking du dimanche.',
+      'Revue des collations bureau. Substitution barres industrielles par fruits secs.',
+      'Hydratation insuffisante identifiee. Objectif 1,5L/jour mis en place.',
+      'Atelier collectif sur les macronutriments, tres bonne participation.',
+    ],
+    MENTAL: [
+      'Travail sur la coherence cardiaque, technique 365 maitrisee.',
+      'Strategies de gestion du stress en reunion. Outils STOP introduits.',
+      'Exercice de visualisation positive avant une echeance importante.',
+      'Detection des pensees automatiques negatives, recadrage cognitif.',
+      'Routine matinale mise en place pour ameliorer la concentration.',
+    ],
+  };
+  const reviewCommentsPool = [
+    'Tres bonne seance, coach a l\'ecoute et professionnel.',
+    'Exactement ce qu\'il me fallait, je me sens deja mieux.',
+    'Excellente experience, je recommande vivement.',
+    'Cours bien structure, je sens deja les progres.',
+    'Coach pedagogue, explications claires.',
+    'Seance dynamique et adaptee a mon niveau.',
+    'Tres satisfait du suivi personnalise.',
+    'Bonne ambiance, format adapte aux collaborateurs.',
+    null,
+    null,
+  ];
+
+  // Construction des RDV : 6 mois passes + 1 mois futur
+  // ~200 RDV au total => moyenne ~6-7 RDV/employe sur 6 mois
+  const totalAppointments = 200;
+  const sixMonthsMs = 6 * 30 * 24 * 60 * 60 * 1000;
+  const oneMonthFutureMs = 30 * 24 * 60 * 60 * 1000;
+  const nowTs = Date.now();
+
+  const appointmentsToCreate = [];
+  for (let i = 0; i < totalAppointments; i++) {
+    // 85% passe, 15% futur (CONFIRMED)
+    const isPast = rnd() < 0.85;
+    const offsetMs = isPast
+      ? -Math.floor(rnd() * sixMonthsMs) - 24 * 60 * 60 * 1000
+      : Math.floor(rnd() * oneMonthFutureMs) + 24 * 60 * 60 * 1000;
+    const scheduledAt = new Date(nowTs + offsetMs);
+    // Heures realistes (entre 8h et 19h, sur des creneaux de 30 min)
+    const hour = pickInt(8, 19);
+    const minute = pick([0, 30]);
+    scheduledAt.setHours(hour, minute, 0, 0);
+
+    const plan = categoryPlan[pick(weightedPool)];
+    const employee = pick(demoEmployees);
+    const status = isPast ? 'DONE' : 'CONFIRMED';
+
+    appointmentsToCreate.push({
+      clientId: employee.id,
+      intervenantId: plan.intervenant.id,
+      serviceId: plan.service.id,
+      scheduledAt,
+      durationMinutes: plan.service.durationMinutes,
+      status,
+      category: plan.category,
+    });
+  }
+
+  // Tri chronologique pour des ids coherents
+  appointmentsToCreate.sort((a, b) => a.scheduledAt - b.scheduledAt);
+
+  // Creation des appointments + (pour DONE) sessionReport + review
+  let doneCount = 0;
+  let confirmedCount = 0;
+  for (const appt of appointmentsToCreate) {
+    const created = await prisma.appointment.create({
+      data: {
+        clientId: appt.clientId,
+        intervenantId: appt.intervenantId,
+        serviceId: appt.serviceId,
+        scheduledAt: appt.scheduledAt,
+        durationMinutes: appt.durationMinutes,
+        status: appt.status,
+        paymentStatus: appt.status === 'DONE' ? 'paid' : 'unpaid',
+      },
+    });
+
+    if (appt.status === 'DONE') {
+      doneCount++;
+      // Session report
+      await prisma.sessionReport.create({
+        data: {
+          appointmentId: created.id,
+          intervenantId: appt.intervenantId,
+          notes: pick(sessionNotesPool[appt.category]),
+          rating: pickInt(4, 5),
+        },
+      });
+      // Review : 80% des seances DONE recoivent un avis client
+      if (rnd() < 0.8) {
+        // Distribution des notes : 60% 5*, 30% 4*, 8% 3*, 2% 2*
+        const r = rnd();
+        let rating;
+        if (r < 0.6) rating = 5;
+        else if (r < 0.9) rating = 4;
+        else if (r < 0.98) rating = 3;
+        else rating = 2;
+        await prisma.review.create({
+          data: {
+            appointmentId: created.id,
+            clientId: appt.clientId,
+            intervenantId: appt.intervenantId,
+            rating,
+            comment: pick(reviewCommentsPool),
+          },
+        });
+      }
+    } else {
+      confirmedCount++;
+    }
+  }
+  console.log(`  ${doneCount} RDV DONE + ${confirmedCount} RDV CONFIRMED crees (Acme Corp)`);
+  console.log('Donnees demo DRH pretes');
+
   // --- Ressources (articles + vidéos) ---
   await prisma.resource.createMany({
     data: [
@@ -749,6 +980,11 @@ Les champions ne tombent pas moins que les autres. Ils se relèvent plus vite.`,
   console.log('  Entreprise 1: rh@acmecorp.fr / Password1! (ZEN_ENTREPRISE annuel)');
   console.log('  Entreprise 2: wellness@techstart.fr / Password1! (PULSE_ENTREPRISE mensuel)');
   console.log('  Entreprise 3: sport@industria.fr / Password1! (BOOST_ENTREPRISE annuel)');
+  console.log('');
+  console.log('Demo DRH Acme Corp :');
+  console.log('  Compte DRH       : rh@acmecorp.fr / Password1! (joinCode ACME-2026)');
+  console.log('  Collaborateurs   : collaborateur1@acmecorp.fr ... collaborateur30@acmecorp.fr / Password1!');
+  console.log('  Historique RDV   : ~200 seances sur 6 mois (Sport 45% / Bienetre 25% / Nutrition 20% / Mental 10%)');
 }
 
 main()
