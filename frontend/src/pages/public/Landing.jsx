@@ -1,10 +1,5 @@
 import { useState, useEffect, Fragment } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { userApi } from '../../services/user.api';
-import { CATEGORY_LABELS } from '../../utils/constants';
-import avatarMale from '../../assets/avatar-default-male.svg';
-import HumanBody3D from '../../components/layout/body';
-import avatarFemale from '../../assets/avatar-default-female.svg';
+import { Link } from 'react-router-dom';
 import PublicNavbar from '../../components/layout/PublicNavbar';
 import logo from '../../assets/logo-goupyl-sport.png';
 
@@ -18,85 +13,75 @@ const IcPlus = (p) => <Icon {...p} d={<><path d="M12 5v14" /><path d="M5 12h14" 
 const IcRun = (p) => <Icon {...p} d={<><circle cx="13" cy="4" r="2" /><path d="M4 22l4-9 5 2 3-3" /><path d="M9 13l-2 5" /><path d="M15 8l3 4 4-1" /></>} />;
 const IcLeaf = (p) => <Icon {...p} d={<><path d="M21 3c-9 0-16 7-16 16h2c0-7 7-14 14-14z" /><path d="M5 19c4-4 8-7 14-12" /></>} />;
 const IcBrain = (p) => <Icon {...p} d={<><path d="M9 4a3 3 0 00-3 3v1a3 3 0 00-2 3v1a3 3 0 002 3v2a3 3 0 003 3h0V4z" /><path d="M15 4a3 3 0 013 3v1a3 3 0 012 3v1a3 3 0 01-2 3v2a3 3 0 01-3 3h0V4z" /></>} />;
-const IcSpark = (p) => <Icon {...p} d={<><path d="M12 3v4" /><path d="M12 17v4" /><path d="M3 12h4" /><path d="M17 12h4" /><path d="M5.6 5.6l2.8 2.8" /><path d="M15.6 15.6l2.8 2.8" /><path d="M5.6 18.4l2.8-2.8" /><path d="M15.6 8.4l2.8-2.8" /></>} />;
-const IcSearch = (p) => <Icon {...p} d={<><circle cx="11" cy="11" r="8" /><path d="M21 21l-4.35-4.35" /></>} />;
-const IcMapPin = (p) => <Icon {...p} d={<><path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0118 0z" /><circle cx="12" cy="10" r="3" /></>} />;
-
-// ─── Avatar with initials fallback ────────────────────────────────
-function CoachAvatar({ coach }) {
-  const [errored, setErrored] = useState(false);
-  const initials = `${(coach.firstName?.[0] || '').toUpperCase()}${(coach.lastName?.[0] || '').toUpperCase()}` || '?';
-  if (errored) {
-    return (
-      <div
-        style={{
-          width: '100%',
-          height: '100%',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          fontFamily: 'Inter, sans-serif',
-          fontWeight: 600,
-          fontSize: 18,
-          color: '#555',
-          background: 'var(--bg-soft)',
-        }}
-      >
-        {initials}
-      </div>
-    );
-  }
-  const src = coach.avatarUrl || (coach.gender === 'FEMME' ? avatarFemale : avatarMale);
-  return <img src={src} alt={coach.firstName} onError={() => setErrored(true)} />;
-}
+const IcBuilding = (p) => <Icon {...p} d={<><path d="M3 21h18" /><path d="M5 21V5a2 2 0 012-2h10a2 2 0 012 2v16" /><path d="M9 8h1" /><path d="M14 8h1" /><path d="M9 12h1" /><path d="M14 12h1" /><path d="M9 16h1" /><path d="M14 16h1" /></>} />;
+const IcUsers = (p) => <Icon {...p} d={<><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M23 21v-2a4 4 0 00-3-3.87" /><path d="M16 3.13a4 4 0 010 7.75" /></>} />;
+const IcShield = (p) => <Icon {...p} d={<path d="M12 2l9 4v6c0 5-3.5 9.5-9 10-5.5-.5-9-5-9-10V6l9-4z" />} />;
+const IcZap = (p) => <Icon {...p} d={<path d="M13 2L3 14h7l-1 8 10-12h-7l1-8z" />} />;
+const IcChart = (p) => <Icon {...p} d={<><path d="M3 3v18h18" /><path d="M7 14l4-4 4 4 5-5" /></>} />;
 
 // ─── Enterprise plans ──────────────────────────────────────────────
 const ENTERPRISE_PLANS = [
   {
-    id: 'zen', tag: 'Entrée', name: 'Essentiel', role: 'ENTREPRISE',
-    priceMonthly: 540, priceYearly: 432,
+    id: 'zen', tag: 'Entrée', name: 'Essentiel',
+    priceMonthly: 54, priceYearly: 43,
     desc: "Jusqu'à 10 collaborateurs",
-    cta: 'Commencer Essentiel',
-    features: ['Remise en activité physique', 'Contenus santé & bien-être', 'Suivi d\'engagement de base', 'Support dédié'],
+    cta: 'Demander une démo',
+    features: [
+      'Remise en activité physique',
+      'Contenus santé & bien-être',
+      'Suivi basique de l\'engagement',
+      'Support email',
+    ],
   },
   {
-    id: 'pulse', tag: 'Recommandé', name: 'Boost', role: 'ENTREPRISE',
-    priceMonthly: 1060, priceYearly: 848,
+    id: 'pulse', tag: 'Recommandé', name: 'Boost',
+    priceMonthly: 122, priceYearly: 98,
     desc: "Jusqu'à 50 collaborateurs",
-    cta: 'Choisir Boost', reco: true,
-    features: ['Coaching sportif structuré', 'Plans d\'entraînement personnalisés', 'Suivi nutritionnel', 'Account manager'],
+    cta: 'Demander une démo', reco: true,
+    features: [
+      'Coaching sportif structuré',
+      'Suivi nutritionnel',
+      'Plans personnalisés & progression',
+      'Account manager dédié',
+    ],
   },
   {
-    id: 'boost', tag: 'Performance', name: 'Ultra', role: 'ENTREPRISE',
-    priceMonthly: 2199, priceYearly: 1759,
+    id: 'boost', tag: 'Haut de gamme', name: 'Ultra',
+    priceMonthly: null, priceYearly: null,
     desc: "Jusqu'à 200 collaborateurs",
-    cta: 'Choisir Ultra',
-    features: ['Suivi nutritionnel individualisé', 'Accompagnement mental', 'Tests à l\'effort', 'SLA garanti'],
+    cta: 'Parler à un expert',
+    features: [
+      'Nutrition individualisée',
+      'Accompagnement mental',
+      'Tests à l\'effort & biomarqueurs',
+      'SLA garanti & conseiller dédié',
+    ],
   },
 ];
 
 const COMPARE_SECTIONS = [
   {
     head: 'Accompagnement', rows: [
-      ['Coachs sportifs certifiés', true, true, true],
-      ['Séances / semaine', '1', '2', '4'],
-      ['Tous les domaines', false, true, true],
+      ['Professionnels certifiés', true, true, true],
+      ['Séances / collaborateur / semaine', '1', '2', '4'],
+      ['Tous les domaines sport-santé', false, true, true],
       ['Suivi nutritionnel', false, true, true],
       ['Préparation mentale', false, false, true],
+      ['Tests à l\'effort & biomarqueurs', false, false, true],
     ]
   },
   {
     head: 'Application & data', rows: [
       ['App iOS & Android', true, true, true],
       ['Suivi des performances', 'Basique', 'Avancé', 'Avancé'],
-      ['Reporting mensuel', false, true, true],
-      ['Export de données RH', false, false, true],
-      ['API & intégration RH', false, false, true],
+      ['Reporting RH mensuel', false, true, true],
+      ['Export de données agrégées', false, false, true],
+      ['API & intégration SIRH', false, false, true],
     ]
   },
   {
     head: 'Gestion entreprise', rows: [
-      ['Espace VOD inclus', true, true, true],
+      ['Kit de lancement & communication', true, true, true],
       ['Collaborateurs inclus', '10', '50', '200'],
       ['Account manager dédié', false, true, true],
       ['SLA garanti', false, false, true],
@@ -113,11 +98,11 @@ const COMPARE_SECTIONS = [
 ];
 
 const FAQS = [
-  ["Comment fonctionne l'offre entreprise ?", "Souscrivez un abonnement mensuel ou annuel pour offrir à vos collaborateurs un accès à nos professionnels certifiés. Les collaborateurs créent leur compte via un lien d'invitation."],
-  ["Les professionnels sont-ils certifiés ?", "Oui. Chaque intervenant soumet ses diplômes lors de l'inscription. Notre équipe vérifie chaque dossier avant activation du profil."],
-  ["Puis-je changer de plan ?", "Oui, à tout moment. Le prorata est calculé automatiquement. Annulation possible à tout moment, sans frais."],
-  ["Comment réserver une séance en tant que particulier ?", "Créez un compte, trouvez un professionnel selon votre besoin, réservez un créneau et payez directement. Sans abonnement."],
-  ["Comment devenir intervenant sur Goupyl Sport ?", "Créez votre compte professionnel, renseignez votre profil et soumettez vos documents. Une fois validé, vous recevez 70% de chaque séance."],
+  ["Comment fonctionne l'offre entreprise ?", "Vous souscrivez un abonnement mensuel ou annuel par collaborateur. Une fois le contrat signé, nous vous livrons un kit de lancement et un code d'invitation à diffuser en interne. Vos collaborateurs créent leur compte en quelques minutes et accèdent immédiatement à nos professionnels certifiés."],
+  ["Les professionnels sont-ils certifiés ?", "Oui. Chaque intervenant soumet ses diplômes et certifications lors de son inscription. Notre équipe vérifie chaque dossier avant l'activation du profil. Nos coachs sportifs, diététiciens et préparateurs mentaux sont tous diplômés et expérimentés."],
+  ["Puis-je changer de plan ?", "Oui, à tout moment. Le prorata est calculé automatiquement lors d'un upgrade. Vous pouvez aussi ajuster le nombre de collaborateurs à chaque échéance. Annulation possible après l'engagement minimum, sans frais cachés."],
+  ["Comment mes collaborateurs accèdent-ils à la plateforme ?", "Chaque collaborateur reçoit un code d'invitation unique (par email, intranet ou QR code). Il crée son compte en 2 minutes, réalise un bilan initial, puis accède à son plan personnalisé et à son tableau de bord de progression sur web et mobile."],
+  ["Nos données RH sont-elles protégées ?", "Absolument. Goupyl Sport est conforme RGPD. Vos données RH et celles de vos collaborateurs sont chiffrées et hébergées en Europe. Les tableaux de bord entreprise ne présentent que des données agrégées et anonymisées — aucune information individuelle n'est partagée avec l'employeur."],
 ];
 
 // ─── FAQ item ──────────────────────────────────────────────────────
@@ -140,12 +125,12 @@ function FaqItem({ q, a, n, open, onToggle }) {
 
 // ─── Main component ────────────────────────────────────────────────
 export default function Landing() {
-  const navigate = useNavigate();
-  const [coaches, setCoaches] = useState([]);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [searchCity, setSearchCity] = useState('');
   const [billingCycle, setBillingCycle] = useState('monthly');
   const [openFaq, setOpenFaq] = useState(0);
+  const [demoSent, setDemoSent] = useState(false);
+  const [demoForm, setDemoForm] = useState({
+    company: '', name: '', email: '', phone: '', size: '', message: '',
+  });
 
   useEffect(() => {
     const link = document.createElement('link');
@@ -154,33 +139,6 @@ export default function Landing() {
     document.head.appendChild(link);
     return () => { if (document.head.contains(link)) document.head.removeChild(link); };
   }, []);
-
-  useEffect(() => {
-    userApi.getIntervenants({ limit: 50 })
-      .then(({ data }) => {
-        const list = data.intervenants || [];
-        const profileScore = (c) => {
-          const p = c.profile || {};
-          return (p.bio ? 1 : 0) + (p.city ? 1 : 0) + (p.experience != null ? 1 : 0) + ((p.specialties?.length || 0) > 0 ? 1 : 0);
-        };
-        const sorted = [...list].sort((a, b) => {
-          if (b.averageRating != null && a.averageRating != null) return b.averageRating - a.averageRating;
-          if (b.averageRating != null) return 1;
-          if (a.averageRating != null) return -1;
-          return profileScore(b) - profileScore(a);
-        });
-        setCoaches(sorted.slice(0, 6));
-      })
-      .catch(() => { });
-  }, []);
-
-  const handleSearch = (e) => {
-    e.preventDefault();
-    const params = new URLSearchParams();
-    if (searchQuery) params.append('q', searchQuery);
-    if (searchCity) params.append('city', searchCity);
-    navigate(`/search?${params.toString()}`);
-  };
 
   const isYearly = billingCycle === 'yearly';
 
@@ -195,6 +153,12 @@ export default function Landing() {
   };
 
   const recoCellStyle = { background: '#d0d3e1ff' };
+
+  const handleDemoChange = (k) => (e) => setDemoForm({ ...demoForm, [k]: e.target.value });
+  const handleDemoSubmit = (e) => {
+    e.preventDefault();
+    setDemoSent(true);
+  };
 
   return (
     <div style={{ background: 'var(--bg)', color: 'var(--ink)', fontFamily: '"Inter Tight", ui-sans-serif, system-ui, sans-serif', fontSize: 15, lineHeight: 1.5 }}>
@@ -221,15 +185,7 @@ export default function Landing() {
         .num{font-family:"Archivo",sans-serif;font-variant-numeric:tabular-nums}
         .container{max-width:1280px;margin:0 auto;padding:0 32px}
 
-        /* nav */
-        .l-nav{position:sticky;top:0;z-index:50;background:color-mix(in oklch,var(--bg) 78%,transparent);backdrop-filter:saturate(150%) blur(14px);border-bottom:1px solid var(--line)}
-        .l-nav-inner{display:flex;align-items:center;justify-content:space-between;height:64px}
-        .l-nav-left{display:flex;align-items:center;gap:48px}
-        .wordmark{font-family:"Archivo Narrow",sans-serif;font-weight:800;letter-spacing:.04em;font-size:20px;text-transform:uppercase;text-decoration:none;color:var(--ink)}
-        .l-nav-links{display:flex;gap:28px}
-        .l-nav-link{font-size:13px;font-weight:500;color:var(--ink-2);text-decoration:none;letter-spacing:.01em;transition:color .15s}
-        .l-nav-link:hover{color:var(--ink)}
-        .l-nav-right{display:flex;align-items:center;gap:8px}
+        html{scroll-behavior:smooth}
 
         /* buttons */
         .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:44px;padding:0 22px;font-family:"Inter Tight",sans-serif;font-weight:600;font-size:13.5px;letter-spacing:.02em;border-radius:999px;border:1px solid transparent;cursor:pointer;text-decoration:none;transition:transform .15s ease,background .2s ease,color .2s ease,border-color .2s ease;white-space:nowrap;background:transparent}
@@ -251,20 +207,28 @@ export default function Landing() {
         .lede{color:var(--ink-2);font-size:16px;max-width:540px}
 
         /* hero */
-        .hero-grid{display:grid;grid-template-columns:1.1fr .9fr;gap:56px;padding:96px 0 80px;align-items:center}
-        .hero-h1{margin:0;font-size:clamp(56px,8.4vw,128px)}
-        .hero-sub{margin-top:28px;max-width:520px;font-size:17px;line-height:1.5;color:var(--ink-2)}
+        .hero-grid{display:grid;grid-template-columns:1.15fr .85fr;gap:64px;padding:96px 0 80px;align-items:center}
+        .hero-h1{margin:0;font-size:clamp(52px,7.6vw,116px)}
+        .hero-sub{margin-top:28px;max-width:560px;font-size:17px;line-height:1.5;color:var(--ink-2)}
         .hero-meta{margin-top:36px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
         .hero-stats{margin-top:56px;display:grid;grid-template-columns:repeat(3,1fr);border-top:1px solid var(--line);padding-top:24px;gap:24px}
-        .stat-num{font-size:42px;font-weight:700;letter-spacing:-.02em;line-height:1}
+        .stat-num{font-size:28px;font-weight:700;letter-spacing:-.02em;line-height:1;font-family:"Archivo Narrow",sans-serif;text-transform:uppercase}
         .stat-label{font-size:12px;color:var(--ink-3);margin-top:6px}
-        .hero-media{position:relative;aspect-ratio:4/5;overflow:hidden;min-height:400px;}
-        .hero-media-img{width:100%;height:100%;object-fit:cover;filter:grayscale(60%) contrast(1.05)}
-        .hero-media-tag{position:absolute;left:20px;top:20px;font-family:"JetBrains Mono",monospace;font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;background:var(--ink);color:var(--bg);padding:6px 10px}
-        .hero-badge{position:absolute;right:20px;bottom:20px;border:1px solid var(--ink);background:var(--bg);padding:14px 16px;display:flex;align-items:center;gap:12px;min-width:180px}
-        .hero-badge-dot{width:10px;height:10px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 4px var(--accent-soft)}
-        .hero-badge-num{font-family:"Archivo",sans-serif;font-weight:800;font-size:24px;line-height:1}
-        .hero-badge-label{font-size:10px;color:var(--ink-3);letter-spacing:.14em;text-transform:uppercase;margin-top:4px}
+
+        /* hero visual */
+        .hero-visual{position:relative;aspect-ratio:4/5;min-height:480px;background:var(--ink);overflow:hidden;border:1px solid var(--ink)}
+        .hero-visual-grid{position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,.04) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.04) 1px,transparent 1px);background-size:32px 32px}
+        .hero-visual-blob{position:absolute;width:420px;height:420px;border-radius:50%;left:50%;top:50%;transform:translate(-50%,-50%);background:radial-gradient(circle at 30% 30%,var(--accent),transparent 70%);filter:blur(40px);opacity:.7;animation:floaty 8s ease-in-out infinite}
+        @keyframes floaty{0%,100%{transform:translate(-50%,-50%) scale(1)}50%{transform:translate(-50%,-58%) scale(1.06)}}
+        .hero-visual-tag{position:absolute;left:20px;top:20px;font-family:"JetBrains Mono",monospace;font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;background:#fff;color:var(--ink);padding:6px 10px}
+        .hero-visual-rings{position:absolute;inset:0;display:flex;align-items:center;justify-content:center}
+        .hero-visual-ring{position:absolute;border:1px solid rgba(255,255,255,.10);border-radius:50%}
+        .hero-pill-stack{position:absolute;left:24px;bottom:24px;display:flex;flex-direction:column;gap:8px}
+        .hero-pill{font-family:"JetBrains Mono",monospace;font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:#fff;padding:8px 12px;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.04);backdrop-filter:blur(4px);width:max-content}
+        .hero-badge{position:absolute;right:20px;bottom:20px;border:1px solid #fff;background:var(--ink);color:#fff;padding:14px 16px;display:flex;align-items:center;gap:12px;min-width:200px}
+        .hero-badge-dot{width:10px;height:10px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 4px rgba(37,45,98,.35)}
+        .hero-badge-num{font-family:"Archivo",sans-serif;font-weight:800;font-size:22px;line-height:1}
+        .hero-badge-label{font-size:10px;color:#aaa;letter-spacing:.14em;text-transform:uppercase;margin-top:4px}
 
         /* ticker */
         .ticker{border-top:1px solid var(--line);border-bottom:1px solid var(--line);overflow:hidden;background:var(--bg)}
@@ -273,39 +237,48 @@ export default function Landing() {
         .ticker-item::after{content:"●";color:var(--accent);font-size:8px}
         @keyframes tick{from{transform:translateX(0)}to{transform:translateX(-50%)}}
 
-        /* categories grid */
-        .cat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--line);border:1px solid var(--line)}
-        .cat{background:var(--bg);padding:32px 28px 28px;display:flex;flex-direction:column;min-height:280px;position:relative;transition:background .2s ease;cursor:pointer;text-decoration:none;color:inherit}
-        .cat:hover{background:var(--bg-soft)}
-        .cat-num{font-family:"JetBrains Mono",monospace;font-size:11px;color:var(--ink-3);letter-spacing:.14em}
-        .cat-icon{width:56px;height:56px;margin:24px 0 auto;border:1px solid var(--ink);border-radius:50%;display:flex;align-items:center;justify-content:center;color:var(--ink)}
-        .cat-title{font-family:"Archivo Narrow",sans-serif;font-weight:700;font-size:32px;text-transform:uppercase;letter-spacing:-.01em;margin-top:24px}
-        .cat-desc{font-size:13.5px;color:var(--ink-3);margin-top:8px;max-width:240px}
-        .cat-arrow{position:absolute;right:24px;bottom:24px;width:36px;height:36px;border-radius:50%;border:1px solid var(--line);display:flex;align-items:center;justify-content:center;transition:all .2s ease}
-        .cat:hover .cat-arrow{background:var(--accent);color:#fff;border-color:var(--accent);transform:translate(2px,-2px)}
+        /* two cards (parcours) */
+        .duo-grid{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--line);border:1px solid var(--line)}
+        .duo-card{background:var(--bg);padding:48px 40px;display:flex;flex-direction:column;min-height:420px;position:relative}
+        .duo-card:hover{background:var(--bg-soft)}
+        .duo-num{font-family:"JetBrains Mono",monospace;font-size:11px;color:var(--ink-3);letter-spacing:.16em;text-transform:uppercase}
+        .duo-icon{width:56px;height:56px;margin:20px 0 24px;border:1px solid var(--ink);border-radius:50%;display:flex;align-items:center;justify-content:center;color:var(--ink)}
+        .duo-title{font-family:"Archivo Narrow",sans-serif;font-weight:700;font-size:40px;text-transform:uppercase;letter-spacing:-.01em}
+        .duo-sub{font-size:14px;color:var(--ink-3);margin-top:6px}
+        .duo-list{margin-top:28px;list-style:none;padding:0;display:flex;flex-direction:column;gap:14px}
+        .duo-list li{display:flex;gap:12px;align-items:flex-start;font-size:14.5px;color:var(--ink-2)}
+        .duo-list li::before{content:"";display:inline-block;width:6px;height:6px;background:var(--accent);border-radius:50%;margin-top:8px;flex-shrink:0}
 
-        /* pros grid */
-        .pros-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line);border:1px solid var(--line)}
-        .pro-card{background:var(--bg);padding:24px;display:flex;gap:16px;align-items:flex-start;text-decoration:none;color:inherit;transition:background .2s}
-        .pro-card:hover{background:var(--bg-soft)}
-        .pro-avatar{width:56px;height:56px;border-radius:50%;background:var(--bg-soft);border:1px solid var(--line);flex-shrink:0;overflow:hidden}
-        .pro-avatar img{width:100%;height:100%;object-fit:cover;filter:grayscale(30%)}
-        .pro-name{font-weight:600;font-size:14.5px}
-        .pro-role{font-size:12px;color:var(--ink-3);margin-top:2px}
-        .pro-stats{margin-top:10px;display:flex;gap:14px;font-family:"JetBrains Mono",monospace;font-size:11px;color:var(--ink-3)}
-        .pro-stats strong{color:var(--ink);font-weight:600}
-        .pro-pill{display:inline-block;padding:3px 8px;font-size:10.5px;border:1px solid var(--line);margin-top:10px;font-family:"JetBrains Mono",monospace;letter-spacing:.08em;text-transform:uppercase}
+        /* steps */
+        .steps-grid{display:grid;grid-template-columns:1fr 1fr;gap:48px}
+        .steps-col-title{font-family:"Archivo Narrow",sans-serif;font-weight:700;font-size:28px;text-transform:uppercase;letter-spacing:-.01em;margin-bottom:8px}
+        .steps-col-sub{font-size:13.5px;color:var(--ink-3);margin-bottom:24px}
+        .step{border-top:1px solid var(--line);padding:20px 0;display:grid;grid-template-columns:48px 1fr;gap:16px;align-items:flex-start}
+        .step:last-child{border-bottom:1px solid var(--line)}
+        .step-num{font-family:"Archivo Narrow",sans-serif;font-weight:700;font-size:28px;color:var(--accent);line-height:1}
+        .step-title{font-weight:600;font-size:15.5px;margin-bottom:4px}
+        .step-desc{font-size:13.5px;color:var(--ink-3)}
 
-        /* banner */
-        .banner{background:var(--ink);color:var(--bg);padding:48px;display:grid;grid-template-columns:1.5fr auto;gap:32px;align-items:center;border:1px solid var(--ink)}
-        .banner h3{margin:0;font-size:36px;font-family:"Archivo Narrow",sans-serif;font-weight:700;text-transform:uppercase;letter-spacing:-.01em}
-        .banner p{margin:8px 0 0;color:#bbb;font-size:14.5px;max-width:520px}
+        /* segments */
+        .seg-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line);border:1px solid var(--line)}
+        .seg{background:var(--bg);padding:32px 28px;min-height:260px;display:flex;flex-direction:column}
+        .seg-tag{font-family:"JetBrains Mono",monospace;font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-3);margin-bottom:18px}
+        .seg-title{font-family:"Archivo Narrow",sans-serif;font-weight:700;font-size:30px;text-transform:uppercase;letter-spacing:-.01em}
+        .seg-desc{font-size:13.5px;color:var(--ink-3);margin-top:12px;flex:1}
+        .seg-foot{margin-top:18px;font-family:"JetBrains Mono",monospace;font-size:11px;color:var(--ink-2);letter-spacing:.06em}
 
-        /* search bar */
-        .search-bar{background:#fff;border:1px solid var(--line);display:flex;gap:4px;padding:6px;margin-top:36px;max-width:650px;align-items: center;}
-        .search-bar input{border:none;outline:none;background:transparent;font-family:inherit;font-size:14px;padding:8px 12px;color:var(--ink);flex:1}
-        .search-bar input::placeholder{color:var(--ink-4)}
-        .search-sep{width:1px;background:var(--line);margin:4px 0}
+        /* proof / stat cards */
+        .proof-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line);border:1px solid var(--line);margin-bottom:48px}
+        .proof{background:var(--bg);padding:36px 32px;min-height:200px;display:flex;flex-direction:column;justify-content:space-between}
+        .proof-icon{width:48px;height:48px;border:1px solid var(--ink);border-radius:50%;display:flex;align-items:center;justify-content:center;margin-bottom:24px}
+        .proof-num{font-family:"Archivo Narrow",sans-serif;font-weight:700;font-size:42px;text-transform:uppercase;letter-spacing:-.01em;line-height:1}
+        .proof-label{font-size:13px;color:var(--ink-3);margin-top:8px}
+        .quote{background:var(--ink);color:var(--bg);padding:48px;border:1px solid var(--ink);display:grid;grid-template-columns:auto 1fr;gap:32px;align-items:center}
+        .quote-mark{font-family:"Archivo Narrow",sans-serif;font-weight:800;font-size:120px;color:var(--accent);line-height:.8;align-self:flex-start}
+        .quote-text{font-family:"Archivo Narrow",sans-serif;font-weight:500;font-size:24px;line-height:1.3;letter-spacing:-.01em}
+        .quote-author{margin-top:18px;display:flex;align-items:center;gap:14px}
+        .quote-author-name{font-weight:600;font-size:14px}
+        .quote-author-role{font-size:12px;color:#999;margin-top:2px}
 
         /* compare */
         .compare-table{width:100%;border-collapse:collapse;font-size:14px}
@@ -314,7 +287,7 @@ export default function Landing() {
         .compare-col-name{font-family:"Archivo Narrow",sans-serif;font-weight:700;text-transform:uppercase;font-size:22px;letter-spacing:.01em;line-height:1}
         .compare-col-tag{display:inline-block;margin-bottom:14px;font-family:"JetBrains Mono",monospace;font-size:10px;letter-spacing:.16em;text-transform:uppercase;padding:4px 10px;border:1px solid var(--line);color:var(--ink-3)}
         .compare-col-recommended .compare-col-tag{background:var(--accent);color:var(--on-accent);border-color:var(--accent)}
-        .compare-price{font-family:"Archivo",sans-serif;font-weight:800;font-size:36px;margin-top:14px;line-height:1;letter-spacing:-.02em}
+        .compare-price{font-family:"Archivo",sans-serif;font-weight:800;font-size:32px;margin-top:14px;line-height:1;letter-spacing:-.02em}
         .compare-price-sub{font-size:11px;color:var(--ink-3);margin-top:4px;font-family:"JetBrains Mono",monospace}
         .compare-cta{margin-top:18px}
         .compare-row-head{background:var(--bg-soft)}
@@ -324,12 +297,41 @@ export default function Landing() {
         .compare-table td.cell{text-align:center}
         .compare-col-recommended .check{background:var(--accent);color:var(--on-accent)}
 
+        /* pricing cards */
+        .price-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin-bottom:64px}
+        .price-card{background:var(--bg);border:1px solid var(--line);padding:32px 28px;display:flex;flex-direction:column;position:relative}
+        .price-card.reco{border-color:var(--ink);background:#fff}
+        .price-tag{display:inline-block;font-family:"JetBrains Mono",monospace;font-size:10px;letter-spacing:.16em;text-transform:uppercase;padding:4px 10px;border:1px solid var(--line);color:var(--ink-3);margin-bottom:18px;align-self:flex-start}
+        .price-card.reco .price-tag{background:var(--accent);color:var(--on-accent);border-color:var(--accent)}
+        .price-name{font-family:"Archivo Narrow",sans-serif;font-weight:700;font-size:38px;text-transform:uppercase;letter-spacing:-.01em;line-height:1}
+        .price-desc{font-size:13px;color:var(--ink-3);margin-top:8px}
+        .price-amount{margin-top:24px;font-family:"Archivo",sans-serif;font-weight:800;font-size:42px;letter-spacing:-.02em;line-height:1}
+        .price-amount-sub{font-size:12px;color:var(--ink-3);margin-top:6px;font-family:"JetBrains Mono",monospace}
+        .price-features{list-style:none;padding:0;margin:28px 0 24px;display:flex;flex-direction:column;gap:12px;flex:1}
+        .price-features li{display:flex;gap:12px;align-items:flex-start;font-size:14px;color:var(--ink-2)}
+        .price-features li svg{flex-shrink:0;margin-top:3px;color:var(--accent)}
+
         /* dark card */
         .dark-card{background:var(--bg-dark);color:#f4f4f2;padding:88px 64px;text-align:center;border:1px solid var(--line)}
         .dark-card h2{font-size:clamp(40px,5.5vw,80px);margin:0 auto;max-width:14ch}
         .dark-card p{color:#bbb;font-size:15px;max-width:560px;margin:18px auto 0}
-        .dark-pillrow{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:32px}
-        .dark-pill{border:1px solid rgba(255,255,255,.18);color:#ddd;font-family:"JetBrains Mono",monospace;font-size:11px;letter-spacing:.14em;text-transform:uppercase;padding:8px 14px}
+
+        /* demo form */
+        .demo-grid{display:grid;grid-template-columns:1fr 1fr;gap:64px;align-items:start}
+        .demo-info h2{font-size:clamp(40px,5vw,72px);margin:0 0 24px}
+        .demo-info p{color:var(--ink-2);font-size:16px;max-width:480px;margin-bottom:32px}
+        .demo-bullet{display:flex;align-items:center;gap:14px;padding:14px 0;border-top:1px solid var(--line);font-size:14.5px}
+        .demo-bullet:last-child{border-bottom:1px solid var(--line)}
+        .demo-bullet svg{color:var(--accent);flex-shrink:0}
+        .demo-form{background:#fff;border:1px solid var(--line);padding:32px}
+        .demo-form-row{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+        .demo-field{margin-bottom:18px;display:flex;flex-direction:column}
+        .demo-field label{font-family:"JetBrains Mono",monospace;font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3);margin-bottom:8px}
+        .demo-field input,.demo-field select,.demo-field textarea{border:1px solid var(--line);background:var(--bg);padding:12px 14px;font-family:inherit;font-size:14px;color:var(--ink);outline:none;transition:border-color .15s}
+        .demo-field input:focus,.demo-field select:focus,.demo-field textarea:focus{border-color:var(--ink)}
+        .demo-field textarea{resize:vertical;min-height:96px;font-family:inherit}
+        .demo-success{background:#fff;border:1px solid var(--line);padding:48px;text-align:center}
+        .demo-success-icon{width:64px;height:64px;border-radius:50%;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;margin:0 auto 24px}
 
         /* footer */
         .l-foot{padding:64px 0 28px;border-top:1px solid var(--line)}
@@ -345,15 +347,20 @@ export default function Landing() {
         @media(max-width:980px){
           .hero-grid{grid-template-columns:1fr;gap:32px;padding:64px 0}
           .section-head{grid-template-columns:1fr;gap:16px}
-          .cat-grid{grid-template-columns:repeat(2,1fr)}
-          .pros-grid{grid-template-columns:1fr}
-          .banner{grid-template-columns:1fr;gap:20px}
+          .duo-grid{grid-template-columns:1fr}
+          .steps-grid{grid-template-columns:1fr;gap:32px}
+          .seg-grid{grid-template-columns:1fr}
+          .proof-grid{grid-template-columns:1fr}
+          .price-grid{grid-template-columns:1fr}
+          .quote{grid-template-columns:1fr;gap:20px;padding:32px}
+          .quote-mark{font-size:80px}
+          .quote-text{font-size:20px}
+          .demo-grid{grid-template-columns:1fr;gap:32px}
           .foot-grid{grid-template-columns:1fr 1fr}
-          .l-nav-links{display:none}
         }
         @media(max-width:640px){
-          .cat-grid{grid-template-columns:1fr}
           .hero-stats{grid-template-columns:1fr 1fr}
+          .demo-form-row{grid-template-columns:1fr}
         }
       `}</style>
 
@@ -361,58 +368,62 @@ export default function Landing() {
       <PublicNavbar />
 
       {/* ── HERO ────────────────────────────────────────────────── */}
-      <section style={{ borderBottom: '1px solid var(--line)', overflow: 'hidden' }}>
+      <section id="hero" style={{ borderBottom: '1px solid var(--line)', overflow: 'hidden' }}>
         <div className="container">
           <div className="hero-grid">
             <div>
-              <div className="eyebrow" style={{ marginBottom: 24 }}></div>
+              <div className="eyebrow" style={{ marginBottom: 24 }}>Plateforme B2B · Sport-santé en entreprise</div>
               <h1 className="hero-h1 display">
-                Sport.<br />
-                Nutrition.<br />
-                <span style={{ color: 'var(--accent)' }}>Bien-être.</span>
+                La santé<br />
+                de vos<br />
+                <span style={{ color: 'var(--accent)' }}>collaborateurs.</span>
               </h1>
               <p className="hero-sub">
-                Les meilleurs professionnels certifiés, disponibles à la séance ou sur abonnement. Sans engagement.
+                Offrez à vos équipes un accompagnement complet par des professionnels certifiés : sport, nutrition, mental. Une plateforme, trois domaines, un seul abonnement.
               </p>
               <div className="hero-meta">
-                <Link to="/search" className="btn btn-primary btn-lg">Trouver un coach <IcArrow size={16} /></Link>
-                <a href="#compare" className="btn btn-ghost btn-lg">Offre entreprise</a>
+                <a href="#demo" className="btn btn-primary btn-lg">Demander une démo <IcArrow size={16} /></a>
+                <a href="#offres" className="btn btn-ghost btn-lg">Voir les offres</a>
               </div>
-
-              {/* Search bar */}
-              <form onSubmit={handleSearch} className="search-bar">
-                <IcSearch size={16} style={{ color: 'var(--ink-4)', flexShrink: 0, alignSelf: 'center', marginLeft: 8 }} />
-                <input type="text" placeholder="Sport, nutrition, yoga..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} />
-                <div className="search-sep" />
-                <IcMapPin size={16} style={{ color: 'var(--ink-4)', flexShrink: 0, alignSelf: 'center' }} />
-                <input type="text" placeholder="Ville" value={searchCity} onChange={e => setSearchCity(e.target.value)} style={{ width: 90 }} />
-                <button type="submit" className="btn btn-primary btn-sm" style={{ borderRadius: 4 }}>Rechercher</button>
-              </form>
 
               <div className="hero-stats">
                 <div>
-                  <div className="stat-label">Professionnels certifiés</div>
+                  <div className="stat-num">48 h</div>
+                  <div className="stat-label">Déploiement</div>
                 </div>
                 <div>
-                  <div className="stat-label">Tous les domaines sport-santé</div>
+                  <div className="stat-num">100%</div>
+                  <div className="stat-label">Pros certifiés</div>
                 </div>
                 <div>
-                  <div className="stat-label">Déploiement en 48h</div>
+                  <div className="stat-num">3</div>
+                  <div className="stat-label">Domaines couverts</div>
                 </div>
               </div>
             </div>
 
-            <div className="hero-media">
-              <HumanBody3D
-                width="100%"
-                height="100%"
-                background="transparent"
-                wireColor={0x1e40af}
-                fillOpacity={0.08}
-                showPoints={true}
-                showMeridians={true}
-                autoRotate={true}
-              />
+            <div className="hero-visual">
+              <div className="hero-visual-grid" />
+              <div className="hero-visual-blob" />
+              <div className="hero-visual-rings">
+                <div className="hero-visual-ring" style={{ width: 160, height: 160 }} />
+                <div className="hero-visual-ring" style={{ width: 280, height: 280 }} />
+                <div className="hero-visual-ring" style={{ width: 400, height: 400 }} />
+                <div className="hero-visual-ring" style={{ width: 520, height: 520 }} />
+              </div>
+              <div className="hero-visual-tag">GOUPYL · B2B</div>
+              <div className="hero-pill-stack">
+                <span className="hero-pill">Sport</span>
+                <span className="hero-pill">Nutrition</span>
+                <span className="hero-pill">Mental</span>
+              </div>
+              <div className="hero-badge">
+                <div className="hero-badge-dot" />
+                <div>
+                  <div className="hero-badge-num">RGPD</div>
+                  <div className="hero-badge-label">Données EU · Anonymisées</div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -421,116 +432,171 @@ export default function Landing() {
       {/* ── TICKER ──────────────────────────────────────────────── */}
       <div className="ticker">
         <div className="ticker-track">
-          {['Force', 'Endurance', 'HIIT', 'Yoga', 'Mobilité', 'Nutrition', 'Sommeil', 'Récupération', 'Méditation', 'Cardio', 'Pilates', 'Stretching',
-            'Force', 'Endurance', 'HIIT', 'Yoga', 'Mobilité', 'Nutrition', 'Sommeil', 'Récupération', 'Méditation', 'Cardio', 'Pilates', 'Stretching',
+          {['Sport en entreprise', 'QVCT', 'Nutrition', 'Mental', 'RH', 'Bien-être', 'CSE', 'Performance', 'Engagement', 'Prévention',
+            'Sport en entreprise', 'QVCT', 'Nutrition', 'Mental', 'RH', 'Bien-être', 'CSE', 'Performance', 'Engagement', 'Prévention',
           ].map((it, i) => <div className="ticker-item" key={i}>{it}</div>)}
         </div>
       </div>
 
-      {/* ── CATEGORIES ──────────────────────────────────────────── */}
-      <section className="l-section">
+      {/* ── DEUX PARCOURS ───────────────────────────────────────── */}
+      <section className="l-section" id="parcours">
         <div className="container">
           <div className="section-head">
             <div>
-              <div className="eyebrow" style={{ marginBottom: 14 }}></div>
-              <h2 className="display">Pilotez<br />votre santé.</h2>
+              <div className="eyebrow" style={{ marginBottom: 14 }}>Deux parcours</div>
+              <h2 className="display">Un projet,<br />deux usages.</h2>
             </div>
-            <p className="lede">Une plateforme, quatre piliers de la performance et du bien-être quotidien. Choisissez le vôtre, ou combinez-les.</p>
+            <p className="lede">Goupyl Sport s'adresse autant aux décideurs qu'aux collaborateurs. Chaque audience trouve sa réponse, dans une seule plateforme.</p>
           </div>
-          <div className="cat-grid">
-            {[
-              { n: '01', t: 'Sport', d: 'Coachs certifiés, programmes sur-mesure, suivi.', I: IcRun, q: 'sport' },
-              { n: '02', t: 'Nutrition', d: 'Diététiciens, plans repas, micro-nutrition.', I: IcLeaf, q: 'nutrition' },
-              { n: '03', t: 'Mental', d: 'Préparateurs mentaux, sophrologie, coaching.', I: IcBrain, q: 'mental' },
-              { n: '04', t: 'Bien-être', d: 'Kiné, ostéo, massage sportif, récupération.', I: IcSpark, q: 'bienetre' },
-            ].map(c => (
-              <Link key={c.t} to={`/search?q=${c.q}`} className="cat">
-                <div className="cat-num">{c.n} / 04</div>
-                <div className="cat-icon"><c.I size={24} stroke={1.5} /></div>
-                <div className="cat-title">{c.t}</div>
-                <div className="cat-desc">{c.d}</div>
-                <div className="cat-arrow"><IcArrow size={14} /></div>
-              </Link>
-            ))}
+
+          <div className="duo-grid">
+            <div className="duo-card">
+              <div className="duo-num">01 / Décideur</div>
+              <div className="duo-icon"><IcBuilding size={24} stroke={1.5} /></div>
+              <div className="duo-title">DRH, Dirigeant, CSE.</div>
+              <div className="duo-sub">Pilotez la santé et la performance de vos équipes.</div>
+              <ul className="duo-list">
+                <li>Pourquoi déployer : prévention, attractivité, fidélisation.</li>
+                <li>ROI mesurable : engagement, absentéisme, satisfaction.</li>
+                <li>Pilotage simple : tableau de bord RH agrégé et anonymisé.</li>
+                <li>Renouvellement transparent : ajustement du périmètre à chaque échéance.</li>
+              </ul>
+            </div>
+            <div className="duo-card">
+              <div className="duo-num">02 / Collaborateur</div>
+              <div className="duo-icon"><IcUsers size={24} stroke={1.5} /></div>
+              <div className="duo-title">Salarié, équipier.</div>
+              <div className="duo-sub">Un accompagnement sur-mesure, à votre rythme.</div>
+              <ul className="duo-list">
+                <li>Accès en 2 minutes avec un code d'invitation entreprise.</li>
+                <li>Tout au même endroit : coachs sportifs, diététiciens, préparateurs mentaux.</li>
+                <li>Plan personnalisé, séances en visio ou en présentiel, suivi continu.</li>
+                <li>Progression visible : objectifs, bilans, historique.</li>
+              </ul>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* ── PROS ────────────────────────────────────────────────── */}
-      <section className="l-section" id="particuliers">
+      {/* ── COMMENT CA MARCHE ───────────────────────────────────── */}
+      <section className="l-section" id="comment-ca-marche">
         <div className="container">
           <div className="section-head">
             <div>
-              <div className="eyebrow" style={{ marginBottom: 14 }}></div>
-              <h2 className="display">Nos professionnels.</h2>
+              <div className="eyebrow" style={{ marginBottom: 14 }}>Onboarding</div>
+              <h2 className="display">Comment<br />ça marche.</h2>
             </div>
-            <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', flexWrap: 'wrap', alignItems: 'flex-end' }}>
-              {['Tous', 'Sport', 'Nutrition', 'Mental', 'Bien-être'].map(label => (
-                <Link key={label} to={label === 'Tous' ? '/search' : `/search?q=${label.toLowerCase()}`} className="btn btn-ghost btn-sm">{label}</Link>
+            <p className="lede">Deux parcours d'onboarding pensés pour fluidifier le déploiement côté entreprise, et l'engagement côté collaborateurs.</p>
+          </div>
+
+          <div className="steps-grid">
+            <div>
+              <div className="steps-col-title">Entreprise</div>
+              <div className="steps-col-sub">Du contrat aux premiers résultats, en moins de deux semaines.</div>
+              {[
+                { t: 'Contractualisation', d: 'Choix de l\'offre, signature en ligne, configuration du compte entreprise.' },
+                { t: 'Kit de lancement', d: 'Codes d\'invitation, supports de communication interne, FAQ collaborateurs.' },
+                { t: 'Communication interne', d: 'Annonce coordonnée avec notre équipe : email, intranet, affichage.' },
+                { t: 'Premiers résultats', d: 'Tableau de bord RH actif, premiers bilans, indicateurs d\'engagement.' },
+              ].map((s, i) => (
+                <div className="step" key={i}>
+                  <div className="step-num">{String(i + 1).padStart(2, '0')}</div>
+                  <div>
+                    <div className="step-title">{s.t}</div>
+                    <div className="step-desc">{s.d}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div>
+              <div className="steps-col-title">Collaborateur</div>
+              <div className="steps-col-sub">Du code d'invitation au premier rendez-vous, en quelques minutes.</div>
+              {[
+                { t: 'Inscription par code', d: 'Création du compte via le code entreprise reçu par email ou intranet.' },
+                { t: 'Bilan initial', d: 'Questionnaire santé, objectifs, préférences. Confidentiel et chiffré.' },
+                { t: 'Plan personnalisé', d: 'Recommandation des professionnels adaptés, planification des séances.' },
+                { t: 'Suivi des résultats', d: 'Progression visible, ajustements, accès continu à l\'équipe d\'experts.' },
+              ].map((s, i) => (
+                <div className="step" key={i}>
+                  <div className="step-num">{String(i + 1).padStart(2, '0')}</div>
+                  <div>
+                    <div className="step-title">{s.t}</div>
+                    <div className="step-desc">{s.d}</div>
+                  </div>
+                </div>
               ))}
             </div>
           </div>
+        </div>
+      </section>
 
-          <div className="pros-grid">
-            {(coaches.length === 0 ? Array(6).fill(null) : coaches).map((coach, i) => {
-              if (!coach) return (
-                <div key={i} className="pro-card">
-                  <div className="pro-avatar" style={{ background: 'var(--bg-soft)' }} />
-                  <div style={{ flex: 1 }}>
-                    <div style={{ height: 14, width: '60%', background: 'var(--bg-soft)', borderRadius: 4, marginBottom: 6 }} />
-                    <div style={{ height: 12, width: '40%', background: 'var(--bg-soft)', borderRadius: 4 }} />
-                  </div>
-                </div>
-              );
-              const specialty = coach.profile?.specialties?.[0]
-                ? CATEGORY_LABELS[coach.profile.specialties[0]] || coach.profile.specialties[0]
-                : null;
-              return (
-                <Link key={coach.id} to={`/coaches/${coach.id}`} className="pro-card">
-                  <div className="pro-avatar">
-                    <CoachAvatar coach={coach} />
-                  </div>
-                  <div className="pro-info">
-                    <div className="pro-name">{coach.firstName} {coach.lastName}</div>
-                    {specialty && <div className="pro-role">{specialty}</div>}
-                    {coach.profile?.city && (
-                      <div className="pro-role" style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 4 }}>
-                        <IcMapPin size={11} /> {coach.profile.city}
-                      </div>
-                    )}
-                    <div className="pro-stats">
-                      {coach.averageRating != null && <span><strong>★ {Number(coach.averageRating).toFixed(1)}</strong></span>}
-                      {coach.reviewCount > 0 && <span><strong>{coach.reviewCount}</strong> avis</span>}
-                      {coach.sessionsDone > 0 && <span><strong>{coach.sessionsDone}</strong> séances</span>}
-                      {!coach.averageRating && !coach.sessionsDone && <span>Nouveau</span>}
-                    </div>
-                    {specialty && <div className="pro-pill">{specialty}</div>}
-                  </div>
-                </Link>
-              );
-            })}
+      {/* ── POUR QUI ────────────────────────────────────────────── */}
+      <section className="l-section" id="pour-qui">
+        <div className="container">
+          <div className="section-head">
+            <div>
+              <div className="eyebrow" style={{ marginBottom: 14 }}>Pour qui</div>
+              <h2 className="display">Une réponse<br />pour chaque<br />organisation.</h2>
+            </div>
+            <p className="lede">Que vous soyez une PME en croissance ou un grand groupe, nous adaptons le déploiement à vos enjeux. Et chaque collaborateur trouve son parcours, du sédentaire au sportif aguerri.</p>
           </div>
 
-          <div className="banner" style={{ marginTop: 48 }}>
-            <div>
-              <h3>Réservez votre séance.</h3>
-              <p>Prenez rendez-vous en 60 secondes avec le pro qui correspond à votre objectif. Sans abonnement — à partir de 40€.</p>
+          <div className="eyebrow" style={{ marginBottom: 14 }}>Par profil d'entreprise</div>
+          <div className="seg-grid" style={{ marginBottom: 32 }}>
+            <div className="seg">
+              <div className="seg-tag">PME · 10–50</div>
+              <div className="seg-title">PME</div>
+              <div className="seg-desc">Outils clé en main, déploiement express, impact rapide sur la cohésion d'équipe.</div>
+              <div className="seg-foot">Recommandé : Essentiel ou Boost</div>
             </div>
-            <Link to="/search" className="btn btn-on-dark btn-lg">Trouver un pro <IcArrow size={16} /></Link>
+            <div className="seg">
+              <div className="seg-tag">ETI · 50–500</div>
+              <div className="seg-title">ETI</div>
+              <div className="seg-desc">Reporting RH avancé, account manager dédié, communication interne pilotée.</div>
+              <div className="seg-foot">Recommandé : Boost</div>
+            </div>
+            <div className="seg">
+              <div className="seg-tag">Grand groupe · 500+</div>
+              <div className="seg-title">Grand groupe</div>
+              <div className="seg-desc">Intégration SIRH, SLA, accompagnement premium, programme multi-sites.</div>
+              <div className="seg-foot">Recommandé : Ultra</div>
+            </div>
+          </div>
+
+          <div className="eyebrow" style={{ marginBottom: 14 }}>Par profil de collaborateur</div>
+          <div className="seg-grid">
+            <div className="seg">
+              <div className="seg-tag">Sédentaire</div>
+              <div className="seg-title">Reprise d'activité</div>
+              <div className="seg-desc">Reprise en douceur, équilibre alimentaire, gestion du stress et du sommeil.</div>
+              <div className="seg-foot">Coachs spécialisés en réathlétisation</div>
+            </div>
+            <div className="seg">
+              <div className="seg-tag">Régulier</div>
+              <div className="seg-title">Sportif régulier</div>
+              <div className="seg-desc">Plans d'entraînement structurés, nutrition adaptée, progression mesurée.</div>
+              <div className="seg-foot">Coachs sportifs & diététiciens</div>
+            </div>
+            <div className="seg">
+              <div className="seg-tag">Performance</div>
+              <div className="seg-title">Haute performance</div>
+              <div className="seg-desc">Préparation physique avancée, mental, tests à l'effort, suivi biomarqueurs.</div>
+              <div className="seg-foot">Préparateurs & médecins du sport</div>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* ── COMPARE TABLE ───────────────────────────────────────── */}
-      <section className="l-section" id="compare" style={{ paddingBottom: 96 }}>
+      {/* ── OFFRES ──────────────────────────────────────────────── */}
+      <section className="l-section" id="offres" style={{ paddingBottom: 96 }}>
         <div className="container">
           <div className="section-head">
             <div>
-              <div className="eyebrow" style={{ marginBottom: 14 }}></div>
-              <h2 className="display">Comparez les abonnements.</h2>
+              <div className="eyebrow" style={{ marginBottom: 14 }}>Trois paliers</div>
+              <h2 className="display">Nos offres<br />entreprise.</h2>
             </div>
             <div>
-              <p className="lede" style={{ marginBottom: 20 }}>Pas de frais cachés. Annulation à tout moment. Le bon plan, c'est celui qui colle à votre objectif.</p>
+              <p className="lede" style={{ marginBottom: 20 }}>Un abonnement par collaborateur. Engagement minimum 10 mois. -20% sur la facturation annuelle.</p>
               <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                 <span style={{ fontSize: 13, fontWeight: 600, color: !isYearly ? 'var(--ink)' : 'var(--ink-3)' }}>Mensuel</span>
                 <button
@@ -546,6 +612,43 @@ export default function Landing() {
             </div>
           </div>
 
+          {/* Pricing cards */}
+          <div className="price-grid">
+            {ENTERPRISE_PLANS.map((p) => {
+              const price = isYearly ? p.priceYearly : p.priceMonthly;
+              return (
+                <div key={p.id} className={'price-card' + (p.reco ? ' reco' : '')}>
+                  <span className="price-tag">{p.tag}</span>
+                  <div className="price-name">{p.name}</div>
+                  <div className="price-desc">{p.desc}</div>
+                  {price != null ? (
+                    <>
+                      <div className="price-amount num">{price}€</div>
+                      <div className="price-amount-sub">/ collaborateur / mois{isYearly ? ` · facturé ${price * 12}€/an` : ''}</div>
+                    </>
+                  ) : (
+                    <>
+                      <div className="price-amount num">Sur devis</div>
+                      <div className="price-amount-sub">Adapté à votre périmètre</div>
+                    </>
+                  )}
+                  <ul className="price-features">
+                    {p.features.map((f, i) => (
+                      <li key={i}><IcCheck size={14} /> {f}</li>
+                    ))}
+                  </ul>
+                  <a href="#demo" className={'btn btn-block ' + (p.reco ? 'btn-accent' : 'btn-primary')}>{p.cta}</a>
+                </div>
+              );
+            })}
+          </div>
+
+          <div style={{ textAlign: 'center', marginBottom: 48, color: 'var(--ink-3)', fontSize: 13, fontFamily: '"JetBrains Mono", monospace' }}>
+            Prix HT · TVA 20% en sus · Engagement minimum 10 mois
+          </div>
+
+          {/* Comparison table */}
+          <div className="eyebrow" style={{ marginBottom: 14, textAlign: 'center' }}>Comparer en détail</div>
           <div style={{ overflowX: 'auto' }}>
             <table className="compare-table">
               <thead>
@@ -558,12 +661,21 @@ export default function Landing() {
                         <div className="compare-col-tag">{p.tag}</div>
                         <div className="compare-col-name">{p.name}</div>
                         <div style={{ fontSize: 12, color: 'var(--ink-3)', fontFamily: '"JetBrains Mono",monospace', marginBottom: 4 }}>{p.desc}</div>
-                        <div className="compare-price num">{price}€</div>
-                        <div className="compare-price-sub">/ mois{isYearly ? ` · facturé ${price * 12}€/an` : ''}</div>
+                        {price != null ? (
+                          <>
+                            <div className="compare-price num">{price}€</div>
+                            <div className="compare-price-sub">/ collab / mois</div>
+                          </>
+                        ) : (
+                          <>
+                            <div className="compare-price num">Sur devis</div>
+                            <div className="compare-price-sub">Custom</div>
+                          </>
+                        )}
                         <div className="compare-cta">
-                          <Link to="/register?role=ENTREPRISE" className={'btn btn-block ' + (p.reco ? 'btn-accent' : 'btn-primary')}>
+                          <a href="#demo" className={'btn btn-block ' + (p.reco ? 'btn-accent' : 'btn-primary')}>
                             {p.cta}
-                          </Link>
+                          </a>
                         </div>
                       </th>
                     );
@@ -589,27 +701,147 @@ export default function Landing() {
               </tbody>
             </table>
           </div>
+        </div>
+      </section>
 
-          <div style={{ textAlign: 'center', marginTop: 32, color: 'var(--ink-3)', fontSize: 13, fontFamily: '"JetBrains Mono", monospace' }}>
-            Prix HT · Engagement minimum 10 mois · TVA 20% en sus.
+      {/* ── PREUVES / RESSOURCES ────────────────────────────────── */}
+      <section className="l-section" id="preuves">
+        <div className="container">
+          <div className="section-head">
+            <div>
+              <div className="eyebrow" style={{ marginBottom: 14 }}>Preuves</div>
+              <h2 className="display">Ce qui<br />nous distingue.</h2>
+            </div>
+            <p className="lede">Une promesse claire, une exécution rigoureuse. Nos engagements de qualité et de conformité sont au cœur de la plateforme.</p>
+          </div>
+
+          <div className="proof-grid">
+            <div className="proof">
+              <div>
+                <div className="proof-icon"><IcZap size={22} stroke={1.5} /></div>
+                <div className="proof-num">48 h</div>
+                <div className="proof-label">Déploiement complet de l'offre, du contrat aux premiers accès collaborateurs.</div>
+              </div>
+            </div>
+            <div className="proof">
+              <div>
+                <div className="proof-icon"><IcShield size={22} stroke={1.5} /></div>
+                <div className="proof-num">Certifiés</div>
+                <div className="proof-label">Tous nos professionnels sont diplômés et leurs documents vérifiés un à un.</div>
+              </div>
+            </div>
+            <div className="proof">
+              <div>
+                <div className="proof-icon"><IcChart size={22} stroke={1.5} /></div>
+                <div className="proof-num">3 domaines</div>
+                <div className="proof-label">Sport, nutrition, mental — une plateforme unique pour la santé globale.</div>
+              </div>
+            </div>
+          </div>
+
+          <div className="quote">
+            <div className="quote-mark">"</div>
+            <div>
+              <div className="quote-text">
+                Nous cherchions une solution simple à déployer, conforme RGPD, et qui couvre vraiment les trois piliers de la santé au travail. Goupyl Sport a coché toutes les cases en moins de deux semaines.
+              </div>
+              <div className="quote-author">
+                <div style={{ width: 44, height: 44, borderRadius: '50%', background: 'var(--accent)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 700, fontFamily: 'Archivo, sans-serif' }}>CL</div>
+                <div>
+                  <div className="quote-author-name">Camille Laurent</div>
+                  <div className="quote-author-role">DRH · Groupe industriel · 320 collaborateurs</div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* ── DEV YOUR ACTIVITY ───────────────────────────────────── */}
+      {/* ── DEMO / CONTACT ──────────────────────────────────────── */}
+      <section className="l-section" id="demo">
+        <div className="container">
+          <div className="demo-grid">
+            <div className="demo-info">
+              <div className="eyebrow" style={{ marginBottom: 18 }}>Démo</div>
+              <h2 className="display">Parlons<br />de vos équipes.</h2>
+              <p>30 minutes pour comprendre vos enjeux, vous présenter la plateforme et co-construire un plan de déploiement adapté.</p>
+              <div className="demo-bullet"><IcCheck size={16} stroke={2.4} /> Diagnostic personnalisé en 30 minutes</div>
+              <div className="demo-bullet"><IcCheck size={16} stroke={2.4} /> Démonstration plateforme & reporting RH</div>
+              <div className="demo-bullet"><IcCheck size={16} stroke={2.4} /> Devis adapté à votre périmètre</div>
+              <div className="demo-bullet"><IcCheck size={16} stroke={2.4} /> Sans engagement, sans pression</div>
+            </div>
+
+            {demoSent ? (
+              <div className="demo-success">
+                <div className="demo-success-icon"><IcCheck size={28} stroke={3} /></div>
+                <h3 className="display" style={{ fontSize: 32, margin: '0 0 14px' }}>Merci !</h3>
+                <p style={{ color: 'var(--ink-3)', fontSize: 14.5, maxWidth: 360, margin: '0 auto' }}>
+                  Votre demande est bien reçue. Un expert Goupyl Sport vous recontacte sous 24 h ouvrées pour caler un créneau.
+                </p>
+              </div>
+            ) : (
+              <form className="demo-form" onSubmit={handleDemoSubmit}>
+                <div className="demo-form-row">
+                  <div className="demo-field">
+                    <label>Entreprise</label>
+                    <input type="text" required value={demoForm.company} onChange={handleDemoChange('company')} placeholder="Nom de l'entreprise" />
+                  </div>
+                  <div className="demo-field">
+                    <label>Effectif</label>
+                    <select required value={demoForm.size} onChange={handleDemoChange('size')}>
+                      <option value="">Sélectionner</option>
+                      <option>10–50</option>
+                      <option>50–200</option>
+                      <option>200–500</option>
+                      <option>500–1000</option>
+                      <option>1000+</option>
+                    </select>
+                  </div>
+                </div>
+                <div className="demo-form-row">
+                  <div className="demo-field">
+                    <label>Nom & prénom</label>
+                    <input type="text" required value={demoForm.name} onChange={handleDemoChange('name')} placeholder="Votre nom" />
+                  </div>
+                  <div className="demo-field">
+                    <label>Téléphone</label>
+                    <input type="tel" value={demoForm.phone} onChange={handleDemoChange('phone')} placeholder="06 12 34 56 78" />
+                  </div>
+                </div>
+                <div className="demo-field">
+                  <label>Email professionnel</label>
+                  <input type="email" required value={demoForm.email} onChange={handleDemoChange('email')} placeholder="vous@entreprise.fr" />
+                </div>
+                <div className="demo-field">
+                  <label>Votre projet</label>
+                  <textarea value={demoForm.message} onChange={handleDemoChange('message')} placeholder="Quelques mots sur votre contexte, vos enjeux..." />
+                </div>
+                <button type="submit" className="btn btn-primary btn-lg btn-block">Demander une démo gratuite <IcArrow size={16} /></button>
+                <div style={{ marginTop: 14, fontSize: 11, color: 'var(--ink-3)', fontFamily: '"JetBrains Mono", monospace', textAlign: 'center' }}>
+                  Vos données sont traitées conformément au RGPD.
+                </div>
+              </form>
+            )}
+          </div>
+        </div>
+      </section>
+
+      {/* ── PROS ────────────────────────────────────────────────── */}
       <section className="l-section">
         <div className="container">
           <div className="dark-card">
-            <div className="eyebrow" style={{ marginBottom: 18, color: '#999' }}></div>
-            <h2 className="display">Développez votre activité.</h2>
-            <p>Coachs, diététiciens, kinés, préparateurs mentaux : rejoignez Goupyl, gérez vos clients, encaissez en un clic. <strong style={{ color: '#fff' }}>70% reversés</strong> à chaque séance.</p>
-            <div className="dark-pillrow">
-              {['Agenda', 'Paiements', 'Séances live', 'Programmes', 'Facturation', 'Avis clients'].map(pill => (
-                <span key={pill} className="dark-pill">{pill}</span>
+            <div className="eyebrow" style={{ marginBottom: 18, color: '#999' }}>Réseau de pros</div>
+            <h2 className="display">Rejoindre Goupyl<br />en tant que pro.</h2>
+            <p>Coachs sportifs, diététiciens, préparateurs mentaux : intégrez notre réseau dédié aux entreprises et accompagnez des collaborateurs engagés dans des programmes structurés.</p>
+            <div style={{ display: 'flex', gap: 8, justifyContent: 'center', flexWrap: 'wrap', marginTop: 32 }}>
+              {[IcRun, IcLeaf, IcBrain].map((I, i) => (
+                <span key={i} style={{ width: 48, height: 48, border: '1px solid rgba(255,255,255,.2)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff' }}>
+                  <I size={20} stroke={1.5} />
+                </span>
               ))}
             </div>
             <div style={{ marginTop: 32 }}>
-              <Link to="/register?role=INTERVENANT" className="btn btn-on-dark btn-lg">Devenir pro <IcArrow size={16} /></Link>
+              <Link to="/register?role=INTERVENANT" className="btn btn-on-dark btn-lg">Devenir intervenant <IcArrow size={16} /></Link>
             </div>
           </div>
         </div>
@@ -618,7 +850,7 @@ export default function Landing() {
       {/* ── FAQ ─────────────────────────────────────────────────── */}
       <section className="l-section">
         <div className="container" style={{ maxWidth: 880 }}>
-          <div className="eyebrow" style={{ textAlign: 'center', marginBottom: 14 }}></div>
+          <div className="eyebrow" style={{ textAlign: 'center', marginBottom: 14 }}>FAQ</div>
           <h2 className="display" style={{ textAlign: 'center', fontSize: 'clamp(40px,5vw,72px)', marginBottom: 48 }}>Questions fréquentes.</h2>
           {FAQS.map((faq, i) => (
             <FaqItem key={i} q={faq[0]} a={faq[1]} n={i + 1} open={openFaq === i} onToggle={() => setOpenFaq(openFaq === i ? -1 : i)} />
@@ -634,22 +866,22 @@ export default function Landing() {
             <div>
               <img src={logo} alt="Goupyl Sport" className="w-55 h-auto ml-[-18px]" />
               <p style={{ color: 'var(--ink-3)', fontSize: 13.5, maxWidth: 280, marginTop: 4 }}>
-                Sport. Nutrition. Bien-être. La plateforme qui réunit les meilleurs pros, à la séance ou sur abonnement.
+                La plateforme B2B de sport-santé en entreprise. Sport, nutrition, mental — par des professionnels certifiés.
               </p>
             </div>
             <div className="foot-col">
-              <h4>Domaines</h4>
-              <Link to="/search?q=sport">Sport</Link>
-              <Link to="/search?q=nutrition">Nutrition</Link>
-              <Link to="/search?q=mental">Mental</Link>
-              <Link to="/search?q=bienetre">Bien-être</Link>
+              <h4>Plateforme</h4>
+              <a href="#parcours">Deux parcours</a>
+              <a href="#comment-ca-marche">Comment ça marche</a>
+              <a href="#pour-qui">Pour qui</a>
+              <a href="#preuves">Preuves</a>
             </div>
             <div className="foot-col">
-              <h4>Entreprise</h4>
-              <a href="#compare">Zen</a>
-              <a href="#compare">Pulse</a>
-              <a href="#compare">Boost</a>
-              <Link to="/register?role=ENTREPRISE">Commencer</Link>
+              <h4>Offres</h4>
+              <a href="#offres">Essentiel</a>
+              <a href="#offres">Boost</a>
+              <a href="#offres">Ultra</a>
+              <a href="#demo">Demander une démo</a>
             </div>
             <div className="foot-col">
               <h4>Légal</h4>

@@ -69,10 +69,10 @@ export default function PublicNavbar({ transparent = true, dark = false }) {
           <Link to="/">
             <img src={logo} alt="Goupyl" style={{ height: 100, width: 'auto' }} /></Link>
           <div className="pnav-links" style={{ display: 'flex', alignItems: 'center', gap: 28 }}>
-            <Link to="/search" className="pnav-link">Coachs</Link>
-            <a href="/#particuliers" className="pnav-link">Particuliers</a>
-            <a href="/#entreprises" className="pnav-link">Entreprises</a>
-            <Link to="/register?role=INTERVENANT" className="pnav-link">Devenir coach</Link>
+            <a href="/#offres" className="pnav-link">Offres</a>
+            <a href="/#comment-ca-marche" className="pnav-link">Comment ça marche</a>
+            <a href="/#pour-qui" className="pnav-link">Pour qui</a>
+            <Link to="/register?role=INTERVENANT" className="pnav-link">Devenir intervenant</Link>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
             {user ? (

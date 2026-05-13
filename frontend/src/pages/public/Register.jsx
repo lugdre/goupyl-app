@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import toast from 'react-hot-toast';
-import { Building2, User, Briefcase, Users, Mail } from 'lucide-react';
+import { Building2, Briefcase, Users, Mail } from 'lucide-react';
 import logo from '../../assets/logo-goupyl-white.png';
 
 const CSS = `
@@ -27,7 +27,7 @@ const CSS = `
   .auth-form-eyebrow{font-family:"JetBrains Mono",monospace;font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--ink-3);margin-bottom:16px}
   .auth-form-h1{font-family:"Archivo Narrow",sans-serif;font-weight:800;font-size:clamp(44px,4.5vw,58px);text-transform:uppercase;letter-spacing:-.015em;line-height:.92;color:var(--ink);margin:0 0 36px}
   .auth-section-label{font-family:"JetBrains Mono",monospace;font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-3);margin-bottom:10px}
-  .auth-roles{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+  .auth-roles{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px}
   .auth-role{padding:10px 12px;border:1px solid var(--line);background:#fff;text-align:left;display:flex;align-items:flex-start;gap:8px;cursor:pointer;font-family:"Inter Tight",sans-serif;transition:border-color .15s,background .15s;border-radius:2px}
   .auth-role:hover{border-color:rgba(0,0,0,.25)}
   .auth-role.selected{border:2px solid var(--ink);background:var(--bg)}
@@ -56,10 +56,9 @@ const CSS = `
 `;
 
 const ROLES = [
-  { value: 'ENTREPRISE', label: 'Entreprise', desc: 'Je gère une équipe', icon: Building2 },
-  { value: 'SALARIE', label: 'Salarié', desc: 'Mon entreprise est partenaire', icon: Users },
-  { value: 'CLIENT', label: 'Particulier', desc: 'Je cherche un coach', icon: User },
-  { value: 'INTERVENANT', label: 'Coach / Pro', desc: 'Je propose mes services', icon: Briefcase },
+  { value: 'ENTREPRISE', label: 'Entreprise', desc: 'DRH / dirigeant / CSE', icon: Building2 },
+  { value: 'SALARIE', label: 'Collaborateur', desc: 'Mon entreprise est partenaire', icon: Users },
+  { value: 'INTERVENANT', label: 'Professionnel', desc: 'Coach / intervenant', icon: Briefcase },
 ];
 
 export default function Register() {
@@ -171,10 +170,10 @@ export default function Register() {
         <div className="auth-panel-body">
           <div className="auth-eyebrow">{'// Inscription'}</div>
           <h2 className="auth-display" style={{ fontSize: 'clamp(48px, 5vw, 76px)' }}>
-            Rejoignez<br />Goupyl Sport
+            La santé<br />de vos<br />équipes
           </h2>
           <p className="auth-panel-sub">
-            La plateforme qui connecte coaches certifiés, entreprises et particuliers.
+            La plateforme B2B sport-santé qui améliore la performance et le bien-être de vos collaborateurs.
           </p>
         </div>
 
