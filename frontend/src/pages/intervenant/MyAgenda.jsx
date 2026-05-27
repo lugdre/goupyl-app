@@ -5,8 +5,10 @@ import Card from '../../components/ui/Card';
 import Badge from '../../components/ui/Badge';
 import Button from '../../components/ui/Button';
 import Spinner from '../../components/ui/Spinner';
+import MobileWeekCalendar from '../../components/appointment/MobileWeekCalendar';
 import { Calendar, ChevronLeft, ChevronRight, List, LayoutGrid, Star } from 'lucide-react';
 import { STATUS_LABELS } from '../../utils/constants';
+import { useIsMobile } from '../../hooks/useMediaQuery';
 import toast from 'react-hot-toast';
 
 const STATUS_FILTERS = ['', 'PENDING', 'CONFIRMED', 'DONE', 'CANCELLED'];
@@ -44,6 +46,7 @@ const STATUS_BG = {
 };
 
 export default function MyAgenda() {
+  const isMobile = useIsMobile();
   const [appointments, setAppointments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState('');
@@ -187,6 +190,25 @@ export default function MyAgenda() {
       {loading ? (
         <Spinner />
       ) : view === 'week' ? (
+        isMobile ? (
+          <Card>
+            <MobileWeekCalendar
+              weekStart={weekStart}
+              onWeekChange={setWeekStart}
+              appointments={weekAppointments}
+              onSelectAppointment={openModal}
+              renderAppointmentContent={(appt) => (
+                <>
+                  <p className="font-semibold">
+                    {new Date(appt.scheduledAt).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
+                  </p>
+                  <p className="truncate">{appt.client.firstName} {appt.client.lastName}</p>
+                  <p className="truncate opacity-75">{appt.coachService?.name || appt.service?.name}</p>
+                </>
+              )}
+            />
+          </Card>
+        ) : (
         <Card>
           <div className="flex items-center justify-between mb-4">
             <button
@@ -288,6 +310,7 @@ export default function MyAgenda() {
             </div>
           </div>
         </Card>
+        )
       ) : appointments.length === 0 ? (
         <Card>
           <div className="text-center py-8">

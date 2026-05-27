@@ -7,8 +7,10 @@ import Spinner from '../../components/ui/Spinner';
 import PaymentModal from '../../components/payment/PaymentModal';
 import ReviewModal from '../../components/review/ReviewModal';
 import CancellationModal from '../../components/appointment/CancellationModal';
+import MobileWeekCalendar from '../../components/appointment/MobileWeekCalendar';
 import { Calendar, ChevronLeft, ChevronRight, Clock, CreditCard, Star, CheckCircle, List, LayoutGrid, X } from 'lucide-react';
 import { STATUS_LABELS } from '../../utils/constants';
+import { useIsMobile } from '../../hooks/useMediaQuery';
 import toast from 'react-hot-toast';
 
 const HOURS_48 = 48 * 60 * 60 * 1000;
@@ -46,6 +48,7 @@ const addDays = (date, n) => {
 };
 
 export default function MyAppointments() {
+  const isMobile = useIsMobile();
   const [appointments, setAppointments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState('');
@@ -149,6 +152,25 @@ export default function MyAppointments() {
       {loading ? (
         <Spinner />
       ) : view === 'week' ? (
+        isMobile ? (
+          <Card>
+            <MobileWeekCalendar
+              weekStart={weekStart}
+              onWeekChange={setWeekStart}
+              appointments={weekAppointments}
+              onSelectAppointment={setSelected}
+              renderAppointmentContent={(appt) => (
+                <>
+                  <p className="font-semibold">
+                    {new Date(appt.scheduledAt).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
+                  </p>
+                  <p className="truncate">{appt.coachService?.name || appt.service?.name}</p>
+                  <p className="truncate opacity-75">{appt.intervenant?.firstName} {appt.intervenant?.lastName}</p>
+                </>
+              )}
+            />
+          </Card>
+        ) : (
         <Card>
           <div className="flex items-center justify-between mb-4">
             <button
@@ -236,6 +258,7 @@ export default function MyAppointments() {
             </div>
           </div>
         </Card>
+        )
       ) : appointments.length === 0 ? (
         <Card>
           <div className="text-center py-8">
