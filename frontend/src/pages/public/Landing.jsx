@@ -238,35 +238,58 @@ export default function Landing() {
         .ticker-item::after{content:"●";color:var(--accent);font-size:8px}
         @keyframes tick{from{transform:translateX(0)}to{transform:translateX(-50%)}}
 
-        /* two cards (parcours) */
-        .duo-grid{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--line);border:1px solid var(--line)}
-        .duo-card{background:var(--bg);padding:48px 40px;display:flex;flex-direction:column;min-height:420px;position:relative}
-        .duo-card:hover{background:var(--bg-soft)}
-        .duo-num{font-family:"JetBrains Mono",monospace;font-size:11px;color:var(--ink-3);letter-spacing:.16em;text-transform:uppercase}
-        .duo-icon{width:56px;height:56px;margin:20px 0 24px;border:1px solid var(--ink);border-radius:50%;display:flex;align-items:center;justify-content:center;color:var(--ink)}
-        .duo-title{font-family:"Archivo Narrow",sans-serif;font-weight:700;font-size:40px;text-transform:uppercase;letter-spacing:-.01em}
-        .duo-sub{font-size:14px;color:var(--ink-3);margin-top:6px}
-        .duo-list{margin-top:28px;list-style:none;padding:0;display:flex;flex-direction:column;gap:14px}
-        .duo-list li{display:flex;gap:12px;align-items:flex-start;font-size:14.5px;color:var(--ink-2)}
-        .duo-list li::before{content:"";display:inline-block;width:6px;height:6px;background:var(--accent);border-radius:50%;margin-top:8px;flex-shrink:0}
+        /* usages — asymmetric contrast split */
+        .usage-split{display:grid;grid-template-columns:1.04fr .96fr;border:1px solid var(--ink)}
+        .upanel{position:relative;padding:52px 46px;display:flex;flex-direction:column;overflow:hidden;isolation:isolate}
+        .upanel--dark{background:var(--ink);color:var(--bg)}
+        .upanel--light{background:var(--bg);color:var(--ink);border-left:1px solid var(--ink)}
+        .upanel-ghost{position:absolute;top:-28px;right:14px;font-family:"Archivo Narrow",sans-serif;font-weight:800;font-size:210px;line-height:1;letter-spacing:-.05em;z-index:-1;pointer-events:none;user-select:none}
+        .upanel--dark .upanel-ghost{color:rgba(255,255,255,.05)}
+        .upanel--light .upanel-ghost{color:rgba(0,0,0,.045)}
+        .upanel-kicker{display:flex;align-items:center;gap:12px;font-family:"JetBrains Mono",monospace;font-size:11px;letter-spacing:.16em;text-transform:uppercase;opacity:.65}
+        .upanel-kicker::before{content:"";width:26px;height:1px;background:currentColor;opacity:.5}
+        .upanel-icon{width:52px;height:52px;margin:28px 0 22px;border:1px solid currentColor;border-radius:50%;display:flex;align-items:center;justify-content:center;opacity:.9}
+        .upanel-title{font-family:"Archivo Narrow",sans-serif;font-weight:700;font-size:clamp(34px,3.4vw,46px);text-transform:uppercase;letter-spacing:-.015em;line-height:.96}
+        .upanel-sub{font-size:14.5px;margin-top:10px;opacity:.6;max-width:360px}
+        .upanel-list{margin-top:32px;list-style:none;padding:0}
+        .upanel-list li{display:grid;grid-template-columns:auto 1fr;gap:16px;align-items:start;font-size:14.5px;line-height:1.45;padding:15px 0;border-top:1px solid currentColor}
+        .upanel--dark .upanel-list li{border-color:rgba(255,255,255,.13)}
+        .upanel--light .upanel-list li{border-color:var(--line)}
+        .upanel-list li:last-child{border-bottom:1px solid currentColor}
+        .upanel--dark .upanel-list li:last-child{border-bottom-color:rgba(255,255,255,.13)}
+        .upanel--light .upanel-list li:last-child{border-bottom-color:var(--line)}
+        .upanel-list .li-idx{font-family:"JetBrains Mono",monospace;font-size:11px;letter-spacing:.06em;padding-top:2px;opacity:.45}
 
-        /* steps */
-        .steps-grid{display:grid;grid-template-columns:1fr 1fr;gap:48px}
-        .steps-col-title{font-family:"Archivo Narrow",sans-serif;font-weight:700;font-size:28px;text-transform:uppercase;letter-spacing:-.01em;margin-bottom:8px}
-        .steps-col-sub{font-size:13.5px;color:var(--ink-3);margin-bottom:24px}
-        .step{border-top:1px solid var(--line);padding:20px 0;display:grid;grid-template-columns:48px 1fr;gap:16px;align-items:flex-start}
-        .step:last-child{border-bottom:1px solid var(--line)}
-        .step-num{font-family:"Archivo Narrow",sans-serif;font-weight:700;font-size:28px;color:var(--accent);line-height:1}
-        .step-title{font-weight:600;font-size:15.5px;margin-bottom:4px}
-        .step-desc{font-size:13.5px;color:var(--ink-3)}
+        /* process — swimlane timeline */
+        .process{display:flex;flex-direction:column}
+        .process-lane{display:grid;grid-template-columns:minmax(150px,.72fr) repeat(4,1fr)}
+        .process-lane + .process-lane{margin-top:40px}
+        .process-rowlabel{padding:24px 28px 24px 0;display:flex;flex-direction:column;justify-content:center}
+        .process-lane-name{font-family:"Archivo Narrow",sans-serif;font-weight:700;font-size:26px;text-transform:uppercase;letter-spacing:-.01em;line-height:1}
+        .process-lane-sub{font-size:12.5px;color:var(--ink-3);margin-top:8px;max-width:210px;line-height:1.4}
+        .process-cell{position:relative;padding:30px 22px 28px;border-top:1px solid var(--line);transition:background .2s}
+        .process-cell + .process-cell{border-left:1px solid var(--line-2)}
+        .process-cell:hover{background:var(--bg-soft)}
+        .process-node{position:absolute;top:-5px;left:22px;width:9px;height:9px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 4px var(--bg)}
+        .process-step{font-family:"JetBrains Mono",monospace;font-size:11px;letter-spacing:.16em;color:var(--accent);display:block;margin-bottom:14px}
+        .process-cell-title{font-weight:600;font-size:15px;margin-bottom:6px}
+        .process-cell-desc{font-size:13px;color:var(--ink-3);line-height:1.5}
 
-        /* segments */
-        .seg-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line);border:1px solid var(--line)}
-        .seg{background:var(--bg);padding:32px 28px;min-height:260px;display:flex;flex-direction:column}
-        .seg-tag{font-family:"JetBrains Mono",monospace;font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-3);margin-bottom:18px}
-        .seg-title{font-family:"Archivo Narrow",sans-serif;font-weight:700;font-size:30px;text-transform:uppercase;letter-spacing:-.01em}
-        .seg-desc{font-size:13.5px;color:var(--ink-3);margin-top:12px;flex:1}
-        .seg-foot{margin-top:18px;font-family:"JetBrains Mono",monospace;font-size:11px;color:var(--ink-2);letter-spacing:.06em}
+        /* profiles */
+        .prof-grid{display:grid;grid-template-columns:repeat(3,1fr);border:1px solid var(--line)}
+        .prof{position:relative;background:var(--bg);padding:34px 30px 30px;display:flex;flex-direction:column;min-height:264px;transition:background .2s}
+        .prof + .prof{border-left:1px solid var(--line)}
+        .prof:hover{background:var(--bg-soft)}
+        .prof::before{content:"";position:absolute;left:0;top:0;bottom:0;width:2px;background:var(--accent);transform:scaleY(0);transform-origin:top;transition:transform .3s}
+        .prof:hover::before{transform:scaleY(1)}
+        .prof-top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:24px}
+        .prof-tag{font-family:"JetBrains Mono",monospace;font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-4)}
+        .prof-idx{font-family:"Archivo Narrow",sans-serif;font-weight:700;font-size:13px;color:var(--ink-4);line-height:1}
+        .prof-mark{width:38px;height:38px;border:1px solid var(--ink);border-radius:50%;display:flex;align-items:center;justify-content:center;color:var(--ink);flex-shrink:0}
+        .prof-title{font-family:"Archivo Narrow",sans-serif;font-weight:700;font-size:clamp(26px,2.4vw,32px);text-transform:uppercase;letter-spacing:-.01em;line-height:.98}
+        .prof-desc{font-size:13.5px;color:var(--ink-3);margin-top:14px;flex:1;line-height:1.5}
+        .prof-foot{margin-top:22px;padding-top:16px;border-top:1px solid var(--line);display:flex;align-items:center;gap:10px;font-family:"JetBrains Mono",monospace;font-size:11px;letter-spacing:.04em;color:var(--ink-2)}
+        .prof-foot .dot{width:5px;height:5px;border-radius:50%;background:var(--accent);flex-shrink:0}
 
         /* proof / stat cards */
         .proof-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line);border:1px solid var(--line);margin-bottom:48px}
@@ -348,9 +371,16 @@ export default function Landing() {
         @media(max-width:980px){
           .hero-grid{grid-template-columns:1fr;gap:32px;padding:64px 0}
           .section-head{grid-template-columns:1fr;gap:16px}
-          .duo-grid{grid-template-columns:1fr}
-          .steps-grid{grid-template-columns:1fr;gap:32px}
-          .seg-grid{grid-template-columns:1fr}
+          .usage-split{grid-template-columns:1fr}
+          .upanel--light{border-left:none;border-top:1px solid var(--ink)}
+          .upanel{padding:40px 28px}
+          .upanel-ghost{font-size:150px}
+          .process-lane{grid-template-columns:1fr}
+          .process-lane + .process-lane{margin-top:24px}
+          .process-rowlabel{padding:0 0 8px}
+          .process-cell + .process-cell{border-left:none}
+          .prof-grid{grid-template-columns:1fr}
+          .prof + .prof{border-left:none;border-top:1px solid var(--line)}
           .proof-grid{grid-template-columns:1fr}
           .price-grid{grid-template-columns:1fr}
           .quote{grid-template-columns:1fr;gap:20px;padding:32px}
@@ -438,29 +468,39 @@ export default function Landing() {
             <p className="lede">Goupyl Sport s'adresse autant aux décideurs qu'aux collaborateurs. Chaque audience trouve sa réponse, dans une seule plateforme.</p>
           </div>
 
-          <div className="duo-grid">
-            <div className="duo-card">
-              <div className="duo-num">01 / Décideur</div>
-              <div className="duo-icon"><IcBuilding size={24} stroke={1.5} /></div>
-              <div className="duo-title">DRH, Dirigeant, CSE.</div>
-              <div className="duo-sub">Pilotez la santé et la performance de vos équipes.</div>
-              <ul className="duo-list">
-                <li>Pourquoi déployer : prévention, attractivité, fidélisation.</li>
-                <li>ROI mesurable : engagement, absentéisme, satisfaction.</li>
-                <li>Pilotage simple : tableau de bord RH agrégé et anonymisé.</li>
-                <li>Renouvellement transparent : ajustement du périmètre à chaque échéance.</li>
+          <div className="usage-split">
+            <div className="upanel upanel--dark">
+              <span className="upanel-ghost">01</span>
+              <div className="upanel-kicker">Décideur</div>
+              <div className="upanel-icon"><IcBuilding size={24} stroke={1.5} /></div>
+              <div className="upanel-title">DRH, Dirigeant,<br />CSE.</div>
+              <div className="upanel-sub">Pilotez la santé et la performance de vos équipes.</div>
+              <ul className="upanel-list">
+                {[
+                  'Pourquoi déployer : prévention, attractivité, fidélisation.',
+                  'ROI mesurable : engagement, absentéisme, satisfaction.',
+                  'Pilotage simple : tableau de bord RH agrégé et anonymisé.',
+                  'Renouvellement transparent : périmètre ajusté à chaque échéance.',
+                ].map((t, i) => (
+                  <li key={i}><span className="li-idx">{String(i + 1).padStart(2, '0')}</span><span>{t}</span></li>
+                ))}
               </ul>
             </div>
-            <div className="duo-card">
-              <div className="duo-num">02 / Collaborateur</div>
-              <div className="duo-icon"><IcUsers size={24} stroke={1.5} /></div>
-              <div className="duo-title">Salarié, équipier.</div>
-              <div className="duo-sub">Un accompagnement sur-mesure, à votre rythme.</div>
-              <ul className="duo-list">
-                <li>Accès en 2 minutes avec un code d'invitation entreprise.</li>
-                <li>Tout au même endroit : coachs sportifs, diététiciens, préparateurs mentaux.</li>
-                <li>Plan personnalisé, séances en visio ou en présentiel, suivi continu.</li>
-                <li>Progression visible : objectifs, bilans, historique.</li>
+            <div className="upanel upanel--light">
+              <span className="upanel-ghost">02</span>
+              <div className="upanel-kicker">Collaborateur</div>
+              <div className="upanel-icon"><IcUsers size={24} stroke={1.5} /></div>
+              <div className="upanel-title">Salarié,<br />équipier.</div>
+              <div className="upanel-sub">Un accompagnement sur-mesure, à votre rythme.</div>
+              <ul className="upanel-list">
+                {[
+                  "Accès en 2 minutes avec un code d'invitation entreprise.",
+                  'Tout au même endroit : coachs, diététiciens, préparateurs mentaux.',
+                  'Plan personnalisé, séances en visio ou en présentiel, suivi continu.',
+                  'Progression visible : objectifs, bilans, historique.',
+                ].map((t, i) => (
+                  <li key={i}><span className="li-idx">{String(i + 1).padStart(2, '0')}</span><span>{t}</span></li>
+                ))}
               </ul>
             </div>
           </div>
@@ -478,43 +518,44 @@ export default function Landing() {
             <p className="lede">Deux parcours d'onboarding pensés pour fluidifier le déploiement côté entreprise, et l'engagement côté collaborateurs.</p>
           </div>
 
-          <div className="steps-grid">
-            <div>
-              <div className="steps-col-title">Entreprise</div>
-              <div className="steps-col-sub">Du contrat aux premiers résultats, en moins de deux semaines.</div>
-              {[
-                { t: 'Contractualisation', d: 'Choix de l\'offre, signature en ligne, configuration du compte entreprise.' },
-                { t: 'Kit de lancement', d: 'Codes d\'invitation, supports de communication interne, FAQ collaborateurs.' },
-                { t: 'Communication interne', d: 'Annonce coordonnée avec notre équipe : email, intranet, affichage.' },
-                { t: 'Premiers résultats', d: 'Tableau de bord RH actif, premiers bilans, indicateurs d\'engagement.' },
-              ].map((s, i) => (
-                <div className="step" key={i}>
-                  <div className="step-num">{String(i + 1).padStart(2, '0')}</div>
-                  <div>
-                    <div className="step-title">{s.t}</div>
-                    <div className="step-desc">{s.d}</div>
-                  </div>
+          <div className="process">
+            {[
+              {
+                name: 'Entreprise',
+                sub: 'Du contrat aux premiers résultats, en moins de deux semaines.',
+                steps: [
+                  { t: 'Contractualisation', d: 'Choix de l\'offre, signature en ligne, configuration du compte.' },
+                  { t: 'Kit de lancement', d: 'Codes d\'invitation, supports de communication interne, FAQ.' },
+                  { t: 'Communication interne', d: 'Annonce coordonnée : email, intranet, affichage.' },
+                  { t: 'Premiers résultats', d: 'Tableau de bord RH actif, bilans, indicateurs d\'engagement.' },
+                ],
+              },
+              {
+                name: 'Collaborateur',
+                sub: 'Du code d\'invitation au premier rendez-vous, en quelques minutes.',
+                steps: [
+                  { t: 'Inscription par code', d: 'Création du compte via le code entreprise reçu par email.' },
+                  { t: 'Bilan initial', d: 'Questionnaire santé, objectifs, préférences. Confidentiel.' },
+                  { t: 'Plan personnalisé', d: 'Professionnels adaptés, planification des séances.' },
+                  { t: 'Suivi des résultats', d: 'Progression visible, ajustements, accès continu aux experts.' },
+                ],
+              },
+            ].map((lane, li) => (
+              <div className="process-lane" key={li}>
+                <div className="process-rowlabel">
+                  <span className="process-lane-name">{lane.name}</span>
+                  <span className="process-lane-sub">{lane.sub}</span>
                 </div>
-              ))}
-            </div>
-            <div>
-              <div className="steps-col-title">Collaborateur</div>
-              <div className="steps-col-sub">Du code d'invitation au premier rendez-vous, en quelques minutes.</div>
-              {[
-                { t: 'Inscription par code', d: 'Création du compte via le code entreprise reçu par email ou intranet.' },
-                { t: 'Bilan initial', d: 'Questionnaire santé, objectifs, préférences. Confidentiel et chiffré.' },
-                { t: 'Plan personnalisé', d: 'Recommandation des professionnels adaptés, planification des séances.' },
-                { t: 'Suivi des résultats', d: 'Progression visible, ajustements, accès continu à l\'équipe d\'experts.' },
-              ].map((s, i) => (
-                <div className="step" key={i}>
-                  <div className="step-num">{String(i + 1).padStart(2, '0')}</div>
-                  <div>
-                    <div className="step-title">{s.t}</div>
-                    <div className="step-desc">{s.d}</div>
+                {lane.steps.map((s, i) => (
+                  <div className="process-cell" key={i}>
+                    <span className="process-node" />
+                    <span className="process-step">{String(i + 1).padStart(2, '0')}</span>
+                    <div className="process-cell-title">{s.t}</div>
+                    <div className="process-cell-desc">{s.d}</div>
                   </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            ))}
           </div>
         </div>
       </section>
@@ -531,47 +572,41 @@ export default function Landing() {
           </div>
 
           <div className="eyebrow" style={{ marginBottom: 14 }}>Par profil d'entreprise</div>
-          <div className="seg-grid" style={{ marginBottom: 32 }}>
-            <div className="seg">
-              <div className="seg-tag">PME · 10–50</div>
-              <div className="seg-title">PME</div>
-              <div className="seg-desc">Outils clé en main, déploiement express, impact rapide sur la cohésion d'équipe.</div>
-              <div className="seg-foot">Recommandé : Essentiel ou Boost</div>
-            </div>
-            <div className="seg">
-              <div className="seg-tag">ETI · 50–500</div>
-              <div className="seg-title">ETI</div>
-              <div className="seg-desc">Reporting RH avancé, account manager dédié, communication interne pilotée.</div>
-              <div className="seg-foot">Recommandé : Boost</div>
-            </div>
-            <div className="seg">
-              <div className="seg-tag">Grand groupe · 500+</div>
-              <div className="seg-title">Grand groupe</div>
-              <div className="seg-desc">Intégration SIRH, SLA, accompagnement premium, programme multi-sites.</div>
-              <div className="seg-foot">Recommandé : Ultra</div>
-            </div>
+          <div className="prof-grid" style={{ marginBottom: 32 }}>
+            {[
+              { tag: 'PME · 10–50', title: 'PME', desc: "Outils clé en main, déploiement express, impact rapide sur la cohésion d'équipe.", foot: 'Essentiel ou Boost' },
+              { tag: 'ETI · 50–500', title: 'ETI', desc: 'Reporting RH avancé, account manager dédié, communication interne pilotée.', foot: 'Boost' },
+              { tag: 'Grand groupe · 500+', title: 'Grand groupe', desc: 'Intégration SIRH, SLA, accompagnement premium, programme multi-sites.', foot: 'Ultra' },
+            ].map((s, i) => (
+              <div className="prof" key={i}>
+                <div className="prof-top">
+                  <span className="prof-tag">{s.tag}</span>
+                  <span className="prof-idx">{String(i + 1).padStart(2, '0')}</span>
+                </div>
+                <div className="prof-title">{s.title}</div>
+                <div className="prof-desc">{s.desc}</div>
+                <div className="prof-foot"><span className="dot" />Recommandé&nbsp;: {s.foot}</div>
+              </div>
+            ))}
           </div>
 
           <div className="eyebrow" style={{ marginBottom: 14 }}>Par profil de collaborateur</div>
-          <div className="seg-grid">
-            <div className="seg">
-              <div className="seg-tag">Sédentaire</div>
-              <div className="seg-title">Reprise d'activité</div>
-              <div className="seg-desc">Reprise en douceur, équilibre alimentaire, gestion du stress et du sommeil.</div>
-              <div className="seg-foot">Coachs spécialisés en réathlétisation</div>
-            </div>
-            <div className="seg">
-              <div className="seg-tag">Régulier</div>
-              <div className="seg-title">Sportif régulier</div>
-              <div className="seg-desc">Plans d'entraînement structurés, nutrition adaptée, progression mesurée.</div>
-              <div className="seg-foot">Coachs sportifs & diététiciens</div>
-            </div>
-            <div className="seg">
-              <div className="seg-tag">Performance</div>
-              <div className="seg-title">Haute performance</div>
-              <div className="seg-desc">Préparation physique avancée, mental, tests à l'effort, suivi biomarqueurs.</div>
-              <div className="seg-foot">Préparateurs & médecins du sport</div>
-            </div>
+          <div className="prof-grid">
+            {[
+              { Ic: IcLeaf, tag: 'Sédentaire', title: "Reprise d'activité", desc: 'Reprise en douceur, équilibre alimentaire, gestion du stress et du sommeil.', foot: 'Coachs en réathlétisation' },
+              { Ic: IcRun, tag: 'Régulier', title: 'Sportif régulier', desc: "Plans d'entraînement structurés, nutrition adaptée, progression mesurée.", foot: 'Coachs sportifs & diététiciens' },
+              { Ic: IcZap, tag: 'Performance', title: 'Haute performance', desc: "Préparation physique avancée, mental, tests à l'effort, suivi biomarqueurs.", foot: 'Préparateurs & médecins du sport' },
+            ].map((s, i) => (
+              <div className="prof" key={i}>
+                <div className="prof-top">
+                  <span className="prof-tag">{s.tag}</span>
+                  <span className="prof-mark"><s.Ic size={18} stroke={1.5} /></span>
+                </div>
+                <div className="prof-title">{s.title}</div>
+                <div className="prof-desc">{s.desc}</div>
+                <div className="prof-foot"><span className="dot" />{s.foot}</div>
+              </div>
+            ))}
           </div>
         </div>
       </section>
