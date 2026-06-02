@@ -405,8 +405,8 @@ export default function Landing() {
             <div>
               <div className="eyebrow" style={{ marginBottom: 24 }}>Plateforme B2B · Sport-santé en entreprise</div>
               <h1 className="hero-h1 display">
-                La santé<br />
-                <span style={{ color: 'var(--accent)' }}>pour tous.</span>
+                Pilotez<br />
+                <span style={{ color: 'var(--accent)' }}>votre santé.</span>
               </h1>
               <p className="hero-sub">
                 Offrez à vos équipes un accompagnement complet par des professionnels certifiés : sport, nutrition, mental. Une plateforme, trois domaines, un seul abonnement.
