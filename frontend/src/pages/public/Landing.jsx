@@ -127,6 +127,7 @@ function FaqItem({ q, a, n, open, onToggle }) {
 // ─── Main component ────────────────────────────────────────────────
 export default function Landing() {
   const [billingCycle, setBillingCycle] = useState('monthly');
+  const [comparePlan, setComparePlan] = useState(1);
   const [openFaq, setOpenFaq] = useState(0);
   const [demoSent, setDemoSent] = useState(false);
   const [demoForm, setDemoForm] = useState({
@@ -335,6 +336,29 @@ export default function Landing() {
         .price-features li{display:flex;gap:12px;align-items:flex-start;font-size:14px;color:var(--ink-2)}
         .price-features li svg{flex-shrink:0;margin-top:3px;color:var(--accent)}
 
+        /* billing toggle */
+        .billing-bar{display:flex;align-items:center;justify-content:center;gap:14px;margin-bottom:40px}
+        .billing-bar span{font-size:13px;font-weight:600;color:var(--ink-3);display:flex;align-items:center}
+        .billing-bar span.active{color:var(--ink)}
+        .billing-bar em{font-style:normal;background:var(--accent);color:#fff;font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;font-family:"JetBrains Mono",monospace;margin-left:8px}
+        .billing-switch{width:44px;height:24px;border-radius:12px;border:none;cursor:pointer;position:relative;flex-shrink:0}
+        .billing-switch span{position:absolute;top:2px;width:20px;height:20px;background:#fff;border-radius:50%;box-shadow:0 1px 4px rgba(0,0,0,.2);transition:left .25s}
+
+        /* compare — mobile selectable */
+        .compare-table-wrap{overflow-x:auto}
+        .compare-mobile{display:none}
+        .compare-tabs{display:flex;gap:8px;margin-bottom:24px}
+        .compare-tab{flex:1;padding:14px 8px;border:1px solid var(--line);background:var(--bg);font-family:"Archivo Narrow",sans-serif;font-weight:700;text-transform:uppercase;font-size:17px;letter-spacing:.01em;line-height:1;cursor:pointer;color:var(--ink-3);transition:background .15s,color .15s,border-color .15s}
+        .compare-tab.active{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+        .compare-m-price{text-align:center;margin-bottom:24px}
+        .compare-m-price .amt{font-family:"Archivo",sans-serif;font-weight:800;font-size:42px;letter-spacing:-.02em;line-height:1}
+        .compare-m-price .sub{font-size:12px;color:var(--ink-3);font-family:"JetBrains Mono",monospace;margin-top:6px}
+        .compare-m-head{font-family:"JetBrains Mono",monospace;font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-3);background:var(--bg-soft);padding:12px 16px;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+        .compare-m-row{display:flex;justify-content:space-between;align-items:center;gap:16px;padding:14px 16px;border-bottom:1px solid var(--line-2);font-size:14px}
+        .compare-m-row .lbl{color:var(--ink-2);font-weight:500}
+        .compare-m-row .val{flex-shrink:0;text-align:right}
+        .compare-m-cta{margin-top:28px}
+
         /* dark card */
         .dark-card{background:var(--bg-dark);color:#f4f4f2;padding:88px 64px;text-align:center;border:1px solid var(--line)}
         .dark-card h2{font-size:clamp(40px,5.5vw,80px);margin:0 auto;max-width:14ch}
@@ -382,12 +406,17 @@ export default function Landing() {
           .prof-grid{grid-template-columns:1fr}
           .prof + .prof{border-left:none;border-top:1px solid var(--line)}
           .proof-grid{grid-template-columns:1fr}
-          .price-grid{grid-template-columns:1fr}
+          .price-grid{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;gap:16px;margin:0 -32px 56px;padding:0 32px 12px;-webkit-overflow-scrolling:touch}
+          .price-card{min-width:82%;scroll-snap-align:center}
           .quote{grid-template-columns:1fr;gap:20px;padding:32px}
           .quote-mark{font-size:80px}
           .quote-text{font-size:20px}
           .demo-grid{grid-template-columns:1fr;gap:32px}
           .foot-grid{grid-template-columns:1fr 1fr}
+        }
+        @media(max-width:768px){
+          .compare-table-wrap{display:none}
+          .compare-mobile{display:block}
         }
         @media(max-width:640px){
           .hero-stats{grid-template-columns:1fr 1fr}
@@ -619,21 +648,21 @@ export default function Landing() {
               <div className="eyebrow" style={{ marginBottom: 14 }}>Trois paliers</div>
               <h2 className="display">Nos offres<br />entreprise.</h2>
             </div>
-            <div>
-              <p className="lede" style={{ marginBottom: 20 }}>Un abonnement par collaborateur. Engagement minimum 10 mois. -20% sur la facturation annuelle.</p>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                <span style={{ fontSize: 13, fontWeight: 600, color: !isYearly ? 'var(--ink)' : 'var(--ink-3)' }}>Mensuel</span>
-                <button
-                  onClick={() => setBillingCycle(isYearly ? 'monthly' : 'yearly')}
-                  style={{ width: 44, height: 24, borderRadius: 12, border: 'none', cursor: 'pointer', background: isYearly ? 'var(--accent)' : '#ddd', position: 'relative', flexShrink: 0 }}
-                >
-                  <span style={{ position: 'absolute', top: 2, left: isYearly ? 22 : 2, width: 20, height: 20, background: '#fff', borderRadius: '50%', boxShadow: '0 1px 4px rgba(0,0,0,.2)', transition: 'left .25s' }} />
-                </button>
-                <span style={{ fontSize: 13, fontWeight: 600, color: isYearly ? 'var(--ink)' : 'var(--ink-3)', display: 'flex', alignItems: 'center', gap: 8 }}>
-                  Annuel {isYearly && <span style={{ background: 'var(--accent)', color: '#fff', fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 20, fontFamily: '"JetBrains Mono", monospace' }}>-20%</span>}
-                </span>
-              </div>
-            </div>
+            <p className="lede">Un abonnement par collaborateur. Engagement minimum 10 mois. -20% sur la facturation annuelle.</p>
+          </div>
+
+          {/* Billing toggle */}
+          <div className="billing-bar">
+            <span className={!isYearly ? 'active' : ''}>Mensuel</span>
+            <button
+              className="billing-switch"
+              onClick={() => setBillingCycle(isYearly ? 'monthly' : 'yearly')}
+              style={{ background: isYearly ? 'var(--accent)' : '#ddd' }}
+              aria-label="Basculer mensuel / annuel"
+            >
+              <span style={{ left: isYearly ? 22 : 2 }} />
+            </button>
+            <span className={isYearly ? 'active' : ''}>Annuel {isYearly && <em>-20%</em>}</span>
           </div>
 
           {/* Pricing cards */}
@@ -673,7 +702,7 @@ export default function Landing() {
 
           {/* Comparison table */}
           <div className="eyebrow" style={{ marginBottom: 14, textAlign: 'center' }}>Comparer en détail</div>
-          <div style={{ overflowX: 'auto' }}>
+          <div className="compare-table-wrap">
             <table className="compare-table">
               <thead>
                 <tr>
@@ -724,6 +753,57 @@ export default function Landing() {
                 ))}
               </tbody>
             </table>
+          </div>
+
+          {/* Comparison — mobile : select one plan */}
+          <div className="compare-mobile">
+            <div className="compare-tabs">
+              {ENTERPRISE_PLANS.map((p, i) => (
+                <button
+                  key={p.id}
+                  className={'compare-tab' + (comparePlan === i ? ' active' : '')}
+                  onClick={() => setComparePlan(i)}
+                >
+                  {p.name}
+                </button>
+              ))}
+            </div>
+
+            {(() => {
+              const p = ENTERPRISE_PLANS[comparePlan];
+              const price = isYearly ? p.priceYearly : p.priceMonthly;
+              return (
+                <div className="compare-m-price">
+                  {price != null ? (
+                    <>
+                      <div className="amt num">{price}€</div>
+                      <div className="sub">/ collaborateur / mois{isYearly ? ` · ${price * 12}€ / an` : ''}</div>
+                    </>
+                  ) : (
+                    <>
+                      <div className="amt num">Sur devis</div>
+                      <div className="sub">Adapté à votre périmètre</div>
+                    </>
+                  )}
+                </div>
+              );
+            })()}
+
+            {COMPARE_SECTIONS.map((s, si) => (
+              <div className="compare-m-section" key={si}>
+                <div className="compare-m-head">{`/ ${String(si + 1).padStart(2, '0')} — ${s.head}`}</div>
+                {s.rows.map((r, ri) => (
+                  <div className="compare-m-row" key={`${si}-${ri}`}>
+                    <span className="lbl">{r[0]}</span>
+                    <span className="val">{tableCell(r[comparePlan + 1])}</span>
+                  </div>
+                ))}
+              </div>
+            ))}
+
+            <a href="#demo" className={'btn btn-block compare-m-cta ' + (ENTERPRISE_PLANS[comparePlan].reco ? 'btn-accent' : 'btn-primary')}>
+              {ENTERPRISE_PLANS[comparePlan].cta}
+            </a>
           </div>
         </div>
       </section>
