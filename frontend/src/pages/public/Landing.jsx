@@ -23,7 +23,7 @@ const IcChart = (p) => <Icon {...p} d={<><path d="M3 3v18h18" /><path d="M7 14l4
 // ─── Enterprise plans ──────────────────────────────────────────────
 const ENTERPRISE_PLANS = [
   {
-    id: 'zen', tag: 'Entrée', name: 'Essentiel', index: 1,
+    id: 'zen', tag: 'Entrée', name: 'Essentiel',
     priceMonthly: 54, priceYearly: 43,
     desc: "Jusqu'à 10 collaborateurs",
     cta: 'Demander une démo',
@@ -35,7 +35,7 @@ const ENTERPRISE_PLANS = [
     ],
   },
   {
-    id: 'pulse', tag: 'Recommandé', name: 'Boost', index: 2,
+    id: 'pulse', tag: 'Recommandé', name: 'Boost',
     priceMonthly: 122, priceYearly: 98,
     desc: "Jusqu'à 50 collaborateurs",
     cta: 'Demander une démo', reco: true,
@@ -47,7 +47,7 @@ const ENTERPRISE_PLANS = [
     ],
   },
   {
-    id: 'boost', tag: 'Haut de gamme', name: 'Ultra', index: 3,
+    id: 'boost', tag: 'Haut de gamme', name: 'Ultra',
     priceMonthly: null, priceYearly: null,
     desc: "Jusqu'à 200 collaborateurs",
     cta: 'Parler à un expert',
@@ -127,7 +127,6 @@ function FaqItem({ q, a, n, open, onToggle }) {
 // ─── Main component ────────────────────────────────────────────────
 export default function Landing() {
   const [billingCycle, setBillingCycle] = useState('monthly');
-  const [activePlanTab, setActivePlanTab] = useState('pulse'); // Par défaut sur 'Boost' pour le mobile tab switcher
   const [openFaq, setOpenFaq] = useState(0);
   const [demoSent, setDemoSent] = useState(false);
   const [demoForm, setDemoForm] = useState({
@@ -161,9 +160,6 @@ export default function Landing() {
     e.preventDefault();
     setDemoSent(true);
   };
-
-  // Récupère l'index (1, 2 ou 3) du plan actif pour filtrer la bonne cellule de ligne sur mobile
-  const activePlanIndex = ENTERPRISE_PLANS.find(p => p.id === activePlanTab)?.index || 2;
 
   return (
     <div style={{ background: 'var(--bg)', color: 'var(--ink)', fontFamily: '"Inter Tight", ui-sans-serif, system-ui, sans-serif', fontSize: 15, lineHeight: 1.5 }}>
@@ -339,36 +335,6 @@ export default function Landing() {
         .price-features li{display:flex;gap:12px;align-items:flex-start;font-size:14px;color:var(--ink-2)}
         .price-features li svg{flex-shrink:0;margin-top:3px;color:var(--accent)}
 
-        /* Mobile Plan Selector Component Styles */
-        .plan-tabs-container {
-          display: none;
-          grid-template-columns: repeat(3, 1fr);
-          background: var(--bg-soft);
-          padding: 4px;
-          border-radius: 8px;
-          margin-bottom: 24px;
-          border: 1px solid var(--line);
-        }
-        .plan-tab-btn {
-          background: transparent;
-          border: none;
-          padding: 10px 4px;
-          font-family: "Archivo Narrow", sans-serif;
-          font-weight: 700;
-          font-size: 14px;
-          text-transform: uppercase;
-          cursor: pointer;
-          text-align: center;
-          color: var(--ink-3);
-          border-radius: 6px;
-          transition: all 0.2s ease;
-        }
-        .plan-tab-btn.active {
-          background: #fff;
-          color: var(--ink);
-          box-shadow: 0 2px 4px rgba(0,0,0,0.06);
-        }
-
         /* dark card */
         .dark-card{background:var(--bg-dark);color:#f4f4f2;padding:88px 64px;text-align:center;border:1px solid var(--line)}
         .dark-card h2{font-size:clamp(40px,5.5vw,80px);margin:0 auto;max-width:14ch}
@@ -404,9 +370,7 @@ export default function Landing() {
         /* responsive */
         @media(max-width:980px){
           .hero-grid{grid-template-columns:1fr;gap:32px;padding:64px 0}
-          .section-head{grid-template-columns:1fr;gap:24px;text-align:center;align-items:center}
-          .section-head div:last-child {display:flex; flex-direction:column; align-items:center; justify-content:center;}
-          .lede {text-align:center;}
+          .section-head{grid-template-columns:1fr;gap:16px}
           .usage-split{grid-template-columns:1fr}
           .upanel--light{border-left:none;border-top:1px solid var(--ink)}
           .upanel{padding:40px 28px}
@@ -424,26 +388,6 @@ export default function Landing() {
           .quote-text{font-size:20px}
           .demo-grid{grid-template-columns:1fr;gap:32px}
           .foot-grid{grid-template-columns:1fr 1fr}
-
-          /* Responsive Table Adjustments */
-          .plan-tabs-container {
-            display: grid;
-          }
-          .compare-table thead th:not(:first-child),
-          .compare-table tbody td.cell:not(:nth-child(2)) {
-            display: none;
-          }
-          /* Classes dynamisées par injection de style ou gestion d'index */
-          .compare-table.show-plan-1 thead th:nth-child(2),
-          .compare-table.show-plan-1 tbody td.cell:nth-child(2) { display: table-cell; }
-          
-          .compare-table.show-plan-2 thead th:nth-child(3),
-          .compare-table.show-plan-2 tbody td.cell:nth-child(3) { display: table-cell; }
-          
-          .compare-table.show-plan-3 thead th:nth-child(4),
-          .compare-table.show-plan-3 tbody td.cell:nth-child(4) { display: table-cell; }
-
-          .compare-table td.feat { width: 60%; }
         }
         @media(max-width:640px){
           .hero-stats{grid-template-columns:1fr 1fr}
@@ -591,7 +535,7 @@ export default function Landing() {
                 sub: 'Du code d\'invitation au premier rendez-vous, en quelques minutes.',
                 steps: [
                   { t: 'Inscription par code', d: 'Création du compte via le code entreprise reçu par email.' },
-                  { t: 'Bilan initial', d: 'Questionnaire santé, objectifs, preferences. Confidentiel.' },
+                  { t: 'Bilan initial', d: 'Questionnaire santé, objectifs, préférences. Confidentiel.' },
                   { t: 'Plan personnalisé', d: 'Professionnels adaptés, planification des séances.' },
                   { t: 'Suivi des résultats', d: 'Progression visible, ajustements, accès continu aux experts.' },
                 ],
@@ -677,7 +621,7 @@ export default function Landing() {
             </div>
             <div>
               <p className="lede" style={{ marginBottom: 20 }}>Un abonnement par collaborateur. Engagement minimum 10 mois. -20% sur la facturation annuelle.</p>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 12, justifyContent: 'center' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                 <span style={{ fontSize: 13, fontWeight: 600, color: !isYearly ? 'var(--ink)' : 'var(--ink-3)' }}>Mensuel</span>
                 <button
                   onClick={() => setBillingCycle(isYearly ? 'monthly' : 'yearly')}
@@ -729,22 +673,8 @@ export default function Landing() {
 
           {/* Comparison table */}
           <div className="eyebrow" style={{ marginBottom: 14, textAlign: 'center' }}>Comparer en détail</div>
-
-          {/* Mobile Tab Switcher */}
-          <div className="plan-tabs-container">
-            {ENTERPRISE_PLANS.map((p) => (
-              <button
-                key={p.id}
-                className={`plan-tab-btn ${activePlanTab === p.id ? 'active' : ''}`}
-                onClick={() => setActivePlanTab(p.id)}
-              >
-                {p.name}
-              </button>
-            ))}
-          </div>
-
           <div style={{ overflowX: 'auto' }}>
-            <table className={`compare-table show-plan-${activePlanIndex}`}>
+            <table className="compare-table">
               <thead>
                 <tr>
                   <th />
