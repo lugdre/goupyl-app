@@ -13,9 +13,9 @@ import { companyApi } from '../../services/company.api';
 import { PLAN_LABELS, BILLING_CYCLE_LABELS } from '../../utils/constants';
 
 const PLAN_FEATURES = {
-  ZEN_ENTREPRISE:   { employees: '10',  sessions: '1/semaine', domains: 'Sport + Bien-être' },
-  PULSE_ENTREPRISE: { employees: '50',  sessions: '2/semaine', domains: 'Tous les domaines' },
-  BOOST_ENTREPRISE: { employees: '200', sessions: '4/semaine', domains: 'Tous les domaines' },
+  ESSENTIEL_ENTREPRISE: { employees: '10',  sessions: '1/semaine', domains: 'Sport + Bien-être' },
+  BOOST_ENTREPRISE:     { employees: '50',  sessions: '2/semaine', domains: 'Tous les domaines' },
+  ULTRA_ENTREPRISE:     { employees: '200', sessions: '4/semaine', domains: 'Tous les domaines' },
 };
 
 export default function EntrepriseDashboard() {
@@ -67,7 +67,7 @@ export default function EntrepriseDashboard() {
           {
             id: 'subscription',
             label: 'Souscrire à une formule',
-            description: 'Choisissez le plan adapté à la taille de votre équipe (Zen, Pulse ou Boost).',
+            description: 'Choisissez le plan adapté à la taille de votre équipe (Essentiel, Boost ou Ultra).',
             to: '/dashboard/entreprise/subscription',
             done: !!subscription,
           },
@@ -229,8 +229,8 @@ export default function EntrepriseDashboard() {
             {[
               'Coaching sportif individuel',
               'Coaching sportif en duo',
-              ...(subscription.plan !== 'ZEN_ENTREPRISE' ? ['Bilan nutritionnel', 'Coaching nutrition entreprise'] : []),
-              ...(subscription.plan === 'BOOST_ENTREPRISE' ? ['Préparation mentale'] : []),
+              ...(subscription.plan !== 'ESSENTIEL_ENTREPRISE' ? ['Bilan nutritionnel', 'Coaching nutrition entreprise'] : []),
+              ...(subscription.plan === 'ULTRA_ENTREPRISE' ? ['Préparation mentale'] : []),
               'Séance de yoga',
               'Atelier bien-être collectif',
             ].map((service) => (

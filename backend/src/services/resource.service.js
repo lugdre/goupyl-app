@@ -3,9 +3,9 @@ const ApiError = require('../utils/apiError');
 
 // Niveaux d'accès par plan
 const PLAN_ACCESS_LEVEL = {
-  ZEN_ENTREPRISE:   ['ZEN'],
-  PULSE_ENTREPRISE: ['ZEN', 'PULSE'],
-  BOOST_ENTREPRISE: ['ZEN', 'PULSE', 'BOOST'],
+  ESSENTIEL_ENTREPRISE: ['ESSENTIEL'],
+  BOOST_ENTREPRISE:     ['ESSENTIEL', 'BOOST'],
+  ULTRA_ENTREPRISE:     ['ESSENTIEL', 'BOOST', 'ULTRA'],
 };
 
 const getAll = async ({ category, type, plan } = {}) => {

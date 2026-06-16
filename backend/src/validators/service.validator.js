@@ -6,7 +6,7 @@ const createServiceSchema = z.object({
   category: z.enum(['SPORT', 'NUTRITION', 'MENTAL', 'BIENETRE']),
   durationMinutes: z.number().int().min(15).max(480),
   price: z.number().positive().max(9999),
-  availableInPlans: z.array(z.enum(['ESSENTIELLE', 'PERFORMANCE', 'ELITE'])).optional(),
+  availableInPlans: z.array(z.enum(['ESSENTIEL_ENTREPRISE', 'BOOST_ENTREPRISE', 'ULTRA_ENTREPRISE'])).optional(),
 });
 
 const updateServiceSchema = createServiceSchema.partial();

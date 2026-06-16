@@ -2,27 +2,33 @@ const getStripe = require('../config/stripe');
 const prisma = require('../config/database');
 const ApiError = require('../utils/apiError');
 
-// Montants en centimes (€ × 100)
+// Montants en centimes (€ × 100), facturés PAR COLLABORATEUR / mois.
+// YEARLY = tarif mensuel remisé -20% × 12 (montant annuel par collaborateur).
+// Ultra (ULTRA_ENTREPRISE) est sur devis : aucun paiement en ligne.
 const PLAN_PRICES = {
-  ZEN_ENTREPRISE:   { MONTHLY:  54000, YEARLY:  518400 },
-  PULSE_ENTREPRISE: { MONTHLY: 106000, YEARLY: 1017600 },
-  BOOST_ENTREPRISE: { MONTHLY: 219900, YEARLY: 2110800 },
+  ESSENTIEL_ENTREPRISE: { MONTHLY:  5400, YEARLY:  51600 },
+  BOOST_ENTREPRISE:     { MONTHLY: 12200, YEARLY: 117600 },
 };
 
 const PLAN_NAMES = {
-  ZEN_ENTREPRISE:   'Zen Entreprise',
-  PULSE_ENTREPRISE: 'Pulse Entreprise',
-  BOOST_ENTREPRISE: 'Boost Entreprise',
+  ESSENTIEL_ENTREPRISE: 'Essentiel',
+  BOOST_ENTREPRISE:     'Boost',
 };
 
 // ─── Entreprise subscription checkout (existing) ───────────────────────
 
 const createCheckoutSession = async (userId, plan, billingCycle = 'MONTHLY') => {
-  if (!PLAN_PRICES[plan]) throw ApiError.badRequest('Plan invalide.');
+  if (!PLAN_PRICES[plan]) throw ApiError.badRequest('Plan invalide ou sur devis.');
 
   const unitAmount = PLAN_PRICES[plan][billingCycle];
   const label = billingCycle === 'YEARLY' ? 'Annuel' : 'Mensuel';
   const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+
+  // Facturation par collaborateur : quantité = collaborateurs rattachés (min. 1).
+  const employeeCount = await prisma.user.count({
+    where: { employerCompanyId: userId, role: 'CLIENT' },
+  });
+  const quantity = Math.max(employeeCount, 1);
 
   const session = await getStripe().checkout.sessions.create({
     payment_method_types: ['card'],
@@ -31,10 +37,10 @@ const createCheckoutSession = async (userId, plan, billingCycle = 'MONTHLY') => 
       {
         price_data: {
           currency: 'eur',
-          product_data: { name: `${PLAN_NAMES[plan]} — ${label}` },
+          product_data: { name: `${PLAN_NAMES[plan]} — ${label} · ${quantity} collaborateur(s)` },
           unit_amount: unitAmount,
         },
-        quantity: 1,
+        quantity,
       },
     ],
     metadata: {
