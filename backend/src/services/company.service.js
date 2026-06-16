@@ -135,9 +135,9 @@ const getEmployerSubscription = async (employeeId) => {
 };
 
 const PLAN_LIMITS = {
-  ZEN_ENTREPRISE:   { maxEmployees: 10,  maxSessions: 4 },
-  PULSE_ENTREPRISE: { maxEmployees: 50,  maxSessions: 8 },
-  BOOST_ENTREPRISE: { maxEmployees: 200, maxSessions: 16 },
+  ESSENTIEL_ENTREPRISE: { maxEmployees: 10,  maxSessions: 4 },
+  BOOST_ENTREPRISE:     { maxEmployees: 50,  maxSessions: 8 },
+  ULTRA_ENTREPRISE:     { maxEmployees: 200, maxSessions: 16 },
 };
 
 const getUsageStats = async (companyId) => {

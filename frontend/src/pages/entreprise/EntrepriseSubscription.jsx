@@ -13,27 +13,26 @@ import { cn } from '../../utils/cn';
 
 const ENTERPRISE_PLANS = [
   {
-    value: 'ZEN_ENTREPRISE',
-    priceMonthly: 540,
-    priceYearly: 432,
-    features: ["Jusqu'à 10 collaborateurs", 'Remise en activité physique', 'Contenus santé & bien-être', 'Support dédié'],
-  },
-  {
-    value: 'PULSE_ENTREPRISE',
-    priceMonthly: 1060,
-    priceYearly: 848,
-    popular: true,
-    features: ["Jusqu'à 50 collaborateurs", 'Coaching sportif structuré', 'Suivi nutritionnel', 'Account manager'],
+    value: 'ESSENTIEL_ENTREPRISE',
+    priceMonthly: 54,
+    priceYearly: 43,
+    features: ["Jusqu'à 10 collaborateurs", 'Programme de remise en activité', 'Contenus santé & bien-être', "Suivi d'engagement de base"],
   },
   {
     value: 'BOOST_ENTREPRISE',
-    priceMonthly: 2199,
-    priceYearly: 1759,
-    features: ["Jusqu'à 200 collaborateurs", 'Suivi nutritionnel individualisé', 'Accompagnement mental', 'SLA garanti'],
+    priceMonthly: 122,
+    priceYearly: 98,
+    popular: true,
+    features: ["Jusqu'à 50 collaborateurs", 'Coaching sportif structuré', "Plans d'entraînement personnalisés", 'Suivi nutritionnel & indicateurs de progression', 'Accompagnement mental allégé'],
+  },
+  {
+    value: 'ULTRA_ENTREPRISE',
+    quote: true,
+    features: ["Jusqu'à 200 collaborateurs", 'Suivi nutritionnel individualisé', 'Accompagnement mental (prépa, stress, performance)', "Biomarqueurs sanguins & tests à l'effort", 'Programme de progression avec objectifs & jalons'],
   },
 ];
 
-function UsageBar({ label, icon: Icon, used, max, color = 'primary' }) {
+function UsageBar({ label, icon: Icon, used, max }) {
   const unlimited = max === null;
   const pct = unlimited ? 0 : Math.min(100, Math.round((used / max) * 100));
   const danger = !unlimited && pct >= 90;
@@ -235,9 +234,18 @@ export default function EntrepriseSubscription() {
                 )}
                 <p className="font-semibold text-gray-900 mt-2">{PLAN_LABELS[plan.value]}</p>
                 <div className="mt-2 mb-4">
-                  <span className="text-2xl font-bold text-primary-700">{price}€</span>
-                  <span className="text-sm text-gray-500">/mois</span>
-                  {isYearly && <p className="text-xs text-gray-400 mt-0.5">facturé {price * 12}€/an</p>}
+                  {plan.quote ? (
+                    <>
+                      <span className="text-2xl font-bold text-primary-700">Sur devis</span>
+                      <p className="text-xs text-gray-400 mt-0.5">Adapté à votre périmètre</p>
+                    </>
+                  ) : (
+                    <>
+                      <span className="text-2xl font-bold text-primary-700">{price}€</span>
+                      <span className="text-sm text-gray-500">/ collaborateur / mois</span>
+                      {isYearly && <p className="text-xs text-gray-400 mt-0.5">facturé {price * 12}€/collaborateur/an</p>}
+                    </>
+                  )}
                 </div>
                 <ul className="space-y-1.5 mb-4">
                   {plan.features.map((f) => (
@@ -246,16 +254,22 @@ export default function EntrepriseSubscription() {
                     </li>
                   ))}
                 </ul>
-                <Button
-                  variant={isActive ? 'ghost' : 'primary'}
-                  size="sm"
-                  className="w-full"
-                  disabled={isActive}
-                  loading={checkingOut === plan.value}
-                  onClick={() => !isActive && handleCheckout(plan.value)}
-                >
-                  {isActive ? 'Actif' : sub.active ? 'Changer' : "S'abonner"}
-                </Button>
+                {plan.quote ? (
+                  <a href="/#demo" className="block">
+                    <Button variant="primary" size="sm" className="w-full">Demander un devis</Button>
+                  </a>
+                ) : (
+                  <Button
+                    variant={isActive ? 'ghost' : 'primary'}
+                    size="sm"
+                    className="w-full"
+                    disabled={isActive}
+                    loading={checkingOut === plan.value}
+                    onClick={() => !isActive && handleCheckout(plan.value)}
+                  >
+                    {isActive ? 'Actif' : sub.active ? 'Changer' : "S'abonner"}
+                  </Button>
+                )}
               </div>
             );
           })}

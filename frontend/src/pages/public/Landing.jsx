@@ -23,39 +23,39 @@ const IcChart = (p) => <Icon {...p} d={<><path d="M3 3v18h18" /><path d="M7 14l4
 // ─── Enterprise plans ──────────────────────────────────────────────
 const ENTERPRISE_PLANS = [
   {
-    id: 'zen', tag: 'Entrée', name: 'Essentiel',
+    id: 'essentiel', tag: 'Entrée', name: 'Essentiel',
     priceMonthly: 54, priceYearly: 43,
     desc: "Jusqu'à 10 collaborateurs",
     cta: 'Demander une démo',
     features: [
-      'Remise en activité physique',
+      'Programme de remise en activité',
       'Contenus santé & bien-être',
-      'Suivi basique de l\'engagement',
+      'Suivi d\'engagement de base',
       'Support email',
     ],
   },
   {
-    id: 'pulse', tag: 'Recommandé', name: 'Boost',
+    id: 'boost', tag: 'Recommandé', name: 'Boost',
     priceMonthly: 122, priceYearly: 98,
     desc: "Jusqu'à 50 collaborateurs",
     cta: 'Demander une démo', reco: true,
     features: [
       'Coaching sportif structuré',
-      'Suivi nutritionnel',
-      'Plans personnalisés & progression',
-      'Account manager dédié',
+      'Plans d\'entraînement personnalisés',
+      'Suivi nutritionnel & indicateurs de progression',
+      'Accompagnement mental allégé',
     ],
   },
   {
-    id: 'boost', tag: 'Haut de gamme', name: 'Ultra',
+    id: 'ultra', tag: 'Haut de gamme', name: 'Ultra',
     priceMonthly: null, priceYearly: null,
     desc: "Jusqu'à 200 collaborateurs",
     cta: 'Parler à un expert',
     features: [
-      'Nutrition individualisée',
-      'Accompagnement mental',
-      'Tests à l\'effort & biomarqueurs',
-      'SLA garanti & conseiller dédié',
+      'Suivi nutritionnel individualisé',
+      'Accompagnement mental (prépa, stress, performance)',
+      'Biomarqueurs sanguins & tests à l\'effort',
+      'Programme de progression avec objectifs & jalons',
     ],
   },
 ];

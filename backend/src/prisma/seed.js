@@ -242,7 +242,7 @@ async function main() {
         durationMinutes: 60,
         price: 55.0,
         description: 'Seance personnalisee avec un coach diplome.',
-        availableInPlans: ['ZEN_ENTREPRISE', 'PULSE_ENTREPRISE', 'BOOST_ENTREPRISE'],
+        availableInPlans: ['ESSENTIEL_ENTREPRISE', 'BOOST_ENTREPRISE', 'ULTRA_ENTREPRISE'],
       },
     }),
     prisma.service.create({
@@ -252,7 +252,7 @@ async function main() {
         durationMinutes: 60,
         price: 35.0,
         description: 'Seance en duo, ideal pour progresser a deux.',
-        availableInPlans: ['ZEN_ENTREPRISE', 'PULSE_ENTREPRISE', 'BOOST_ENTREPRISE'],
+        availableInPlans: ['ESSENTIEL_ENTREPRISE', 'BOOST_ENTREPRISE', 'ULTRA_ENTREPRISE'],
       },
     }),
     prisma.service.create({
@@ -262,7 +262,7 @@ async function main() {
         durationMinutes: 90,
         price: 70.0,
         description: 'Analyse complete de vos habitudes alimentaires.',
-        availableInPlans: ['ZEN_ENTREPRISE', 'PULSE_ENTREPRISE', 'BOOST_ENTREPRISE'],
+        availableInPlans: ['ESSENTIEL_ENTREPRISE', 'BOOST_ENTREPRISE', 'ULTRA_ENTREPRISE'],
       },
     }),
     prisma.service.create({
@@ -272,7 +272,7 @@ async function main() {
         durationMinutes: 60,
         price: 65.0,
         description: 'Travail sur la concentration et la gestion du stress.',
-        availableInPlans: ['PULSE_ENTREPRISE', 'BOOST_ENTREPRISE'],
+        availableInPlans: ['BOOST_ENTREPRISE', 'ULTRA_ENTREPRISE'],
       },
     }),
     prisma.service.create({
@@ -282,7 +282,7 @@ async function main() {
         durationMinutes: 75,
         price: 40.0,
         description: 'Yoga Vinyasa adapte a tous niveaux.',
-        availableInPlans: ['ZEN_ENTREPRISE', 'PULSE_ENTREPRISE', 'BOOST_ENTREPRISE'],
+        availableInPlans: ['ESSENTIEL_ENTREPRISE', 'BOOST_ENTREPRISE', 'ULTRA_ENTREPRISE'],
       },
     }),
     prisma.service.create({
@@ -292,7 +292,7 @@ async function main() {
         durationMinutes: 90,
         price: 20.0,
         description: 'Atelier collectif meditation, respiration et gestion du stress pour equipes.',
-        availableInPlans: ['ZEN_ENTREPRISE', 'PULSE_ENTREPRISE', 'BOOST_ENTREPRISE'],
+        availableInPlans: ['ESSENTIEL_ENTREPRISE', 'BOOST_ENTREPRISE', 'ULTRA_ENTREPRISE'],
       },
     }),
     prisma.service.create({
@@ -302,7 +302,7 @@ async function main() {
         durationMinutes: 60,
         price: 50.0,
         description: 'Accompagnement nutritionnel collectif adapte aux salaries.',
-        availableInPlans: ['PULSE_ENTREPRISE', 'BOOST_ENTREPRISE'],
+        availableInPlans: ['BOOST_ENTREPRISE', 'ULTRA_ENTREPRISE'],
       },
     }),
   ]);
@@ -312,25 +312,25 @@ async function main() {
   // --- Abonnements entreprises ---
   const now = new Date();
 
-  // Acme Corp - ZEN_ENTREPRISE annuel
-  const endZen = new Date(now);
-  endZen.setFullYear(endZen.getFullYear() + 1);
+  // Acme Corp - ESSENTIEL_ENTREPRISE annuel
+  const endEssentiel = new Date(now);
+  endEssentiel.setFullYear(endEssentiel.getFullYear() + 1);
   await prisma.subscription.create({
-    data: { userId: entreprise1.id, plan: 'ZEN_ENTREPRISE', billingCycle: 'YEARLY', startDate: now, endDate: endZen, status: 'ACTIVE' },
+    data: { userId: entreprise1.id, plan: 'ESSENTIEL_ENTREPRISE', billingCycle: 'YEARLY', startDate: now, endDate: endEssentiel, status: 'ACTIVE' },
   });
 
-  // TechStart - PULSE_ENTREPRISE mensuel
-  const endPulse = new Date(now);
-  endPulse.setMonth(endPulse.getMonth() + 1);
-  await prisma.subscription.create({
-    data: { userId: entreprise2.id, plan: 'PULSE_ENTREPRISE', billingCycle: 'MONTHLY', startDate: now, endDate: endPulse, status: 'ACTIVE' },
-  });
-
-  // Industria - BOOST_ENTREPRISE annuel
+  // TechStart - BOOST_ENTREPRISE mensuel
   const endBoost = new Date(now);
-  endBoost.setFullYear(endBoost.getFullYear() + 1);
+  endBoost.setMonth(endBoost.getMonth() + 1);
   await prisma.subscription.create({
-    data: { userId: entreprise3.id, plan: 'BOOST_ENTREPRISE', billingCycle: 'YEARLY', startDate: now, endDate: endBoost, status: 'ACTIVE' },
+    data: { userId: entreprise2.id, plan: 'BOOST_ENTREPRISE', billingCycle: 'MONTHLY', startDate: now, endDate: endBoost, status: 'ACTIVE' },
+  });
+
+  // Industria - ULTRA_ENTREPRISE annuel
+  const endUltra = new Date(now);
+  endUltra.setFullYear(endUltra.getFullYear() + 1);
+  await prisma.subscription.create({
+    data: { userId: entreprise3.id, plan: 'ULTRA_ENTREPRISE', billingCycle: 'YEARLY', startDate: now, endDate: endUltra, status: 'ACTIVE' },
   });
 
   console.log('Abonnements crees');
@@ -606,7 +606,7 @@ async function main() {
   // --- Ressources (articles + vidéos) ---
   await prisma.resource.createMany({
     data: [
-      // ── ARTICLES ZEN (accès tous plans) ──────────────────────────────────
+      // ── ARTICLES ESSENTIEL (accès tous plans) ──────────────────────────────────
       {
         title: '5 étirements indispensables après une journée de travail',
         description: 'Réduisez les tensions musculaires accumulées au bureau avec cette routine de 10 minutes.',
@@ -637,7 +637,7 @@ Placez l'avant-bras contre le montant d'une porte, pivotez doucement le corps. T
 - Pratiquez cette routine tous les soirs pour des résultats visibles en 2 semaines`,
         type: 'ARTICLE',
         category: 'BIENETRE',
-        access: 'ZEN',
+        access: 'ESSENTIEL',
         published: true,
       },
       {
@@ -673,7 +673,7 @@ Couchez-vous et levez-vous à la même heure, même le week-end. Votre horloge b
 Calculez votre heure de coucher idéale : si vous devez vous lever à 7h et avez besoin de 8h de sommeil, couchez-vous avant 23h (comptez 15 minutes d'endormissement).`,
         type: 'ARTICLE',
         category: 'BIENETRE',
-        access: 'ZEN',
+        access: 'ESSENTIEL',
         published: true,
       },
       {
@@ -716,11 +716,11 @@ Consultez votre médecin si vous avez plus de 40 ans ou si vous n'avez pas fait 
 ❌ Sous-estimer l'importance de la récupération`,
         type: 'ARTICLE',
         category: 'SPORT',
-        access: 'ZEN',
+        access: 'ESSENTIEL',
         published: true,
       },
 
-      // ── ARTICLES PULSE (plans PULSE et BOOST) ──────────────────────────
+      // ── ARTICLES BOOST (plans Boost et Ultra) ──────────────────────────
       {
         title: 'Nutrition au travail : comment bien manger malgré un emploi du temps chargé',
         description: 'Stratégies concrètes pour maintenir une alimentation équilibrée même en période de rush.',
@@ -761,7 +761,7 @@ Demandez-vous : est-ce de la faim physique (estomac vide) ou émotionnelle (stre
 Une déshydratation de seulement 2% diminue les capacités cognitives. Objectif : 1,5 à 2L d'eau par jour. Astuce : posez une gourde sur votre bureau et finissez-la avant de partir.`,
         type: 'ARTICLE',
         category: 'NUTRITION',
-        access: 'PULSE',
+        access: 'BOOST',
         published: true,
       },
       {
@@ -807,7 +807,7 @@ Distinguez ce qui est :
 Cette clarté cognitive réduit le sentiment d'être dépassé de 60%.`,
         type: 'ARTICLE',
         category: 'MENTAL',
-        access: 'PULSE',
+        access: 'BOOST',
         published: true,
       },
       {
@@ -848,11 +848,11 @@ Cette clarté cognitive réduit le sentiment d'être dépassé de 60%.`,
 ❌ "Le sport compense tout" → On ne peut pas outrunner a bad diet`,
         type: 'ARTICLE',
         category: 'NUTRITION',
-        access: 'PULSE',
+        access: 'BOOST',
         published: true,
       },
 
-      // ── ARTICLE BOOST ──────────────────────────────────────────────────
+      // ── ARTICLE ULTRA ──────────────────────────────────────────────────
       {
         title: 'Performance mentale : le mental des champions appliqué au quotidien',
         description: 'Visualisation, dialogue intérieur positif, routines : les outils des sportifs d\'élite pour vous.',
@@ -901,18 +901,18 @@ L'échec est une donnée, pas une identité. Après un résultat décevant :
 Les champions ne tombent pas moins que les autres. Ils se relèvent plus vite.`,
         type: 'ARTICLE',
         category: 'MENTAL',
-        access: 'BOOST',
+        access: 'ULTRA',
         published: true,
       },
 
-      // ── VIDÉOS ZEN ─────────────────────────────────────────────────────
+      // ── VIDÉOS ESSENTIEL ─────────────────────────────────────────────────────
       {
         title: 'Yoga du matin : routine 15 minutes pour bien démarrer la journée',
         description: 'Une séquence de yoga douce pour réveiller le corps et l\'esprit avant de commencer à travailler.',
         videoUrl: 'https://www.youtube.com/embed/VaoV1PrYft4',
         type: 'VIDEO',
         category: 'BIENETRE',
-        access: 'ZEN',
+        access: 'ESSENTIEL',
         published: true,
       },
       {
@@ -921,7 +921,7 @@ Les champions ne tombent pas moins que les autres. Ils se relèvent plus vite.`,
         videoUrl: 'https://www.youtube.com/embed/UItWltVZZmE',
         type: 'VIDEO',
         category: 'SPORT',
-        access: 'ZEN',
+        access: 'ESSENTIEL',
         published: true,
       },
       {
@@ -930,18 +930,18 @@ Les champions ne tombent pas moins que les autres. Ils se relèvent plus vite.`,
         videoUrl: 'https://www.youtube.com/embed/O-6f5wQXSu8',
         type: 'VIDEO',
         category: 'MENTAL',
-        access: 'ZEN',
+        access: 'ESSENTIEL',
         published: true,
       },
 
-      // ── VIDÉOS PULSE ────────────────────────────────────────────────────
+      // ── VIDÉOS BOOST ────────────────────────────────────────────────────
       {
         title: 'Comment construire une assiette équilibrée : guide visuel',
         description: 'Comprendre la méthode de l\'assiette pour manger sainement sans se prendre la tête.',
         videoUrl: 'https://www.youtube.com/embed/fqhYBTg73fw',
         type: 'VIDEO',
         category: 'NUTRITION',
-        access: 'PULSE',
+        access: 'BOOST',
         published: true,
       },
       {
@@ -950,18 +950,18 @@ Les champions ne tombent pas moins que les autres. Ils se relèvent plus vite.`,
         videoUrl: 'https://www.youtube.com/embed/vMHHEPFNfZ0',
         type: 'VIDEO',
         category: 'MENTAL',
-        access: 'PULSE',
+        access: 'BOOST',
         published: true,
       },
 
-      // ── VIDÉO BOOST ─────────────────────────────────────────────────────
+      // ── VIDÉO ULTRA ─────────────────────────────────────────────────────
       {
         title: 'Préparation mentale : les techniques des champions olympiques',
         description: 'Découvrez comment les sportifs de haut niveau utilisent la visualisation et le self-talk.',
         videoUrl: 'https://www.youtube.com/embed/X6aUREVWsRY',
         type: 'VIDEO',
         category: 'MENTAL',
-        access: 'BOOST',
+        access: 'ULTRA',
         published: true,
       },
     ],
@@ -977,9 +977,9 @@ Les champions ne tombent pas moins que les autres. Ils se relèvent plus vite.`,
   console.log('  Psycho      : julien.blanc@email.com / Password1!');
   console.log('  Client 1    : marvin.dupont@email.com / Password1! (particulier)');
   console.log('  Client 2    : sarah.benali@email.com / Password1! (particulier)');
-  console.log('  Entreprise 1: rh@acmecorp.fr / Password1! (ZEN_ENTREPRISE annuel)');
-  console.log('  Entreprise 2: wellness@techstart.fr / Password1! (PULSE_ENTREPRISE mensuel)');
-  console.log('  Entreprise 3: sport@industria.fr / Password1! (BOOST_ENTREPRISE annuel)');
+  console.log('  Entreprise 1: rh@acmecorp.fr / Password1! (ESSENTIEL_ENTREPRISE annuel)');
+  console.log('  Entreprise 2: wellness@techstart.fr / Password1! (BOOST_ENTREPRISE mensuel)');
+  console.log('  Entreprise 3: sport@industria.fr / Password1! (ULTRA_ENTREPRISE annuel)');
   console.log('');
   console.log('Demo DRH Acme Corp :');
   console.log('  Compte DRH       : rh@acmecorp.fr / Password1! (joinCode ACME-2026)');

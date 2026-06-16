@@ -124,12 +124,12 @@ Appointments can reference either a B2B `Service` (platform-defined, `serviceId`
 ### Payment (Stripe)
 
 Two payment flows both use Stripe:
-1. **ENTREPRISE subscriptions** — Stripe Checkout sessions (`/api/payments/checkout`). Amounts in cents: ZEN 540€/mo, PULSE 1060€/mo, BOOST 2199€/mo. Webhook at `/api/payments/webhook` activates subscriptions.
+1. **ENTREPRISE subscriptions** — Stripe Checkout sessions (`/api/payments/checkout`). Billed **per collaborator / month**: `ESSENTIEL_ENTREPRISE` 54€/collab/mo (5400 cents), `BOOST_ENTREPRISE` 122€/collab/mo (12200 cents); `ULTRA_ENTREPRISE` is **sur devis** (no online checkout — routes to `/#demo`). YEARLY = monthly rate −20% × 12. Stripe `quantity` = number of attached collaborators (min 1). Webhook at `/api/payments/webhook` activates subscriptions.
 2. **Appointment payments** — PaymentIntent with platform fee split between platform and intervenant (`Payment` model stores `platformFee` + `intervenantShare`).
 
 ### Resource access tiers
 
-`Resource` model has `access` enum (`ZEN` / `PULSE` / `BOOST`) matching ENTREPRISE subscription plans. Access gates content visibility by the client's company subscription tier.
+`Resource` model has `access` enum (`ESSENTIEL` / `BOOST` / `ULTRA`) matching the ENTREPRISE subscription plans (`ESSENTIEL_ENTREPRISE` / `BOOST_ENTREPRISE` / `ULTRA_ENTREPRISE`). Access is cumulative (Boost sees Essentiel+Boost; Ultra sees all) and gates content visibility by the client's company subscription tier.
 
 ### Passkey / WebAuthn
 
@@ -168,6 +168,6 @@ All seed users have password `Password1!`:
 - `admin@goupylsport.fr` — ADMIN
 - `marc.leroy@email.com`, `sophie.martin@email.com`, `julien.blanc@email.com` — INTERVENANT
 - `marvin.dupont@email.com`, `sarah.benali@email.com` — CLIENT
-- `rh@acmecorp.fr` (ZEN), `wellness@techstart.fr` (PULSE), `sport@industria.fr` (BOOST) — ENTREPRISE
+- `rh@acmecorp.fr` (ESSENTIEL_ENTREPRISE), `wellness@techstart.fr` (BOOST_ENTREPRISE), `sport@industria.fr` (ULTRA_ENTREPRISE) — ENTREPRISE
 
 When updating `seed.js` cleanup order, `payment` and `review` must be deleted before `appointment` due to foreign key constraints.

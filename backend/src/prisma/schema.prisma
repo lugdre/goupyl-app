@@ -39,9 +39,9 @@ enum SubscriptionPlan {
   ESSENTIELLE
   PERFORMANCE
   ELITE
-  ZEN_ENTREPRISE
-  PULSE_ENTREPRISE
+  ESSENTIEL_ENTREPRISE
   BOOST_ENTREPRISE
+  ULTRA_ENTREPRISE
 }
 
 enum BillingCycle {
@@ -73,9 +73,9 @@ enum ResourceType {
 }
 
 enum ResourceAccess {
-  ZEN
-  PULSE
+  ESSENTIEL
   BOOST
+  ULTRA
 }
 
 enum Gender {
@@ -294,7 +294,7 @@ model Resource {
   videoUrl    String?        @map("video_url")
   type        ResourceType
   category    ServiceCategory
-  access      ResourceAccess @default(ZEN)
+  access      ResourceAccess @default(ESSENTIEL)
   published   Boolean        @default(true)
   createdAt   DateTime       @default(now()) @map("created_at")
   updatedAt   DateTime       @updatedAt @map("updated_at")
