@@ -36,7 +36,6 @@ const menuItems = {
     { to: '/dashboard/admin', icon: LayoutDashboard, label: 'Dashboard' },
     { to: '/dashboard/admin/users', icon: Users, label: 'Utilisateurs' },
     { to: '/dashboard/admin/verifications', icon: ShieldCheck, label: 'Vérifs' },
-    { to: '/dashboard/admin/services', icon: Package, label: 'Services' },
   ],
 };
 
