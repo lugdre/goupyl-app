@@ -33,7 +33,6 @@ import MyEarnings from './pages/intervenant/MyEarnings';
 
 import AdminDashboard from './pages/admin/AdminDashboard';
 import ManageUsers from './pages/admin/ManageUsers';
-import ManageServices from './pages/admin/ManageServices';
 import ManageVerifications from './pages/admin/ManageVerifications';
 
 import EntrepriseDashboard from './pages/entreprise/EntrepriseDashboard';
@@ -162,7 +161,6 @@ export default function App() {
           >
             <Route index element={<AdminDashboard />} />
             <Route path="users" element={<ManageUsers />} />
-            <Route path="services" element={<ManageServices />} />
             <Route path="verifications" element={<ManageVerifications />} />
           </Route>
 
