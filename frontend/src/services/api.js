@@ -32,7 +32,12 @@ api.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
 
-    if (error.response?.status === 401 && !originalRequest._retry) {
+    // Un 401 sur les routes d'auth (login/register/refresh) = mauvais
+    // identifiants ou session expiree, PAS un access token a rafraichir.
+    // On laisse l'erreur remonter pour l'afficher normalement.
+    const isAuthRoute = /\/auth\/(login|register|refresh)/.test(originalRequest.url || '');
+
+    if (error.response?.status === 401 && !originalRequest._retry && !isAuthRoute) {
       if (isRefreshing) {
         return new Promise((resolve, reject) => {
           failedQueue.push({ resolve, reject });
