@@ -28,8 +28,7 @@ import IntervenantDashboard from './pages/intervenant/IntervenantDashboard';
 import MyAgenda from './pages/intervenant/MyAgenda';
 import MyReviews from './pages/intervenant/MyReviews';
 import IntervenantProfile from './pages/intervenant/IntervenantProfile';
-import StripeOnboarding from './pages/intervenant/StripeOnboarding';
-import MyEarnings from './pages/intervenant/MyEarnings';
+import MyPayments from './pages/intervenant/MyPayments';
 
 import AdminDashboard from './pages/admin/AdminDashboard';
 import ManageUsers from './pages/admin/ManageUsers';
@@ -122,8 +121,8 @@ export default function App() {
             <Route index element={<IntervenantDashboard />} />
             <Route path="agenda" element={<MyAgenda />} />
             <Route path="reviews" element={<MyReviews />} />
-            <Route path="payments" element={<StripeOnboarding />} />
-            <Route path="earnings" element={<MyEarnings />} />
+            <Route path="payments" element={<MyPayments />} />
+            <Route path="earnings" element={<Navigate to="/dashboard/intervenant/payments" replace />} />
             <Route path="profile" element={<IntervenantProfile />} />
             <Route path="documents" element={<UploadDocuments />} />
           </Route>
