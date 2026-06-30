@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Link, useParams, useNavigate } from 'react-router-dom';
 import { userApi } from '../../services/user.api';
 import { coachServiceApi } from '../../services/coachService.api';
@@ -23,6 +23,8 @@ export default function CoachPublicProfile() {
   const [coach, setCoach] = useState(null);
   const [services, setServices] = useState([]);
   const [reviews, setReviews] = useState([]);
+  const [showAllReviews, setShowAllReviews] = useState(false);
+  const [reviewSort, setReviewSort] = useState('recent'); // 'recent' | 'high' | 'low'
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [avatarError, setAvatarError] = useState(false);
@@ -41,6 +43,14 @@ export default function CoachPublicProfile() {
       .catch(() => setError('Profil introuvable'))
       .finally(() => setLoading(false));
   }, [id]);
+
+  const sortedReviews = useMemo(() => {
+    const arr = [...reviews];
+    if (reviewSort === 'high') arr.sort((a, b) => b.rating - a.rating);
+    else if (reviewSort === 'low') arr.sort((a, b) => a.rating - b.rating);
+    else arr.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    return arr;
+  }, [reviews, reviewSort]);
 
   // Load design system fonts.
   useEffect(() => {
@@ -105,6 +115,8 @@ export default function CoachPublicProfile() {
     ? Number(avgRating).toLocaleString('fr-FR', { minimumFractionDigits: 1, maximumFractionDigits: 1 })
     : null;
   const reviewCount = coach.reviewCount || reviews.length;
+  const REVIEWS_PREVIEW = 5;
+  const visibleReviews = showAllReviews ? sortedReviews : sortedReviews.slice(0, REVIEWS_PREVIEW);
   const sessionsDone = coach.sessionsDone || 0;
   const minPrice = services.length > 0 ? Math.min(...services.map((s) => Number(s.price))) : null;
   const bookBasePath = user?.role === 'CLIENT' ? '/dashboard/client' : null;
@@ -202,6 +214,12 @@ export default function CoachPublicProfile() {
 
         .cpp-empty{border:1px solid var(--line);background:var(--bg);padding:60px 32px;text-align:center;font-family:"JetBrains Mono",monospace;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3)}
 
+        .cpp-review-sort{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px}
+        .cpp-review-sort-btn{font-family:"JetBrains Mono",monospace;font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);background:var(--bg);border:1px solid var(--line);padding:7px 14px;cursor:pointer;transition:border-color .15s,color .15s}
+        .cpp-review-sort-btn:hover{border-color:var(--ink-3);color:var(--ink)}
+        .cpp-review-sort-btn.is-active{border-color:var(--ink);color:var(--ink);background:#fff}
+        .cpp-review-more{font-family:"JetBrains Mono",monospace;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink);background:transparent;border:1px solid var(--ink);padding:13px 20px;margin-top:16px;width:100%;cursor:pointer;transition:background .2s,color .2s}
+        .cpp-review-more:hover{background:var(--ink);color:var(--bg)}
         .cpp-reviews{display:flex;flex-direction:column;gap:1px;background:var(--line);border:1px solid var(--line)}
         .cpp-review{background:var(--bg);padding:22px 24px}
         .cpp-review-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
@@ -470,13 +488,32 @@ export default function CoachPublicProfile() {
                 )}
               </div>
 
+              {reviews.length > 1 && (
+                <div className="cpp-review-sort">
+                  {[
+                    { value: 'recent', label: 'Plus récents' },
+                    { value: 'high', label: 'Mieux notés' },
+                    { value: 'low', label: 'Moins bien notés' },
+                  ].map((opt) => (
+                    <button
+                      key={opt.value}
+                      type="button"
+                      className={`cpp-review-sort-btn${reviewSort === opt.value ? ' is-active' : ''}`}
+                      onClick={() => setReviewSort(opt.value)}
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
+              )}
+
               {reviews.length === 0 ? (
                 <div className="cpp-empty">
                   Sois le premier à laisser un avis
                 </div>
               ) : (
                 <div className="cpp-reviews">
-                  {reviews.map((review) => (
+                  {visibleReviews.map((review) => (
                     <div key={review.id} className="cpp-review">
                       <div className="cpp-review-head">
                         <div className="cpp-review-stars">
@@ -504,6 +541,18 @@ export default function CoachPublicProfile() {
                     </div>
                   ))}
                 </div>
+              )}
+
+              {reviews.length > REVIEWS_PREVIEW && (
+                <button
+                  type="button"
+                  className="cpp-review-more"
+                  onClick={() => setShowAllReviews((v) => !v)}
+                >
+                  {showAllReviews
+                    ? 'Voir moins'
+                    : `Voir les ${reviews.length - REVIEWS_PREVIEW} autres avis`}
+                </button>
               )}
             </section>
           </div>
