@@ -4,7 +4,8 @@
       "Bash(node -e ' *)",
       "Bash(rtk ls *)",
       "Bash(printf -- \"- [DB local & migrations cassées]\\(db-local-and-broken-migrations.md\\) — dev = Postgres local, ne pas lancer db:migrate, utiliser db push\\\\n\")",
-      "Bash(rtk grep *)"
+      "Bash(rtk grep *)",
+      "Bash(rtk find *)"
     ],
     "additionalDirectories": [
       "/Users/luciengendre/.claude/projects/-Users-luciengendre-Documents-EKOD-25-26-PROJET-PRO-CODE-goupyl-sport-main/memory",

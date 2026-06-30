@@ -107,7 +107,12 @@ const register = async ({ email, password, firstName, lastName, role, companyNam
 
   const accessToken = generateAccessToken(user);
   const refreshToken = generateRefreshToken(user);
-  await redis.set(`refresh_token:${user.id}`, refreshToken, 'EX', REFRESH_TTL);
+  // Un hoquet Redis ne doit pas faire échouer une inscription déjà créée en base.
+  try {
+    await redis.set(`refresh_token:${user.id}`, refreshToken, 'EX', REFRESH_TTL);
+  } catch (err) {
+    console.error('Erreur stockage refresh token (register):', err.message);
+  }
 
   return { user, accessToken, refreshToken };
 };
@@ -136,7 +141,11 @@ const login = async ({ email, password }) => {
 
   const accessToken = generateAccessToken(userResponse);
   const refreshToken = generateRefreshToken(userResponse);
-  await redis.set(`refresh_token:${user.id}`, refreshToken, 'EX', REFRESH_TTL);
+  try {
+    await redis.set(`refresh_token:${user.id}`, refreshToken, 'EX', REFRESH_TTL);
+  } catch (err) {
+    console.error('Erreur stockage refresh token (login):', err.message);
+  }
 
   return { user: userResponse, accessToken, refreshToken };
 };
