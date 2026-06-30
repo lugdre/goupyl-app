@@ -11,9 +11,14 @@ const KDF_SALT = 'goupyl-sport-parq-v1';
 let cachedKey = null;
 const getKey = () => {
   if (cachedKey) return cachedKey;
-  const secret = process.env.PARQ_ENCRYPTION_KEY || process.env.JWT_ACCESS_SECRET;
+  // Cle dediee si fournie, sinon repli sur les secrets JWT (noms variables
+  // selon les environnements : JWT_ACCESS_SECRET en local, JWT_SECRET en prod).
+  const secret =
+    process.env.PARQ_ENCRYPTION_KEY ||
+    process.env.JWT_ACCESS_SECRET ||
+    process.env.JWT_SECRET;
   if (!secret) {
-    throw new Error('Missing secret for PARQ encryption (set PARQ_ENCRYPTION_KEY or JWT_ACCESS_SECRET).');
+    throw new Error('Missing secret for PARQ encryption (set PARQ_ENCRYPTION_KEY).');
   }
   cachedKey = crypto.scryptSync(secret, KDF_SALT, 32);
   return cachedKey;
