@@ -3,7 +3,7 @@ import { useAuth } from '../../hooks/useAuth';
 import {
   LayoutDashboard, Calendar, Search, CreditCard, User,
   Users, Package, Building2, ShieldCheck, FileText,
-  BarChart2, BookOpen, Euro, Star,
+  BarChart2, BookOpen, Star,
 } from 'lucide-react';
 
 const BASE_CLIENT_ITEMS = [
@@ -18,8 +18,7 @@ const menuItems = {
     { to: '/dashboard/intervenant', icon: LayoutDashboard, label: 'Accueil' },
     { to: '/dashboard/intervenant/agenda', icon: Calendar, label: 'Agenda' },
     { to: '/dashboard/intervenant/reviews', icon: Star, label: 'Avis' },
-    { to: '/dashboard/intervenant/payments', icon: CreditCard, label: 'Paiements' },
-    { to: '/dashboard/intervenant/earnings', icon: Euro, label: 'Gains' },
+    { to: '/dashboard/intervenant/payments', icon: CreditCard, label: 'Paiements & gains' },
     { to: '/dashboard/intervenant/profile', icon: User, label: 'Profil' },
     { to: '/dashboard/intervenant/documents', icon: FileText, label: 'Documents' },
   ],
