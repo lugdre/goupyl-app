@@ -87,7 +87,7 @@ export default function IntervenantDashboard() {
       id: 'documents',
       label: 'Envoyer vos documents',
       description: "Diplômes et pièce d'identité requis pour activer votre profil.",
-      to: '/dashboard/intervenant/documents',
+      to: '/dashboard/intervenant/profile',
       done: profile?.verificationStatus === 'VERIFIED',
     },
     {

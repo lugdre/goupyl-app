@@ -29,6 +29,7 @@ import MyAgenda from './pages/intervenant/MyAgenda';
 import MyReviews from './pages/intervenant/MyReviews';
 import IntervenantProfile from './pages/intervenant/IntervenantProfile';
 import MyPayments from './pages/intervenant/MyPayments';
+import MyServices from './pages/intervenant/MyServices';
 
 import AdminDashboard from './pages/admin/AdminDashboard';
 import ManageUsers from './pages/admin/ManageUsers';
@@ -40,7 +41,6 @@ import ManageEmployees from './pages/entreprise/ManageEmployees';
 import EntrepriseAnalytics from './pages/entreprise/EntrepriseAnalytics';
 import EntrepriseSubscription from './pages/entreprise/EntrepriseSubscription';
 
-import UploadDocuments from './pages/shared/UploadDocuments';
 import ResourcesLibrary from './pages/shared/ResourcesLibrary';
 
 function DashboardRedirect() {
@@ -121,10 +121,11 @@ export default function App() {
             <Route index element={<IntervenantDashboard />} />
             <Route path="agenda" element={<MyAgenda />} />
             <Route path="reviews" element={<MyReviews />} />
+            <Route path="services" element={<MyServices />} />
             <Route path="payments" element={<MyPayments />} />
             <Route path="earnings" element={<Navigate to="/dashboard/intervenant/payments" replace />} />
             <Route path="profile" element={<IntervenantProfile />} />
-            <Route path="documents" element={<UploadDocuments />} />
+            <Route path="documents" element={<Navigate to="/dashboard/intervenant/profile" replace />} />
           </Route>
 
           {/* Entreprise routes */}
