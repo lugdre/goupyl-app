@@ -7,7 +7,9 @@
       "Bash(rtk grep *)",
       "Bash(rtk find *)",
       "Bash(rtk read *)",
-      "Bash(rtk npm *)"
+      "Bash(rtk npm *)",
+      "Bash(rtk wc *)",
+      "Bash(awk -F: '$1>250')"
     ],
     "additionalDirectories": [
       "/Users/luciengendre/.claude/projects/-Users-luciengendre-Documents-EKOD-25-26-PROJET-PRO-CODE-goupyl-sport-main/memory",

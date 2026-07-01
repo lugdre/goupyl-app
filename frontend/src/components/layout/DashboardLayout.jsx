@@ -8,7 +8,7 @@ function VerificationBanner() {
   const { user } = useAuth();
   if (user?.role !== 'INTERVENANT') return null;
 
-  const docPath = '/dashboard/intervenant/documents';
+  const docPath = '/dashboard/intervenant/profile';
 
   if (user?.verificationStatus === 'PENDING') {
     return (
