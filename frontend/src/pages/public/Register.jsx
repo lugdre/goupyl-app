@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import toast from 'react-hot-toast';
-import { Building2, Briefcase, Users, Mail } from 'lucide-react';
+import { Building2, Briefcase, Users, User, Mail } from 'lucide-react';
 import logo from '../../assets/logo-goupyl-white.png';
 
 const CSS = `
@@ -27,7 +27,7 @@ const CSS = `
   .auth-form-eyebrow{font-family:"JetBrains Mono",monospace;font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--ink-3);margin-bottom:16px}
   .auth-form-h1{font-family:"Archivo Narrow",sans-serif;font-weight:800;font-size:clamp(44px,4.5vw,58px);text-transform:uppercase;letter-spacing:-.015em;line-height:.92;color:var(--ink);margin:0 0 36px}
   .auth-section-label{font-family:"JetBrains Mono",monospace;font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-3);margin-bottom:10px}
-  .auth-roles{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px}
+  .auth-roles{display:grid;grid-template-columns:1fr 1fr;gap:6px}
   .auth-role{padding:10px 12px;border:1px solid var(--line);background:#fff;text-align:left;display:flex;align-items:flex-start;gap:8px;cursor:pointer;font-family:"Inter Tight",sans-serif;transition:border-color .15s,background .15s;border-radius:2px}
   .auth-role:hover{border-color:rgba(0,0,0,.25)}
   .auth-role.selected{border:2px solid var(--ink);background:var(--bg)}
@@ -56,8 +56,9 @@ const CSS = `
 `;
 
 const ROLES = [
-  { value: 'ENTREPRISE', label: 'Entreprise', desc: 'DRH / dirigeant / CSE', icon: Building2 },
+  { value: 'PARTICULIER', label: 'Particulier', desc: 'Je réserve pour moi', icon: User },
   { value: 'SALARIE', label: 'Collaborateur', desc: 'Mon entreprise est partenaire', icon: Users },
+  { value: 'ENTREPRISE', label: 'Entreprise', desc: 'DRH / dirigeant / CSE', icon: Building2 },
   { value: 'INTERVENANT', label: 'Professionnel', desc: 'Coach / intervenant', icon: Briefcase },
 ];
 
@@ -104,7 +105,7 @@ export default function Register() {
     setLoading(true);
     setErrors({});
 
-    const role = selected === 'SALARIE' ? 'CLIENT' : selected;
+    const role = (selected === 'SALARIE' || selected === 'PARTICULIER') ? 'CLIENT' : selected;
 
     try {
       const payload = { email: form.email, password: form.password, firstName: form.firstName, lastName: form.lastName, role, acceptedTerms };
