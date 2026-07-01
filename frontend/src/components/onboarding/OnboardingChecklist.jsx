@@ -1,23 +1,18 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { CheckCircle, ChevronDown, ChevronUp, X } from 'lucide-react';
+import { CheckCircle, ChevronDown, ChevronUp } from 'lucide-react';
 
-export default function OnboardingChecklist({ steps, storageKey, title, subtitle }) {
-  const [dismissed, setDismissed] = useState(
-    () => localStorage.getItem(storageKey) === 'true'
-  );
+export default function OnboardingChecklist({ steps, title, subtitle }) {
   const [collapsed, setCollapsed] = useState(false);
 
   const completedCount = steps.filter((s) => s.done).length;
   const allDone = completedCount === steps.length;
   const progress = Math.round((completedCount / steps.length) * 100);
 
-  const handleDismiss = () => {
-    localStorage.setItem(storageKey, 'true');
-    setDismissed(true);
-  };
-
-  if (dismissed) return null;
+  // Le guide disparait automatiquement une fois toutes les etapes terminees.
+  // Il ne peut pas etre ferme manuellement : l'utilisateur doit d'abord
+  // completer son profil.
+  if (allDone) return null;
 
   return (
     <div style={{
@@ -42,13 +37,6 @@ export default function OnboardingChecklist({ steps, storageKey, title, subtitle
             style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 28, height: 28, borderRadius: 4, border: '1px solid rgba(0,0,0,0.10)', background: 'transparent', cursor: 'pointer', color: '#555' }}
           >
             {collapsed ? <ChevronDown size={14} /> : <ChevronUp size={14} />}
-          </button>
-          <button
-            onClick={handleDismiss}
-            title="Masquer ce guide"
-            style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 28, height: 28, borderRadius: 4, border: '1px solid rgba(0,0,0,0.10)', background: 'transparent', cursor: 'pointer', color: '#888' }}
-          >
-            <X size={14} />
           </button>
         </div>
       </div>
