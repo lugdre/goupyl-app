@@ -135,7 +135,7 @@ export default function IntervenantDashboard() {
                     <p className="font-medium text-gray-900">{rdv.coachService?.name || rdv.service?.name}</p>
                     <p className="text-sm text-gray-500 flex items-center gap-2">
                       Client : {rdv.client.firstName} {rdv.client.lastName}
-                      {rdv.client.employerCompanyId && (
+                      {rdv.coveredByCompany && (
                         <span className="text-xs font-semibold px-1.5 py-0.5 bg-primary-500/15 text-primary-400 rounded-md">
                           {rdv.client.employerCompany?.companyName || 'Entreprise'}
                         </span>
@@ -169,15 +169,15 @@ export default function IntervenantDashboard() {
                       <Button
                         size="sm"
                         onClick={() => handleComplete(rdv.id)}
-                        disabled={rdv.paymentStatus !== 'paid' && !rdv.client.employerCompanyId}
-                        title={rdv.paymentStatus !== 'paid' && !rdv.client.employerCompanyId ? 'Le client doit payer avant de clôturer' : ''}
+                        disabled={rdv.paymentStatus !== 'paid' && !rdv.coveredByCompany}
+                        title={rdv.paymentStatus !== 'paid' && !rdv.coveredByCompany ? 'Le client doit payer avant de clôturer' : ''}
                       >
                         Terminer
                       </Button>
-                      {rdv.paymentStatus !== 'paid' && !rdv.client.employerCompanyId && (
+                      {rdv.paymentStatus !== 'paid' && !rdv.coveredByCompany && (
                         <span className="text-xs text-amber-600 font-medium">En attente de paiement</span>
                       )}
-                      {rdv.client.employerCompanyId && (
+                      {rdv.coveredByCompany && (
                         <span className="text-xs text-primary-400 font-medium">Paiement via Goupyl Sport</span>
                       )}
                     </div>

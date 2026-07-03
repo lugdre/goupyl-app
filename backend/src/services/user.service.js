@@ -67,11 +67,13 @@ const updateMe = async (userId, data) => {
   return updated;
 };
 
-const getIntervenants = async ({ city, page = 1, limit = 20 }) => {
+const getIntervenants = async ({ city, courseLocation, maxRate, page = 1, limit = 20 }) => {
   const where = { role: 'INTERVENANT', isActive: true, verificationStatus: 'VERIFIED' };
-  if (city) {
-    where.profile = { city: { contains: city, mode: 'insensitive' } };
-  }
+  const profileFilter = {};
+  if (city) profileFilter.city = { contains: city, mode: 'insensitive' };
+  if (courseLocation) profileFilter.courseLocations = { has: courseLocation };
+  if (maxRate && !Number.isNaN(Number(maxRate))) profileFilter.hourlyRate = { lte: Number(maxRate) };
+  if (Object.keys(profileFilter).length) where.profile = profileFilter;
 
   const [users, total] = await Promise.all([
     prisma.user.findMany({
@@ -90,6 +92,7 @@ const getIntervenants = async ({ city, page = 1, limit = 20 }) => {
             experience: true,
             hourlyRate: true,
             level: true,
+            courseLocations: true,
           },
         },
       },

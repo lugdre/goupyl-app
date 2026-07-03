@@ -62,4 +62,29 @@ const getMyBusySlots = async (req, res, next) => {
   } catch (e) { next(e); }
 };
 
-module.exports = { create, getMyAppointments, getAll, updateStatus, getBusySlots, getMyBusySlots, cancelAppointment };
+const validateQr = async (req, res, next) => {
+  try { res.status(200).json(await appointmentService.validateQr(req.user.userId, req.body.code)); }
+  catch (e) { next(e); }
+};
+
+const markAbsent = async (req, res, next) => {
+  try { res.status(200).json(await appointmentService.markAbsent(parseInt(req.params.id), req.user.userId)); }
+  catch (e) { next(e); }
+};
+
+const openDispute = async (req, res, next) => {
+  try { res.status(200).json(await appointmentService.openDispute(parseInt(req.params.id), req.user.userId, req.body.reason)); }
+  catch (e) { next(e); }
+};
+
+const listDisputes = async (req, res, next) => {
+  try { res.status(200).json(await appointmentService.listDisputes({ status: req.query.status || 'OPEN' })); }
+  catch (e) { next(e); }
+};
+
+const resolveDispute = async (req, res, next) => {
+  try { res.status(200).json(await appointmentService.resolveDispute(parseInt(req.params.id), req.body.resolution)); }
+  catch (e) { next(e); }
+};
+
+module.exports = { create, getMyAppointments, getAll, updateStatus, getBusySlots, getMyBusySlots, cancelAppointment, validateQr, markAbsent, openDispute, listDisputes, resolveDispute };

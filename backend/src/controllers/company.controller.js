@@ -54,4 +54,14 @@ const getEmployeeStats = async (req, res, next) => {
   catch (e) { next(e); }
 };
 
-module.exports = { getEmployees, getJoinCode, regenerateJoinCode, createInvite, getInvites, deleteInvite, removeEmployee, getEmployerPlan, getUsageStats, getEmployeeStats };
+const getMyQuota = async (req, res, next) => {
+  try { res.json(await companyService.getMyQuota(req.user.userId)); }
+  catch (e) { next(e); }
+};
+
+const getEmployeesUsage = async (req, res, next) => {
+  try { res.json(await companyService.getEmployeesUsage(req.user.userId)); }
+  catch (e) { next(e); }
+};
+
+module.exports = { getEmployees, getJoinCode, regenerateJoinCode, createInvite, getInvites, deleteInvite, removeEmployee, getEmployerPlan, getUsageStats, getEmployeeStats, getMyQuota, getEmployeesUsage };

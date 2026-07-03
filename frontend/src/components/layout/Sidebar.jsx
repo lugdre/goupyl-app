@@ -3,13 +3,14 @@ import { useAuth } from '../../hooks/useAuth';
 import {
   LayoutDashboard, Calendar, Search, CreditCard, User,
   Users, Package, Building2, ShieldCheck,
-  BarChart2, BookOpen, Star,
+  BarChart2, BookOpen, Star, ShoppingBag, Scale,
 } from 'lucide-react';
 
 const BASE_CLIENT_ITEMS = [
   { to: '/dashboard/client', icon: LayoutDashboard, label: 'Accueil' },
   { to: '/dashboard/client/search', icon: Search, label: 'Trouver' },
   { to: '/dashboard/client/appointments', icon: Calendar, label: 'Rendez-vous' },
+  { to: '/dashboard/client/marketplace', icon: ShoppingBag, label: 'Boutique' },
   { to: '/dashboard/client/profile', icon: User, label: 'Profil' },
 ];
 
@@ -35,6 +36,8 @@ const menuItems = {
     { to: '/dashboard/admin', icon: LayoutDashboard, label: 'Dashboard' },
     { to: '/dashboard/admin/users', icon: Users, label: 'Utilisateurs' },
     { to: '/dashboard/admin/verifications', icon: ShieldCheck, label: 'Vérifs' },
+    { to: '/dashboard/admin/disputes', icon: Scale, label: 'Litiges' },
+    { to: '/dashboard/admin/products', icon: Package, label: 'Produits' },
   ],
 };
 
@@ -50,7 +53,7 @@ function useNavItems() {
       const planItem = { to: '/dashboard/client/employer-plan', icon: Building2, label: 'Forfait' };
       const resourcesItem = { to: '/dashboard/client/resources', icon: BookOpen, label: 'Ressources' };
       const servicesItem = { to: '/dashboard/client/services', icon: Package, label: 'Services' };
-      return [...BASE_CLIENT_ITEMS.slice(0, 3), planItem, servicesItem, resourcesItem, BASE_CLIENT_ITEMS[3]];
+      return [...BASE_CLIENT_ITEMS.slice(0, 3), planItem, servicesItem, resourcesItem, ...BASE_CLIENT_ITEMS.slice(3)];
     }
     return [...BASE_CLIENT_ITEMS];
   }

@@ -29,6 +29,27 @@ warmUp()
       console.log(`http://localhost:${PORT}/api/health`);
       console.log(`Environnement : ${process.env.NODE_ENV || 'development'}\n`);
     });
+
+    // Balayage des RDV PENDING expirés (créneau verrouillé max 24h).
+    // Dans server.js (pas app.js) pour ne jamais démarrer l'interval dans les tests.
+    if (process.env.NODE_ENV !== 'test') {
+      const appointmentService = require('./services/appointment.service');
+      let sweeping = false;
+      const sweep = async () => {
+        if (sweeping) return;
+        sweeping = true;
+        try {
+          const n = await appointmentService.expirePendingAppointments();
+          if (n) console.log(`[sweep] ${n} RDV PENDING expirés`);
+        } catch (err) {
+          console.error('[sweep] échec :', err.message);
+        } finally {
+          sweeping = false;
+        }
+      };
+      sweep();
+      setInterval(sweep, 10 * 60 * 1000).unref();
+    }
   })
   .catch((err) => {
     console.error('Echec du demarrage (connexion DB/Redis) :', err.message);

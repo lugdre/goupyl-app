@@ -134,10 +134,116 @@ const getEmployerSubscription = async (employeeId) => {
   };
 };
 
+// maxSessions = quota de séances couvertes PAR collaborateur et PAR mois calendaire
 const PLAN_LIMITS = {
   ESSENTIEL_ENTREPRISE: { maxEmployees: 10,  maxSessions: 4 },
   BOOST_ENTREPRISE:     { maxEmployees: 50,  maxSessions: 8 },
   ULTRA_ENTREPRISE:     { maxEmployees: 200, maxSessions: 16 },
+};
+
+// Séances couvertes par l'entreprise pour un salarié sur le mois calendaire de refDate.
+// Un litige tranché en faveur du client restitue la séance au quota.
+const countCoveredSessions = (clientId, refDate = new Date()) => {
+  const start = new Date(refDate.getFullYear(), refDate.getMonth(), 1);
+  const end = new Date(refDate.getFullYear(), refDate.getMonth() + 1, 1);
+  return prisma.appointment.count({
+    where: {
+      clientId,
+      coveredByCompany: true,
+      status: { in: ['PENDING', 'CONFIRMED', 'DONE'] },
+      scheduledAt: { gte: start, lt: end },
+      OR: [{ disputeStatus: null }, { disputeStatus: { not: 'RESOLVED_CLIENT' } }], // litige gagné → restitué au quota (null inclus : piège Prisma not)
+    },
+  });
+};
+
+const getMyQuota = async (employeeId) => {
+  const now = new Date();
+  const employee = await prisma.user.findUnique({
+    where: { id: employeeId },
+    select: {
+      employerCompanyId: true,
+      employerCompany: {
+        select: {
+          subscriptions: {
+            where: { status: { in: ['ACTIVE', 'CANCELLED'] }, endDate: { gt: now } },
+            orderBy: { createdAt: 'desc' },
+            take: 1,
+          },
+        },
+      },
+    },
+  });
+  if (!employee?.employerCompanyId) throw ApiError.forbidden("Vous n'êtes pas rattaché à une entreprise.");
+
+  const sub = employee.employerCompany?.subscriptions[0] || null;
+  const quota = sub ? (PLAN_LIMITS[sub.plan]?.maxSessions ?? null) : null;
+  const used = await countCoveredSessions(employeeId, now);
+
+  return {
+    plan: sub?.plan || null,
+    quota,
+    used,
+    remaining: quota != null ? Math.max(quota - used, 0) : null,
+    month: now.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' }),
+  };
+};
+
+const getEmployeesUsage = async (companyId) => {
+  const now = new Date();
+  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+
+  const [employees, sub] = await Promise.all([
+    prisma.user.findMany({
+      where: { employerCompanyId: companyId, role: 'CLIENT' },
+      select: { id: true, firstName: true, lastName: true, email: true },
+      orderBy: { lastName: 'asc' },
+    }),
+    prisma.subscription.findFirst({
+      where: { userId: companyId, status: { in: ['ACTIVE', 'CANCELLED'] }, endDate: { gt: now } },
+      orderBy: { createdAt: 'desc' },
+    }),
+  ]);
+
+  const employeeIds = employees.map((e) => e.id);
+  const [coveredCounts, totalCounts] = await Promise.all([
+    prisma.appointment.groupBy({
+      by: ['clientId'],
+      where: {
+        clientId: { in: employeeIds },
+        coveredByCompany: true,
+        status: { in: ['PENDING', 'CONFIRMED', 'DONE'] },
+        scheduledAt: { gte: startOfMonth },
+        OR: [{ disputeStatus: null }, { disputeStatus: { not: 'RESOLVED_CLIENT' } }], // litige gagné → restitué au quota (null inclus : piège Prisma not)
+      },
+      _count: { id: true },
+    }),
+    prisma.appointment.groupBy({
+      by: ['clientId'],
+      where: {
+        clientId: { in: employeeIds },
+        status: { in: ['PENDING', 'CONFIRMED', 'DONE'] },
+        scheduledAt: { gte: startOfMonth },
+      },
+      _count: { id: true },
+    }),
+  ]);
+
+  const coveredMap = Object.fromEntries(coveredCounts.map((c) => [c.clientId, c._count.id]));
+  const totalMap = Object.fromEntries(totalCounts.map((c) => [c.clientId, c._count.id]));
+
+  return {
+    month: now.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' }),
+    quota: sub ? (PLAN_LIMITS[sub.plan]?.maxSessions ?? null) : null,
+    rows: employees.map((e) => ({
+      id: e.id,
+      firstName: e.firstName,
+      lastName: e.lastName,
+      email: e.email,
+      covered: coveredMap[e.id] || 0,
+      total: totalMap[e.id] || 0,
+    })),
+  };
 };
 
 const getUsageStats = async (companyId) => {
@@ -164,12 +270,19 @@ const getUsageStats = async (companyId) => {
   const sessionCount = await prisma.appointment.count({
     where: {
       clientId: { in: employeeIds },
+      coveredByCompany: true,
       scheduledAt: { gte: startOfMonth },
       status: { in: ['PENDING', 'CONFIRMED', 'DONE'] },
+      OR: [{ disputeStatus: null }, { disputeStatus: { not: 'RESOLVED_CLIENT' } }], // litige gagné → restitué au quota (null inclus : piège Prisma not)
     },
   });
 
-  const limits = sub ? (PLAN_LIMITS[sub.plan] || { maxEmployees: null, maxSessions: null }) : { maxEmployees: null, maxSessions: null };
+  const base = sub ? (PLAN_LIMITS[sub.plan] || { maxEmployees: null, maxSessions: null }) : { maxEmployees: null, maxSessions: null };
+  const limits = {
+    ...base,
+    quotaPerEmployee: base.maxSessions,
+    totalQuota: base.maxSessions != null ? base.maxSessions * employeeCount : null,
+  };
 
   return { employeeCount, sessionCount, limits, plan: sub?.plan || null };
 };
@@ -231,4 +344,4 @@ const getEmployeeStats = async (employeeId) => {
   };
 };
 
-module.exports = { getEmployees, getJoinCode, regenerateJoinCode, createInvite, getInvites, deleteInvite, removeEmployee, getEmployerSubscription, getUsageStats, getEmployeeStats };
+module.exports = { getEmployees, getJoinCode, regenerateJoinCode, createInvite, getInvites, deleteInvite, removeEmployee, getEmployerSubscription, getUsageStats, getEmployeeStats, getMyQuota, getEmployeesUsage, countCoveredSessions, PLAN_LIMITS };

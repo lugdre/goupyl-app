@@ -1,6 +1,33 @@
 const getStripe = require('../config/stripe');
 const prisma = require('../config/database');
 const ApiError = require('../utils/apiError');
+const notificationService = require('./notification.service');
+
+// Marque un RDV payé (appelé par le webhook ET par le fallback confirm) ;
+// idempotent : la notification au coach ne part qu'une seule fois.
+const markAppointmentPaid = async (appointmentId, stripePaymentIntentId) => {
+  await prisma.payment.updateMany({
+    where: { stripePaymentIntentId },
+    data: { status: 'succeeded' },
+  });
+
+  const appointment = await prisma.appointment.findUnique({
+    where: { id: appointmentId },
+    select: { paymentStatus: true, intervenantId: true, scheduledAt: true },
+  });
+  if (!appointment || appointment.paymentStatus === 'paid') return;
+
+  await prisma.appointment.update({
+    where: { id: appointmentId },
+    data: { paymentStatus: 'paid' },
+  });
+
+  notificationService.create(appointment.intervenantId, {
+    type: 'PAYMENT_RECEIVED',
+    title: 'Paiement reçu',
+    body: `Le paiement de la séance du ${new Date(appointment.scheduledAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' })} a été effectué.`,
+  }).catch(() => {});
+};
 
 // Montants en centimes (€ × 100), facturés PAR COLLABORATEUR / mois.
 // YEARLY = tarif mensuel remisé -20% × 12 (montant annuel par collaborateur).
@@ -256,9 +283,15 @@ const handleWebhook = async (rawBody, signature) => {
   }
 
   switch (event.type) {
-    // Entreprise subscription checkout
+    // Checkout : commande marketplace produits OU abonnement entreprise
     case 'checkout.session.completed': {
       const session = event.data.object;
+
+      if (session.metadata?.type === 'product_order') {
+        await require('./product.service').fulfillOrderFromSession(session);
+        break;
+      }
+
       const { userId, plan, billingCycle } = session.metadata;
 
       if (userId && plan && billingCycle) {
@@ -287,14 +320,7 @@ const handleWebhook = async (rawBody, signature) => {
       const pi = event.data.object;
       const { appointmentId } = pi.metadata;
       if (appointmentId) {
-        await prisma.payment.updateMany({
-          where: { stripePaymentIntentId: pi.id },
-          data: { status: 'succeeded' },
-        });
-        await prisma.appointment.update({
-          where: { id: parseInt(appointmentId) },
-          data: { paymentStatus: 'paid' },
-        });
+        await markAppointmentPaid(parseInt(appointmentId), pi.id);
       }
       break;
     }
@@ -331,15 +357,7 @@ const confirmPaymentIntent = async (paymentIntentId, clientId) => {
   const appointmentId = parseInt(pi.metadata?.appointmentId);
   if (!appointmentId) throw ApiError.badRequest('Métadonnées de paiement invalides.');
 
-  await prisma.payment.updateMany({
-    where: { stripePaymentIntentId: paymentIntentId },
-    data: { status: 'succeeded' },
-  });
-
-  await prisma.appointment.update({
-    where: { id: appointmentId },
-    data: { paymentStatus: 'paid' },
-  });
+  await markAppointmentPaid(appointmentId, paymentIntentId);
 
   return { success: true };
 };
@@ -373,7 +391,11 @@ const getIntervenantPayments = async (intervenantId) => {
     orderBy: { createdAt: 'desc' },
   });
 
-  const done    = all.filter((p) => p.appointment.status === 'DONE');
+  // Les séances sous litige OPEN sont gelées : exclues des gains tant que
+  // l'admin n'a pas tranché. (Litige gagné par le client → remboursement
+  // intégral → paymentStatus 'refunded' → disparaît de la requête ci-dessus.)
+  const done    = all.filter((p) => p.appointment.status === 'DONE' && p.appointment.disputeStatus !== 'OPEN');
+  const frozen  = all.filter((p) => p.appointment.status === 'DONE' && p.appointment.disputeStatus === 'OPEN');
   const pending = all.filter((p) => p.appointment.status === 'CONFIRMED');
 
   const toRow = (p) => ({
@@ -389,8 +411,10 @@ const getIntervenantPayments = async (intervenantId) => {
   return {
     payments: done.map(toRow),
     pending: pending.map(toRow),
+    frozen: frozen.map(toRow),
     totalEarned: done.reduce((s, p) => s + p.intervenantShare, 0),
     totalPending: pending.reduce((s, p) => s + p.intervenantShare, 0),
+    totalFrozen: frozen.reduce((s, p) => s + p.intervenantShare, 0),
   };
 };
 

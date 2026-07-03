@@ -7,13 +7,13 @@ import Spinner from '../../components/ui/Spinner';
 import PaymentModal from '../../components/payment/PaymentModal';
 import ReviewModal from '../../components/review/ReviewModal';
 import CancellationModal from '../../components/appointment/CancellationModal';
+import QrCodeModal from '../../components/appointment/QrCodeModal';
+import DisputeModal from '../../components/appointment/DisputeModal';
 import MobileWeekCalendar from '../../components/appointment/MobileWeekCalendar';
-import { Calendar, ChevronLeft, ChevronRight, Clock, CreditCard, Star, CheckCircle, List, LayoutGrid, X } from 'lucide-react';
-import { STATUS_LABELS } from '../../utils/constants';
+import { Calendar, ChevronLeft, ChevronRight, Clock, CreditCard, Star, CheckCircle, List, LayoutGrid, X, QrCode, Scale, UserX } from 'lucide-react';
+import { STATUS_LABELS, DISPUTE_STATUS_LABELS } from '../../utils/constants';
 import { useIsMobile } from '../../hooks/useMediaQuery';
 import toast from 'react-hot-toast';
-
-const HOURS_48 = 48 * 60 * 60 * 1000;
 const STATUS_FILTERS = ['', 'PENDING', 'CONFIRMED', 'DONE', 'CANCELLED'];
 const DAY_LABELS_SHORT = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
 const BUSINESS_START_HOUR = 7;
@@ -58,6 +58,8 @@ export default function MyAppointments() {
   const [payingAppointment, setPayingAppointment] = useState(null);
   const [reviewingAppointment, setReviewingAppointment] = useState(null);
   const [cancellingAppointment, setCancellingAppointment] = useState(null);
+  const [qrAppointment, setQrAppointment] = useState(null);
+  const [disputingAppointment, setDisputingAppointment] = useState(null);
   const [reviewedIds, setReviewedIds] = useState(new Set());
 
   const fetchAppointments = () => {
@@ -101,8 +103,6 @@ export default function MyAppointments() {
   };
 
   const hours = Array.from({ length: BUSINESS_END_HOUR - BUSINESS_START_HOUR + 1 }, (_, i) => BUSINESS_START_HOUR + i);
-
-  const canCancel = (rdv) => new Date(rdv.scheduledAt).getTime() - Date.now() >= HOURS_48;
 
   return (
     <div className="space-y-6">
@@ -289,12 +289,12 @@ export default function MyAppointments() {
                 </div>
                 <div className="flex flex-col items-end gap-2 shrink-0">
                   <Badge variant={rdv.status}>{STATUS_LABELS[rdv.status]}</Badge>
-                  {rdv.status === 'CONFIRMED' && rdv.paymentStatus !== 'paid' && !rdv.client?.employerCompanyId && (
+                  {rdv.status === 'CONFIRMED' && rdv.paymentStatus !== 'paid' && !rdv.coveredByCompany && (
                     <Button variant="success" size="sm" onClick={() => setPayingAppointment(rdv)}>
                       <CreditCard className="w-3.5 h-3.5 mr-1.5" />Payer
                     </Button>
                   )}
-                  {rdv.status === 'CONFIRMED' && !!rdv.client?.employerCompanyId && (
+                  {rdv.status === 'CONFIRMED' && !!rdv.coveredByCompany && (
                     <span className="inline-flex items-center gap-1 text-xs font-medium text-primary-400">
                       <CheckCircle className="w-3 h-3" />Couvert par forfait
                     </span>
@@ -304,7 +304,27 @@ export default function MyAppointments() {
                       <CreditCard className="w-3 h-3" />Payé
                     </span>
                   )}
-                  {rdv.status === 'DONE' && (rdv.paymentStatus === 'paid' || !!rdv.client?.employerCompanyId) && !reviewedIds.has(rdv.id) && (
+                  {rdv.status === 'CONFIRMED' && rdv.qrToken && (
+                    <Button variant="secondary" size="sm" onClick={() => setQrAppointment(rdv)}>
+                      <QrCode className="w-3.5 h-3.5 mr-1.5" />QR séance
+                    </Button>
+                  )}
+                  {rdv.status === 'DONE' && rdv.attendanceStatus === 'ABSENT' && (
+                    <span className="inline-flex items-center gap-1 text-xs font-medium text-red-600">
+                      <UserX className="w-3 h-3" />Absence signalée
+                    </span>
+                  )}
+                  {rdv.status === 'DONE' && rdv.attendanceStatus === 'ABSENT' && !rdv.disputeStatus && (
+                    <Button variant="secondary" size="sm" onClick={() => setDisputingAppointment(rdv)}>
+                      <Scale className="w-3.5 h-3.5 mr-1.5" />Contester
+                    </Button>
+                  )}
+                  {rdv.disputeStatus && (
+                    <span className="inline-flex items-center gap-1 text-xs font-medium text-amber-700">
+                      <Scale className="w-3 h-3" />{DISPUTE_STATUS_LABELS[rdv.disputeStatus]}
+                    </span>
+                  )}
+                  {rdv.status === 'DONE' && rdv.attendanceStatus !== 'ABSENT' && (rdv.paymentStatus === 'paid' || !!rdv.coveredByCompany) && !reviewedIds.has(rdv.id) && (
                     <Button variant="secondary" size="sm" onClick={() => setReviewingAppointment(rdv)}>
                       <Star className="w-3.5 h-3.5 mr-1.5" />Laisser un avis
                     </Button>
@@ -315,11 +335,7 @@ export default function MyAppointments() {
                     </span>
                   )}
                   {['PENDING', 'CONFIRMED'].includes(rdv.status) && (
-                    canCancel(rdv) ? (
-                      <Button variant="danger" size="sm" onClick={() => setCancellingAppointment(rdv)}>Annuler</Button>
-                    ) : (
-                      <span className="text-xs text-gray-600" title="Annulation impossible — moins de 48h avant la séance">Non annulable</span>
-                    )
+                    <Button variant="danger" size="sm" onClick={() => setCancellingAppointment(rdv)}>Annuler</Button>
                   )}
                 </div>
               </div>
@@ -363,7 +379,7 @@ export default function MyAppointments() {
             )}
 
             <div className="flex flex-wrap gap-2 justify-end pt-4" style={{ borderTop: '1px solid rgba(0,0,0,0.08)' }}>
-              {selected.status === 'CONFIRMED' && selected.paymentStatus !== 'paid' && !selected.client?.employerCompanyId && (
+              {selected.status === 'CONFIRMED' && selected.paymentStatus !== 'paid' && !selected.coveredByCompany && (
                 <Button
                   size="sm"
                   variant="success"
@@ -372,12 +388,30 @@ export default function MyAppointments() {
                   <CreditCard className="w-3.5 h-3.5 mr-1.5" />Payer
                 </Button>
               )}
-              {selected.status === 'CONFIRMED' && !!selected.client?.employerCompanyId && (
+              {selected.status === 'CONFIRMED' && !!selected.coveredByCompany && (
                 <span className="inline-flex items-center gap-1.5 text-xs font-medium text-primary-400 px-2 py-1.5 bg-primary-500/10 rounded-lg">
                   <CheckCircle className="w-3.5 h-3.5" />Couvert par votre forfait entreprise
                 </span>
               )}
-              {selected.status === 'DONE' && (selected.paymentStatus === 'paid' || !!selected.client?.employerCompanyId) && !reviewedIds.has(selected.id) && (
+              {selected.status === 'CONFIRMED' && selected.qrToken && (
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  onClick={() => { setSelected(null); setQrAppointment(selected); }}
+                >
+                  <QrCode className="w-3.5 h-3.5 mr-1.5" />QR séance
+                </Button>
+              )}
+              {selected.status === 'DONE' && selected.attendanceStatus === 'ABSENT' && !selected.disputeStatus && (
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  onClick={() => { setSelected(null); setDisputingAppointment(selected); }}
+                >
+                  <Scale className="w-3.5 h-3.5 mr-1.5" />Contester
+                </Button>
+              )}
+              {selected.status === 'DONE' && selected.attendanceStatus !== 'ABSENT' && (selected.paymentStatus === 'paid' || !!selected.coveredByCompany) && !reviewedIds.has(selected.id) && (
                 <Button
                   size="sm"
                   variant="secondary"
@@ -387,17 +421,13 @@ export default function MyAppointments() {
                 </Button>
               )}
               {['PENDING', 'CONFIRMED'].includes(selected.status) && (
-                canCancel(selected) ? (
-                  <Button
-                    size="sm"
-                    variant="danger"
-                    onClick={() => { setSelected(null); setCancellingAppointment(selected); }}
-                  >
-                    Annuler
-                  </Button>
-                ) : (
-                  <span className="text-xs text-gray-500 self-center">Non annulable (&lt;48h)</span>
-                )
+                <Button
+                  size="sm"
+                  variant="danger"
+                  onClick={() => { setSelected(null); setCancellingAppointment(selected); }}
+                >
+                  Annuler
+                </Button>
               )}
               <Button size="sm" variant="secondary" onClick={() => setSelected(null)}>Fermer</Button>
             </div>
@@ -423,6 +453,19 @@ export default function MyAppointments() {
         <CancellationModal
           appointment={cancellingAppointment}
           onClose={() => setCancellingAppointment(null)}
+          onSuccess={fetchAppointments}
+        />
+      )}
+      {qrAppointment && (
+        <QrCodeModal
+          appointment={qrAppointment}
+          onClose={() => setQrAppointment(null)}
+        />
+      )}
+      {disputingAppointment && (
+        <DisputeModal
+          appointment={disputingAppointment}
+          onClose={() => setDisputingAppointment(null)}
           onSuccess={fetchAppointments}
         />
       )}

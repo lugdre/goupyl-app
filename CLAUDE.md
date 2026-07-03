@@ -102,7 +102,7 @@ app.js (helmet → cors → morgan → rateLimit) → routes/index.js (mounts un
   → controller (thin try/catch, calls service) → service (business logic: Prisma + Redis + Stripe)
 ```
 
-Every domain follows the same file triple: `routes/X.routes.js` + `controllers/X.controller.js` + `services/X.service.js`, plus `validators/X.validator.js` (Zod schemas). 16 domains mounted in `routes/index.js`: auth, users, services, appointments, subscriptions, session-reports, documents, companies, payments, resources, analytics, reviews, coach-services, passkeys, notifications, parq.
+Every domain follows the same file triple: `routes/X.routes.js` + `controllers/X.controller.js` + `services/X.service.js`, plus `validators/X.validator.js` (Zod schemas). 17 domains mounted in `routes/index.js`: auth, users, services, appointments, subscriptions, session-reports, documents, companies, payments, resources, analytics, reviews, coach-services, passkeys, notifications, parq, products.
 
 Key cross-cutting files:
 - `src/app.js` — global rate limit 100/min; stricter 10/min on `/api/auth/login` and `/api/auth/register`; `express.raw` mounted on `/api/payments/webhook` **before** `express.json` (Stripe signature needs the raw body); serves `/uploads/avatars` statically; `trust proxy 1`
@@ -111,19 +111,22 @@ Key cross-cutting files:
 - `src/middlewares/validate.middleware.js` — **Zod 4**: reads `error.issues` (not the Zod-3 `error.errors`); returns `400 VALIDATION_ERROR` with joined messages
 - `src/middlewares/auth.middleware.js` — sets `req.user = { userId, role }` from the Bearer token
 - `src/middlewares/activePlan.middleware.js` — injects `req.activePlan`: ENTREPRISE's own subscription, or the employer's plan for CLIENT; a CANCELLED subscription still counts until its `endDate`
-- `src/config/jwt.js` — access token 15 min (`JWT_SECRET`), refresh token 7 days (`JWT_REFRESH_SECRET`, stored in Redis under `refresh_token:<userId>`)
+- `src/config/jwt.js` — access token 15 min (`JWT_SECRET`, fallback `JWT_ACCESS_SECRET`), refresh token 7 days (`JWT_REFRESH_SECRET`, stored in Redis under `refresh_token:<userId>`)
+- `server.js` also runs a **PENDING-expiry sweep** (boot + every 10 min, skipped when `NODE_ENV==='test'`): PENDING appointments older than 24 h or past their `scheduledAt` are CANCELLED with `cancelledBy:'system'`; busy/overlap queries additionally ignore stale PENDINGs before the sweep runs
 - `src/utils/encryption.js` — AES-256-GCM envelope (`iv:authTag:ciphertext` base64) for PARQ answers; key derived via scrypt from `PARQ_ENCRYPTION_KEY` → `JWT_ACCESS_SECRET` → `JWT_SECRET`
 
 Backend is **CommonJS** (`require`/`module.exports`).
 
-### Data model (Prisma, 15 models)
+### Data model (Prisma, 18 models)
 
 `User` is the hub — one table for all four roles, self-relation `employerCompany`/`employees` links salaried CLIENTs to their ENTREPRISE. Key fields: `verificationStatus` (PENDING/VERIFIED/REJECTED), `joinCode` (unique per company, employees register with it), `stripeAccountId`/`stripeAccountStatus` (Connect, intervenants).
 
 - `Profile` — 1:1 with User; coach data (bio, specialties/diplomas as Json, hourlyRate, city, courseLocations…) and client data (level, objectives)
 - `Service` — **B2B platform-defined** offerings; `availableInPlans` (Json) gates them by company plan
 - `CoachService` — **B2C coach-defined** offerings; `sessionType` SOLO/DUO/GROUP + `maxParticipants`; soft-delete via `active`
-- `Appointment` — points to **either** `serviceId` (B2B) **or** `coachServiceId` (B2C), both nullable; status PENDING→CONFIRMED→DONE/CANCELLED; `paymentStatus` string ('unpaid'/'paid')
+- `Appointment` — points to **either** `serviceId` (B2B) **or** `coachServiceId` (B2C), both nullable; status PENDING→CONFIRMED→DONE/CANCELLED; `paymentStatus` string ('unpaid'/'paid'/'refunded'); `coveredByCompany` (set at booking, drives the payment gate and quota), `qrToken` (unique, generated at creation), `validatedByQr`, `attendanceStatus` (PRESENT/ABSENT), `disputeStatus` (OPEN/REJECTED/RESOLVED_CLIENT) + `disputeReason/disputedAt/disputeResolvedAt`
+- `AppointmentStatusHistory` — audit log of every status transition (`changedBy`: client/intervenant/admin/system); written fire-and-forget, no UI
+- `Product` / `ProductOrder` — marketplace produits (dropshipping-lite): admin-managed catalog (soft-delete via `active`), orders paid by one-shot Stripe Checkout (platform sale, **not** Connect), `metadata.type='product_order'` distinguishes them in the shared webhook
 - `Payment` — 1:1 with Appointment; cents; `platformFee` + `intervenantShare`; refund fields
 - `Subscription` — ENTREPRISE plans (`ESSENTIEL_ENTREPRISE`/`BOOST_ENTREPRISE`/`ULTRA_ENTREPRISE`), MONTHLY/YEARLY
 - `Review` — 1:1 with Appointment; `coachReply` editable max 3 times (`coachReplyEdits`)
@@ -140,20 +143,24 @@ Backend is **CommonJS** (`require`/`module.exports`).
 No availability model — scheduling works on **busy intervals + business hours**:
 - `GET /api/appointments/busy/:intervenantId` (public) returns `{start,end}` intervals for PENDING/CONFIRMED appointments; the frontend `SlotPicker` renders a Doctolib-style week grid between **07:00 and 21:00** and greys out overlaps (optionally also the client's own busy slots via `/appointments/me/busy-slots`)
 - `appointment.service.create` re-validates server-side: business hours 7h–21h, overlap detection for both intervenant and client, service belongs to the intervenant, and for B2B services that the employee's company plan includes the service (`availableInPlans`)
-- Status transitions are whitelisted (`PENDING→CONFIRMED|CANCELLED`, `CONFIRMED→DONE|CANCELLED`); CLIENTs can only cancel
-- **Payment gate:** CONFIRMED→DONE requires `paymentStatus === 'paid'` unless the client is a company employee (B2B sessions are invoiced to the company, coach is notified accordingly)
-- **Cancellation policy:** client cancel allowed only ≥ 48 h before the session; if already paid, Stripe partial refund with split **35% refunded to client / 30% kept for coach / 35% platform** (constants at top of `appointment.service.js`)
+- Status transitions are whitelisted (`PENDING→CONFIRMED|CANCELLED`, `CONFIRMED→DONE|CANCELLED`); CLIENT cancellations are **rejected on the generic `PATCH /:id/status`** (403 `USE_CANCEL_ENDPOINT`) — they must go through `POST /:id/cancel` which applies the refund policy
+- **Quota B2B:** booking a platform `serviceId` as an employee checks the per-collaborator monthly quota (`PLAN_LIMITS.maxSessions` = sessions **per collaborator per calendar month of the session date**: Essentiel 4 / Boost 8 / Ultra 16); over quota → 403 `QUOTA_EXHAUSTED` and the frontend switches the salarié to the paid CoachService flow; under quota the appointment is created with `coveredByCompany: true`. Disputes resolved in the client's favour restore quota (mind the **Prisma `not`-excludes-NULL trap**: dispute filters use `OR: [{disputeStatus: null}, {disputeStatus: {not: 'RESOLVED_CLIENT'}}]`)
+- **Payment gate:** CONFIRMED→DONE requires `paymentStatus === 'paid'` unless `appointment.coveredByCompany` (NOT the client's employee status — a salarié over quota booking personally must pay)
+- **QR validation:** every appointment gets a `qrToken` (uuid) at creation; the client shows it (`QrCodeModal`) and the coach validates via `POST /appointments/validate-qr` with the full uuid (camera scan, `html5-qrcode`) or the first-8-chars short code → DONE + `attendanceStatus: PRESENT` + `validatedByQr`, same payment gate as manual DONE (manual "Terminer" still works)
+- **Absence & disputes:** coach can `POST /:id/absent` on a CONFIRMED session whose start time passed (no payment gate — deliberate) → DONE + ABSENT, client notified; client can `POST /:id/dispute` (reason 10–500 chars) → `disputeStatus: OPEN`, all admins notified, the coach's earnings for that session are **frozen** (excluded from `/payments/earnings` totals as `frozen`/`totalFrozen`); admin resolves via `PATCH /:id/dispute` (`REJECTED` unfreezes; `RESOLVED_CLIENT` full Stripe refund with `reverse_transfer` + `refund_application_fee`, sets `paymentStatus: 'refunded'`). Admin UI: `/dashboard/admin/disputes`
+- **Degressive cancellation policy** (client, `POST /:id/cancel`): ≥ 7 days → 100% refund; 48 h–7 d → 50% refund (Stripe `reverse_transfer`+`refund_application_fee` reclaim coach/platform shares pro-rata → coach keeps 35%, platform 15%); < 48 h → cancellation **allowed**, zero refund. Full refund also sets `paymentStatus: 'refunded'`. Constants at top of `appointment.service.js`; tiers mirrored in `CancellationModal`
 
 ### Payments (Stripe, two distinct flows)
 
 1. **ENTREPRISE subscriptions** — one-shot Checkout Session (`mode: 'payment'`, not Stripe subscriptions). Priced **per collaborator/month**: Essentiel 5 400 cents, Boost 12 200 cents; YEARLY = monthly −20% × 12; `quantity` = attached collaborators (min 1). `ULTRA_ENTREPRISE` is sur devis — no online checkout. Activation happens twice-redundantly: via the webhook `checkout.session.completed` **and** via `GET /payments/verify-session` on the success redirect.
-2. **Marketplace (B2C sessions)** — Stripe **Connect**: intervenants onboard via account links (`/payments/onboard`, status polled at `/payments/onboard/status`); clients pay a confirmed appointment via PaymentIntent (`/payments/create-intent`) with `application_fee_amount` = **30% platform fee** and `transfer_data.destination` = the coach's account. Card + Klarna. Pending PaymentIntents are reused (React StrictMode double-invoke guard). Success recorded via webhook `payment_intent.succeeded` **and** `POST /payments/confirm` fallback called by the frontend after `stripe.confirmPayment()`.
+2. **B2C sessions** — Stripe **Connect**: intervenants onboard via account links (`/payments/onboard`, status polled at `/payments/onboard/status`); clients pay a confirmed appointment via PaymentIntent (`/payments/create-intent`) with `application_fee_amount` = **30% platform fee** and `transfer_data.destination` = the coach's account. Card + Klarna. Pending PaymentIntents are reused (React StrictMode double-invoke guard). Success recorded via webhook `payment_intent.succeeded` **and** `POST /payments/confirm` fallback called by the frontend after `stripe.confirmPayment()` — both paths go through the shared idempotent `markAppointmentPaid` helper (single `PAYMENT_RECEIVED` notification to the coach).
+3. **Marketplace produits** — one-shot Checkout Session per `ProductOrder` (platform sale, no Connect). Fulfilment is idempotent (`updateMany` PENDING→PAID) via the shared `checkout.session.completed` webhook (branch on `metadata.type === 'product_order'`) **and** `GET /products/orders/verify` on the success redirect.
 
-`GET /payments/earnings` aggregates an intervenant's paid (DONE) vs pending (paid but not DONE) totals.
+`GET /payments/earnings` aggregates an intervenant's paid (DONE) vs pending (paid but not DONE) vs **frozen** (open dispute) totals.
 
 ### Auth
 
-- Register: role CLIENT/INTERVENANT/ENTREPRISE. ENTREPRISE gets an auto-generated unique 8-hex `joinCode` and is auto-VERIFIED when a SIRET is provided (Pappers validation planned, not implemented). CLIENT may pass a `joinCode` — either a `CompanyInvite` token or a company's permanent code — to be attached as employee. INTERVENANT starts PENDING until admin validates documents.
+- Register: role CLIENT/INTERVENANT/ENTREPRISE. ENTREPRISE gets an auto-generated unique 8-hex `joinCode` and is auto-VERIFIED when a SIRET is provided (Pappers validation planned, not implemented). CLIENT may pass a `joinCode` — either a `CompanyInvite` token or a company's permanent code — to be attached as employee. CLIENT may also pass optional onboarding-questionnaire fields (`level`, `sportType`, `objectives[]`) which nested-create the `Profile` (Register.jsx step 2 for Particulier/Collaborateur, skippable). INTERVENANT starts PENDING until admin validates documents.
 - Login returns `{ user, accessToken, refreshToken }`; refresh token stored in Redis (7-day TTL). Email verification token (`email_verify:<token>`, 24 h) sent via Resend; `POST /auth/verify-email` sets `emailVerifiedAt`.
 - **Passkeys/WebAuthn** (`/api/passkeys`, `@simplewebauthn/server`): challenges in Redis (5 min TTL, keys `passkey_challenge:<scope>:<id>`); authentication returns the same JWT pair as password login. `PASSKEY_RP_ID`/`PASSKEY_ORIGIN` must match the serving domain.
 - Redis `set` failures during login/register are caught and logged — a Redis hiccup must not fail an otherwise successful auth.
@@ -164,7 +171,7 @@ CLIENT-only, gates the booking flow. Routes `/api/parq`: `submit`, `status`, `me
 
 ### Companies (B2B)
 
-ENTREPRISE manages employees at `/api/companies`: list/remove employees, permanent `joinCode` (regenerable), tokenized email invites (7-day expiry, Resend), usage stats with per-plan session limits (`PLAN_LIMITS` in `company.service.js`), per-employee stats. Employees see their employer plan at `/dashboard/client/employer-plan`.
+ENTREPRISE manages employees at `/api/companies`: list/remove employees, permanent `joinCode` (regenerable), tokenized email invites (7-day expiry, Resend), usage stats (`PLAN_LIMITS` in `company.service.js` — `maxSessions` is a **per-collaborator monthly quota**, enforced at booking), per-employee stats, and `GET /companies/employees/usage` (per-employee covered/total counts, feeds the client-side CSV export in `utils/exportCsv.js` — BOM + `;` separator for Excel FR). Employees see their employer plan + quota counter at `/dashboard/client/employer-plan` and `GET /companies/my-quota`.
 
 ### Resources
 
@@ -186,10 +193,10 @@ main.jsx → App.jsx: ThemeProvider > BrowserRouter > AuthProvider > Toaster + R
 ```
 
 Public routes: `/`, `/login`, `/register`, `/search`, `/coaches/:id`, `/verify-email`, `/cgu`, `/confidentialite`. `/dashboard` redirects by role via `DashboardRedirect`:
-- CLIENT → `/dashboard/client` (appointments, search, book/:intervenantId, employer-plan, services=B2B catalog, resources, profile)
-- INTERVENANT → `/dashboard/intervenant` (agenda, reviews, services=CoachService management, payments=Stripe onboarding+earnings merged, profile=identity+expertise+documents; legacy `earnings`/`documents` paths redirect)
-- ENTREPRISE → `/dashboard/entreprise` (employees, search, subscription, analytics, resources, profile)
-- ADMIN → `/dashboard/admin` (users, verifications)
+- CLIENT → `/dashboard/client` (appointments, search, book/:intervenantId, employer-plan, services=B2B catalog, resources, marketplace=Boutique produits, profile)
+- INTERVENANT → `/dashboard/intervenant` (agenda incl. QR scanner + "Client absent", reviews, services=CoachService management, payments=Stripe onboarding+earnings merged, profile=identity+expertise+documents; legacy `earnings`/`documents` paths redirect)
+- ENTREPRISE → `/dashboard/entreprise` (employees incl. export CSV, search, subscription, analytics, resources, profile)
+- ADMIN → `/dashboard/admin` (users, verifications, disputes, products)
 
 Sidebar menus per role live in `components/layout/Sidebar.jsx`.
 
@@ -203,13 +210,13 @@ Each backend domain has a matching thin API module in `src/services/*.api.js`.
 
 ### Conventions & gotchas
 
-- Shared label maps in `src/utils/constants.js`: `CATEGORY_LABELS`, `STATUS_LABELS`, `PLAN_LABELS`, `BILLING_CYCLE_LABELS`, `LEVEL_LABELS`, `DAY_LABELS` (index 0 = Lundi)
+- Shared label maps in `src/utils/constants.js`: `CATEGORY_LABELS`, `STATUS_LABELS`, `PLAN_LABELS`, `BILLING_CYCLE_LABELS`, `LEVEL_LABELS`, `DAY_LABELS` (index 0 = Lundi), `ATTENDANCE_LABELS`, `DISPUTE_STATUS_LABELS`, `ORDER_STATUS_LABELS`, `COURSE_LOCATION_OPTIONS` (values must stay byte-identical — the search filter does an exact `courseLocations: { has }` match)
 - `reviewApi.getForIntervenant()` returns `{ reviews, averageRating, reviewCount, totalSessions }` — destructure, it is not an array
 - UI primitives in `src/components/ui/` (`Button`, `Card`, `Input`, `Badge`, `Spinner`, `AvatarFallback`); `cn.js` for class merging
 - Public pages (Landing, Login, Register, CoachPublicProfile) use their own inline `<style>` CSS with an editorial design system (Archivo Narrow / Inter Tight / JetBrains Mono) — they do not use the dashboard Tailwind components
 - `ThemeContext` is currently **hard-pinned to light mode** (toggle is a no-op); Landing uses Tailwind `dark:` variants driven by `prefers-color-scheme` independently
 - `OnboardingChecklist` (per-role setup steps on each dashboard) auto-hides only when every step is `done` and **cannot be dismissed manually**
-- Booking UI: `BookAppointment.jsx` = pick CoachService → `SlotPicker` week grid → PARQ gate (`PARQModal`) → create appointment; payment happens later from `MyAppointments` via `PaymentModal` (Stripe Elements) once the coach confirmed
+- Booking UI: `BookAppointment.jsx` = pick service → `SlotPicker` week grid → PARQ gate (`PARQModal`) → create appointment; payment happens later from `MyAppointments` via `PaymentModal` (Stripe Elements) once the coach confirmed. The flow is driven by `useCompanyFlow` (salarié **with remaining quota** → platform-service select; particulier or salarié over quota → paid CoachService cards + explanatory banner); a server-side `QUOTA_EXHAUSTED` error also flips the UI to the paid flow
 - Dead files (not routed, do not extend): `pages/client/Profile.jsx`, `pages/client/MySubscription.jsx`
 
 ## Seed data
@@ -220,4 +227,6 @@ Each backend domain has a matching thin API module in `src/services/*.api.js`.
 - `marvin.dupont@email.com`, `sarah.benali@email.com` (+ others) — CLIENT
 - `rh@acmecorp.fr` (ESSENTIEL), `wellness@techstart.fr` (BOOST), `sport@industria.fr` (ULTRA) — ENTREPRISE
 
-When changing the seed cleanup order: `payment` and `review` must be deleted before `appointment` (FK constraints).
+The seed also creates CoachServices for the 3 named coaches (B2C flow demoable), `courseLocations` on several coach profiles (search filter demoable), 5 marketplace products, and `qrToken`s on CONFIRMED appointments.
+
+When changing the seed cleanup order: `payment`, `review`, and `appointmentStatusHistory` must be deleted before `appointment`; `productOrder` before `product` (FK constraints).

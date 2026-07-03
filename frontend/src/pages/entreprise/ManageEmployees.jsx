@@ -5,7 +5,8 @@ import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
 import Spinner from '../../components/ui/Spinner';
 import toast from 'react-hot-toast';
-import { Users, Copy, RefreshCw, Mail, Trash2, UserMinus, Check } from 'lucide-react';
+import { Users, Copy, RefreshCw, Mail, Trash2, UserMinus, Check, Download } from 'lucide-react';
+import { exportEmployeesUsageCsv } from '../../utils/exportCsv';
 
 function formatDate(d) {
   return new Date(d).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' });
@@ -96,16 +97,30 @@ export default function ManageEmployees() {
 
   if (loading) return <div className="flex justify-center py-16"><Spinner size="lg" /></div>;
 
+  const handleExportCsv = async () => {
+    try {
+      await exportEmployeesUsageCsv();
+      toast.success('Export CSV téléchargé');
+    } catch {
+      toast.error("Erreur lors de l'export");
+    }
+  };
+
   return (
     <div className="space-y-6 max-w-3xl">
-      <div>
-        <h1 className="text-2xl font-semibold text-gray-900 flex items-center gap-2">
-          <Users className="w-6 h-6 text-primary-600" />
-          Mes collaborateurs
-        </h1>
-        <p className="text-gray-500 mt-1 text-sm">
-          {employees.length} collaborateur{employees.length !== 1 ? 's' : ''} rattaché{employees.length !== 1 ? 's' : ''}
-        </p>
+      <div className="flex items-start justify-between flex-wrap gap-3">
+        <div>
+          <h1 className="text-2xl font-semibold text-gray-900 flex items-center gap-2">
+            <Users className="w-6 h-6 text-primary-600" />
+            Mes collaborateurs
+          </h1>
+          <p className="text-gray-500 mt-1 text-sm">
+            {employees.length} collaborateur{employees.length !== 1 ? 's' : ''} rattaché{employees.length !== 1 ? 's' : ''}
+          </p>
+        </div>
+        <Button variant="secondary" size="sm" onClick={handleExportCsv}>
+          <Download className="w-4 h-4 mr-1.5" />Exporter CSV
+        </Button>
       </div>
 
       {/* Code d'accès */}

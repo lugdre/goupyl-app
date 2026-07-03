@@ -20,4 +20,18 @@ const updateStatusSchema = z.object({
   cancelReason: z.string().max(200).optional(),
 });
 
-module.exports = { createAppointmentSchema, updateStatusSchema };
+const validateQrSchema = z.object({
+  code: z.string({ required_error: 'Code requis' }).trim().min(8, 'Minimum 8 caractères').max(64),
+});
+
+const disputeSchema = z.object({
+  reason: z.string({ required_error: 'Motif requis' }).trim().min(10, 'Minimum 10 caractères').max(500),
+});
+
+const resolveDisputeSchema = z.object({
+  resolution: z.enum(['REJECTED', 'RESOLVED_CLIENT'], {
+    errorMap: () => ({ message: 'Résolution invalide' }),
+  }),
+});
+
+module.exports = { createAppointmentSchema, updateStatusSchema, validateQrSchema, disputeSchema, resolveDisputeSchema };
