@@ -6,6 +6,7 @@ import { serviceApi } from '../../services/service.api';
 import { coachServiceApi } from '../../services/coachService.api';
 import { appointmentApi } from '../../services/appointment.api';
 import { parqApi } from '../../services/parq.api';
+import { companyApi } from '../../services/company.api';
 import Card from '../../components/ui/Card';
 import Button from '../../components/ui/Button';
 import Spinner from '../../components/ui/Spinner';
@@ -39,6 +40,11 @@ export default function BookAppointment() {
 
   const isSalarie = !!user?.employerCompanyId;
 
+  // Quota mensuel de séances couvertes par l'entreprise. Quota épuisé (ou pas
+  // d'abonnement actif) → le salarié bascule sur le flux B2C payant.
+  const [quota, setQuota] = useState(null);
+  const [useCompanyFlow, setUseCompanyFlow] = useState(false);
+
   // B2C state (coach services as cards)
   const [coachServices, setCoachServices] = useState([]);
   const [selectedCoachServiceId, setSelectedCoachServiceId] = useState(null);
@@ -57,27 +63,43 @@ export default function BookAppointment() {
   const [showParq, setShowParq] = useState(false);
 
   useEffect(() => {
-    const promises = [userApi.getIntervenantById(intervenantId), parqApi.getStatus()];
-
-    if (isSalarie) {
-      promises.push(serviceApi.getAll());
-    } else {
-      promises.push(coachServiceApi.getByIntervenant(intervenantId));
-    }
-
-    Promise.all(promises)
-      .then(([{ data: iv }, { data: parq }, { data: svcs }]) => {
+    const load = async () => {
+      try {
+        const [{ data: iv }, { data: parq }] = await Promise.all([
+          userApi.getIntervenantById(intervenantId),
+          parqApi.getStatus(),
+        ]);
         setIntervenant(iv);
         setParqStatus(parq);
+
+        let q = null;
         if (isSalarie) {
+          try {
+            q = (await companyApi.getMyQuota()).data;
+          } catch {
+            // pas d'employeur / pas d'abonnement actif → flux personnel
+          }
+          setQuota(q);
+        }
+
+        const companyFlow = isSalarie && q?.quota != null && q.remaining > 0;
+        setUseCompanyFlow(companyFlow);
+
+        if (companyFlow) {
+          const { data: svcs } = await serviceApi.getAll();
           setPlatformServices(svcs);
           if (svcs.length > 0) setSelectedPlatformServiceId(svcs[0].id);
         } else {
+          const { data: svcs } = await coachServiceApi.getByIntervenant(intervenantId);
           setCoachServices(svcs);
         }
-      })
-      .catch(() => toast.error('Erreur de chargement'))
-      .finally(() => setLoading(false));
+      } catch {
+        toast.error('Erreur de chargement');
+      } finally {
+        setLoading(false);
+      }
+    };
+    load();
   }, [intervenantId, isSalarie]);
 
   const selectedCoachService = coachServices.find((s) => s.id === selectedCoachServiceId);
@@ -87,11 +109,11 @@ export default function BookAppointment() {
     e.preventDefault();
     if (!scheduledAt) { toast.error('Choisissez une date'); return; }
 
-    if (!isSalarie && !selectedCoachServiceId) {
+    if (!useCompanyFlow && !selectedCoachServiceId) {
       toast.error('Sélectionnez un service');
       return;
     }
-    if (isSalarie && !selectedPlatformServiceId) {
+    if (useCompanyFlow && !selectedPlatformServiceId) {
       toast.error('Sélectionnez un service');
       return;
     }
@@ -117,7 +139,7 @@ export default function BookAppointment() {
         notes: notes || undefined,
       };
 
-      if (isSalarie) {
+      if (useCompanyFlow) {
         payload.serviceId = parseInt(selectedPlatformServiceId);
       } else {
         payload.coachServiceId = selectedCoachServiceId;
@@ -127,7 +149,23 @@ export default function BookAppointment() {
       toast.success('Rendez-vous réservé !');
       navigate('/dashboard/client/appointments');
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Erreur lors de la réservation');
+      // Le serveur reste la source de vérité sur le quota : si épuisé entre
+      // temps, on bascule sur le flux personnel payant.
+      if (err.response?.data?.error === 'QUOTA_EXHAUSTED') {
+        toast.error('Quota mensuel atteint — vous pouvez réserver une séance à titre personnel.');
+        setUseCompanyFlow(false);
+        setScheduledAt('');
+        try {
+          const [{ data: svcs }, { data: q }] = await Promise.all([
+            coachServiceApi.getByIntervenant(intervenantId),
+            companyApi.getMyQuota(),
+          ]);
+          setCoachServices(svcs);
+          setQuota(q);
+        } catch { /* affichage dégradé */ }
+      } else {
+        toast.error(err.response?.data?.message || 'Erreur lors de la réservation');
+      }
     } finally {
       setBooking(false);
     }
@@ -136,7 +174,7 @@ export default function BookAppointment() {
   if (loading) return <Spinner />;
   if (!intervenant) return <div className="text-gray-500">Professionnel non trouvé.</div>;
 
-  const durationMinutes = isSalarie
+  const durationMinutes = useCompanyFlow
     ? selectedPlatformService?.durationMinutes || 60
     : selectedCoachService?.durationMinutes || 60;
 
@@ -169,16 +207,34 @@ export default function BookAppointment() {
         </div>
       </Card>
 
-      {/* Bannière forfait entreprise */}
-      {isSalarie && (
-        <div className="flex items-center gap-3 bg-primary-50 border border-primary-100 rounded-xl px-4 py-3 text-sm text-primary-700">
-          <Building2 className="w-4 h-4 shrink-0" />
-          <span>Séance prise en charge par le forfait de votre entreprise (selon services inclus)</span>
+      {/* Bannière forfait entreprise + compteur de quota */}
+      {useCompanyFlow && (
+        <div className="bg-primary-50 border border-primary-100 rounded-xl px-4 py-3 text-sm text-primary-700 space-y-1">
+          <div className="flex items-center gap-3">
+            <Building2 className="w-4 h-4 shrink-0" />
+            <span>Séance prise en charge par le forfait de votre entreprise (selon services inclus)</span>
+          </div>
+          {quota?.quota != null && (
+            <p className="font-medium pl-7">
+              Séances couvertes restantes ce mois : {quota.remaining} / {quota.quota}
+            </p>
+          )}
+        </div>
+      )}
+
+      {/* Quota épuisé : le salarié réserve à titre personnel */}
+      {isSalarie && !useCompanyFlow && quota?.quota != null && (
+        <div className="flex items-start gap-3 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 text-sm text-amber-700">
+          <Building2 className="w-4 h-4 shrink-0 mt-0.5" />
+          <span>
+            Votre quota mensuel de séances couvertes est atteint ({quota.used} / {quota.quota}).
+            Vous pouvez réserver une séance à titre personnel — elle sera à votre charge.
+          </span>
         </div>
       )}
 
       {/* B2C: Coach service cards */}
-      {!isSalarie && (
+      {!useCompanyFlow && (
         <div>
           <label className="block text-sm font-medium text-gray-900 mb-3">Choisissez un service</label>
           {coachServices.length === 0 ? (
@@ -228,7 +284,7 @@ export default function BookAppointment() {
       )}
 
       {/* B2B: Platform service select */}
-      {isSalarie && (
+      {useCompanyFlow && (
         <Card>
           <label className="block text-sm font-medium text-gray-900 mb-2">Service</label>
           <select
@@ -256,7 +312,7 @@ export default function BookAppointment() {
       )}
 
       {/* Slot picker — shown once a service is chosen */}
-      {((isSalarie && selectedPlatformServiceId) || (!isSalarie && selectedCoachServiceId)) && (
+      {((useCompanyFlow && selectedPlatformServiceId) || (!useCompanyFlow && selectedCoachServiceId)) && (
         <div>
           <label className="block text-sm font-medium text-gray-900 mb-2">
             Choisissez un créneau
@@ -289,7 +345,7 @@ export default function BookAppointment() {
       {scheduledAt && (
         <Card>
           <form onSubmit={handleSubmit} className="space-y-4">
-            {!isSalarie && selectedCoachService && (
+            {!useCompanyFlow && selectedCoachService && (
               <div className="flex items-center justify-between pb-3 border-b border-gray-100">
                 <p className="text-sm font-medium text-gray-900">{selectedCoachService.name}</p>
                 <p className="text-sm font-semibold text-gray-900">

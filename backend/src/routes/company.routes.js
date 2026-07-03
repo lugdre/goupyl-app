@@ -9,10 +9,12 @@ const { inviteSchema } = require('../validators/company.validator');
 // Route accessible aux salariés (CLIENT rattaché à une entreprise)
 router.get('/employer-plan', authenticate, authorize('CLIENT'), companyController.getEmployerPlan);
 router.get('/employee-stats', authenticate, authorize('CLIENT'), companyController.getEmployeeStats);
+router.get('/my-quota', authenticate, authorize('CLIENT'), companyController.getMyQuota);
 
 router.use(authenticate, authorize('ENTREPRISE'));
 
 router.get('/usage', companyController.getUsageStats);
+router.get('/employees/usage', companyController.getEmployeesUsage);
 
 router.get('/employees', companyController.getEmployees);
 router.delete('/employees/:employeeId', companyController.removeEmployee);

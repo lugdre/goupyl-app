@@ -14,4 +14,6 @@ export const companyApi = {
   getEmployerPlan: () => api.get('/companies/employer-plan'),
   getUsageStats: () => api.get('/companies/usage'),
   getEmployeeStats: () => api.get('/companies/employee-stats'),
+  getMyQuota: () => api.get('/companies/my-quota'),
+  getEmployeesUsage: () => api.get('/companies/employees/usage'),
 };

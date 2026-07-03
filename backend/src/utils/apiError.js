@@ -12,11 +12,11 @@ class ApiError extends Error {
   static unauthorized(message = 'Non autorise') {
     return new ApiError(401, message, 'UNAUTHORIZED');
   }
-  static forbidden(message = 'Acces interdit') {
-    return new ApiError(403, message, 'FORBIDDEN');
+  static forbidden(message = 'Acces interdit', errorCode = 'FORBIDDEN') {
+    return new ApiError(403, message, errorCode);
   }
-  static notFound(message = 'Ressource non trouvee') {
-    return new ApiError(404, message, 'NOT_FOUND');
+  static notFound(message = 'Ressource non trouvee', errorCode = 'NOT_FOUND') {
+    return new ApiError(404, message, errorCode);
   }
   static conflict(message, errorCode) {
     return new ApiError(409, message, errorCode);

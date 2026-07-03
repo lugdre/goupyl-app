@@ -1,6 +1,7 @@
 require('dotenv').config();
 const { PrismaClient } = require('@prisma/client');
 const bcrypt = require('bcryptjs');
+const crypto = require('crypto');
 
 const prisma = new PrismaClient();
 
@@ -11,7 +12,10 @@ async function main() {
   await prisma.sessionReport.deleteMany();
   await prisma.review.deleteMany();
   await prisma.payment.deleteMany();
+  await prisma.appointmentStatusHistory.deleteMany();
   await prisma.appointment.deleteMany();
+  await prisma.productOrder.deleteMany();
+  await prisma.product.deleteMany();
   await prisma.subscription.deleteMany();
   await prisma.document.deleteMany();
   await prisma.profile.deleteMany();
@@ -51,6 +55,7 @@ async function main() {
           level: 'ELITE',
           experience: 15,
           hourlyRate: 60,
+          courseLocations: ['A domicile', 'En salle', 'En entreprise'],
         },
       },
     },
@@ -73,6 +78,7 @@ async function main() {
           level: 'AVANCE',
           experience: 8,
           hourlyRate: 70,
+          courseLocations: ['En entreprise', 'A domicile'],
         },
       },
     },
@@ -95,6 +101,7 @@ async function main() {
           level: 'AVANCE',
           experience: 10,
           hourlyRate: 80,
+          courseLocations: ['En entreprise', "A l'exterieur"],
         },
       },
     },
@@ -103,10 +110,10 @@ async function main() {
   // --- Coachs supplementaires (partout en France) ---
   const extraCoaches = await Promise.all([
     // Paris & Île-de-France
-    prisma.user.create({ data: { email: 'emma.rousseau@email.com', passwordHash, firstName: 'Emma', lastName: 'Rousseau', role: 'INTERVENANT', verificationStatus: 'VERIFIED', profile: { create: { bio: 'Coach fitness et yoga certifiée RYT-200, spécialisée dans la remise en forme post-grossesse et le yoga thérapeutique.', city: 'Paris', specialties: ['yoga', 'pilates', 'remise en forme'], diplomas: ['RYT-200 Yoga Alliance', 'BPJEPS AF'], level: 'AVANCE', experience: 7, hourlyRate: 65 } } } }),
+    prisma.user.create({ data: { email: 'emma.rousseau@email.com', passwordHash, firstName: 'Emma', lastName: 'Rousseau', role: 'INTERVENANT', verificationStatus: 'VERIFIED', profile: { create: { bio: 'Coach fitness et yoga certifiée RYT-200, spécialisée dans la remise en forme post-grossesse et le yoga thérapeutique.', city: 'Paris', specialties: ['yoga', 'pilates', 'remise en forme'], diplomas: ['RYT-200 Yoga Alliance', 'BPJEPS AF'], level: 'AVANCE', experience: 7, hourlyRate: 65, courseLocations: ['A domicile', 'En salle'] } } } }),
     prisma.user.create({ data: { email: 'thomas.klein@email.com', passwordHash, firstName: 'Thomas', lastName: 'Klein', role: 'INTERVENANT', verificationStatus: 'VERIFIED', profile: { create: { bio: 'Préparateur physique ex-professionnel, ancien staff technique Ligue 1. Spécialiste haute performance et réathlétisation.', city: 'Paris', specialties: ['preparation physique', 'reathletisation', 'musculation'], diplomas: ['DE JEPS', 'Master STAPS'], level: 'ELITE', experience: 18, hourlyRate: 90 } } } }),
     prisma.user.create({ data: { email: 'amandine.petit@email.com', passwordHash, firstName: 'Amandine', lastName: 'Petit', role: 'INTERVENANT', verificationStatus: 'VERIFIED', profile: { create: { bio: 'Nutritionniste et micronutritionniste, consultations en cabinet et à domicile. Approche fonctionnelle et personnalisée.', city: 'Boulogne-Billancourt', specialties: ['micronutrition', 'nutrition fonctionnelle', 'perte de poids'], diplomas: ['DU Micronutrition', 'BTS Dietetique'], level: 'AVANCE', experience: 9, hourlyRate: 75 } } } }),
-    prisma.user.create({ data: { email: 'kevin.moreau@email.com', passwordHash, firstName: 'Kévin', lastName: 'Moreau', role: 'INTERVENANT', verificationStatus: 'VERIFIED', profile: { create: { bio: 'Coach CrossFit certifié L2 et coach running. Préparation aux trails et compétitions d\'endurance.', city: 'Vincennes', specialties: ['crossfit', 'running', 'trail'], diplomas: ['CrossFit L2', 'BPJEPS AGFF'], level: 'ELITE', experience: 11, hourlyRate: 70 } } } }),
+    prisma.user.create({ data: { email: 'kevin.moreau@email.com', passwordHash, firstName: 'Kévin', lastName: 'Moreau', role: 'INTERVENANT', verificationStatus: 'VERIFIED', profile: { create: { bio: 'Coach CrossFit certifié L2 et coach running. Préparation aux trails et compétitions d\'endurance.', city: 'Vincennes', specialties: ['crossfit', 'running', 'trail'], diplomas: ['CrossFit L2', 'BPJEPS AGFF'], level: 'ELITE', experience: 11, hourlyRate: 70, courseLocations: ['En salle', "A l'exterieur"] } } } }),
 
     // Lyon & Rhône-Alpes
     prisma.user.create({ data: { email: 'claire.dubois@email.com', passwordHash, firstName: 'Claire', lastName: 'Dubois', role: 'INTERVENANT', verificationStatus: 'VERIFIED', profile: { create: { bio: 'Coach bien-être et sophrologie caycédienne. Accompagnement des entreprises dans la gestion du stress et la qualité de vie au travail.', city: 'Lyon', specialties: ['sophrologie', 'meditation', 'gestion du stress'], diplomas: ['Titre RNCP Sophrologue', 'DU Qualite de vie au travail'], level: 'AVANCE', experience: 12, hourlyRate: 68 } } } }),
@@ -309,6 +316,19 @@ async function main() {
 
   console.log('Services crees');
 
+  // --- Services coach B2C (paiement direct via Stripe Connect) ---
+  await prisma.coachService.createMany({
+    data: [
+      { intervenantId: coach.id, name: 'Séance coaching personnalisée', description: 'Séance individuelle sur mesure : renforcement, cardio ou remise en forme selon vos objectifs.', category: 'SPORT', durationMinutes: 60, price: 55.0, sessionType: 'SOLO' },
+      { intervenantId: coach.id, name: 'Séance duo', description: 'Entraînez-vous à deux : motivation garantie et tarif partagé.', category: 'SPORT', durationMinutes: 60, price: 40.0, sessionType: 'DUO', maxParticipants: 2 },
+      { intervenantId: coach.id, name: 'Programme running 45 min', description: 'Préparation course à pied : fractionné, allure, technique de foulée.', category: 'SPORT', durationMinutes: 45, price: 45.0, sessionType: 'SOLO' },
+      { intervenantId: nutritionist.id, name: 'Consultation nutrition', description: 'Bilan alimentaire complet et plan personnalisé.', category: 'NUTRITION', durationMinutes: 60, price: 65.0, sessionType: 'SOLO' },
+      { intervenantId: psycho.id, name: 'Séance préparation mentale', description: 'Gestion du stress et optimisation de la performance.', category: 'MENTAL', durationMinutes: 60, price: 75.0, sessionType: 'SOLO' },
+    ],
+  });
+
+  console.log('Services coach B2C crees');
+
   // --- Abonnements entreprises ---
   const now = new Date();
 
@@ -345,6 +365,7 @@ async function main() {
       durationMinutes: 60,
       status: 'CONFIRMED',
       notes: 'Premiere seance d\'evaluation',
+      qrToken: crypto.randomUUID(),
     },
   });
 
@@ -563,6 +584,9 @@ async function main() {
         durationMinutes: appt.durationMinutes,
         status: appt.status,
         paymentStatus: appt.status === 'DONE' ? 'paid' : 'unpaid',
+        coveredByCompany: true,
+        qrToken: appt.status === 'CONFIRMED' ? crypto.randomUUID() : null,
+        attendanceStatus: appt.status === 'DONE' ? 'PRESENT' : null,
       },
     });
 
@@ -968,6 +992,54 @@ Les champions ne tombent pas moins que les autres. Ils se relèvent plus vite.`,
   });
 
   console.log('Ressources creees');
+
+  // --- Produits marketplace (dropshipping-lite) ---
+  await prisma.product.createMany({
+    data: [
+      {
+        name: 'Tapis de yoga premium antidérapant',
+        description: 'Tapis 6 mm en TPE écologique, double face antidérapante, avec sangle de transport. Idéal yoga, pilates et étirements.',
+        priceCents: 3990,
+        brand: 'ZenFlow',
+        category: 'Équipement',
+        externalProviderUrl: 'https://partenaire.example.com/zenflow/tapis-premium',
+      },
+      {
+        name: 'Kettlebell fonte 12 kg',
+        description: 'Kettlebell en fonte revêtement néoprène, poignée large pour swings, squats et renforcement complet.',
+        priceCents: 4490,
+        brand: 'IronCore',
+        category: 'Équipement',
+        externalProviderUrl: 'https://partenaire.example.com/ironcore/kettlebell-12',
+      },
+      {
+        name: 'Gourde isotherme 750 ml',
+        description: 'Inox double paroi : garde vos boissons froides 24 h ou chaudes 12 h. Sans BPA.',
+        priceCents: 2490,
+        brand: 'HydraPro',
+        category: 'Accessoires',
+        externalProviderUrl: 'https://partenaire.example.com/hydrapro/gourde-750',
+      },
+      {
+        name: 'Bandes élastiques de résistance (lot de 5)',
+        description: 'Set de 5 bandes de résistances progressives (5 à 40 kg) avec pochette de rangement et guide d\'exercices.',
+        priceCents: 1990,
+        brand: 'FlexBand',
+        category: 'Équipement',
+        externalProviderUrl: 'https://partenaire.example.com/flexband/set-5',
+      },
+      {
+        name: 'Protéine vegan chocolat 1 kg',
+        description: 'Protéine végétale (pois, riz) 22 g de protéines par dose, sans sucres ajoutés, goût chocolat.',
+        priceCents: 2990,
+        brand: 'GreenFuel',
+        category: 'Nutrition',
+        externalProviderUrl: 'https://partenaire.example.com/greenfuel/vegan-choco',
+      },
+    ],
+  });
+
+  console.log('Produits marketplace crees');
   console.log('RDV et comptes-rendus crees');
   console.log('\nSeeding termine !');
   console.log('\nComptes de test :');

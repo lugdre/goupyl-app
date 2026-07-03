@@ -4,7 +4,7 @@ import { userApi } from '../../services/user.api';
 import { useAuth } from '../../hooks/useAuth';
 import Spinner from '../../components/ui/Spinner';
 import { MapPin, Search } from 'lucide-react';
-import { CATEGORY_LABELS } from '../../utils/constants';
+import { CATEGORY_LABELS, COURSE_LOCATION_OPTIONS } from '../../utils/constants';
 import PublicNavbar from '../../components/layout/PublicNavbar';
 import avatarMale from '../../assets/avatar-default-male.svg';
 import avatarFemale from '../../assets/avatar-default-female.svg';
@@ -67,6 +67,8 @@ export default function SearchIntervenants() {
   const [loading, setLoading] = useState(true);
   const [city, setCity] = useState(searchParams.get('city') || '');
   const [query, setQuery] = useState(searchParams.get('q') || '');
+  const [courseLocation, setCourseLocation] = useState(searchParams.get('lieu') || '');
+  const [maxRate, setMaxRate] = useState(searchParams.get('maxRate') || '');
   const [activeCategory, setActiveCategory] = useState(
     CATEGORIES.includes(searchParams.get('category')) ? searchParams.get('category') : 'Tous'
   );
@@ -84,13 +86,55 @@ export default function SearchIntervenants() {
   const fetchIntervenants = () => {
     setLoading(true);
     userApi
-      .getIntervenants({ ...(city && { city }) })
+      .getIntervenants({
+        ...(city && { city }),
+        ...(courseLocation && { courseLocation }),
+        ...(maxRate && { maxRate }),
+      })
       .then(({ data }) => setIntervenants(data.intervenants))
       .catch(() => { })
       .finally(() => setLoading(false));
   };
 
-  useEffect(fetchIntervenants, []);
+  // Refetch immédiat quand le lieu change (filtre serveur) ; la ville et le
+  // tarif max s'appliquent au submit du formulaire de recherche.
+  useEffect(fetchIntervenants, [courseLocation]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const advancedFilters = (
+    <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center', marginBottom: 20 }}>
+      <select
+        value={courseLocation}
+        onChange={(e) => setCourseLocation(e.target.value)}
+        style={{
+          height: 38, padding: '0 12px', borderRadius: 4, fontSize: 13,
+          border: '1px solid rgba(0,0,0,0.14)', background: '#fff', color: courseLocation ? '#0a0a0a' : '#888',
+          fontFamily: '"Inter Tight", sans-serif', cursor: 'pointer', outline: 'none',
+        }}
+      >
+        <option value="">Lieu de séance — Tous</option>
+        {COURSE_LOCATION_OPTIONS.map((loc) => (
+          <option key={loc} value={loc}>{loc}</option>
+        ))}
+      </select>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+        <input
+          type="number"
+          min="0"
+          placeholder="Tarif max"
+          value={maxRate}
+          onChange={(e) => setMaxRate(e.target.value)}
+          onBlur={fetchIntervenants}
+          onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); fetchIntervenants(); } }}
+          style={{
+            height: 38, width: 100, padding: '0 12px', borderRadius: 4, fontSize: 13,
+            border: '1px solid rgba(0,0,0,0.14)', background: '#fff', color: '#0a0a0a',
+            fontFamily: '"Inter Tight", sans-serif', outline: 'none',
+          }}
+        />
+        <span style={{ fontSize: 12, color: '#888', fontFamily: '"JetBrains Mono", monospace' }}>€/h</span>
+      </div>
+    </div>
+  );
 
   const filtered = intervenants.filter((i) => {
     const q = query.toLowerCase();
@@ -122,6 +166,8 @@ export default function SearchIntervenants() {
         <input type="text" placeholder="Ville" value={city} onChange={(e) => setCity(e.target.value)} style={{ width: 90 }} />
         <button type="submit" className="si-btn si-btn-primary si-btn-sm" style={{ borderRadius: 4 }}>Rechercher</button>
       </form>
+
+      {advancedFilters}
 
       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 28 }}>
         {CATEGORIES.map((cat) => {
@@ -306,6 +352,7 @@ export default function SearchIntervenants() {
               <input type="text" placeholder="Ville" value={city} onChange={(e) => setCity(e.target.value)} style={{ width: 90 }} />
               <button type="submit" className="si-btn si-btn-primary si-btn-sm" style={{ borderRadius: 4 }}>Rechercher</button>
             </form>
+            <div style={{ marginTop: 16 }}>{advancedFilters}</div>
           </div>
         ) : (
           <div style={{ marginBottom: 24 }}>
@@ -321,6 +368,7 @@ export default function SearchIntervenants() {
               <input type="text" placeholder="Ville" value={city} onChange={(e) => setCity(e.target.value)} style={{ width: 90 }} />
               <button type="submit" className="si-btn si-btn-primary si-btn-sm" style={{ borderRadius: 4 }}>Rechercher</button>
             </form>
+            {advancedFilters}
           </div>
         )}
 

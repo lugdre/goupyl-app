@@ -1,6 +1,6 @@
 const multer = require('multer');
 const path = require('path');
-const { v4: uuidv4 } = require('uuid');
+const { randomUUID: uuidv4 } = require('crypto');
 const fs = require('fs');
 
 const uploadDir = path.join(__dirname, '../../uploads/avatars');

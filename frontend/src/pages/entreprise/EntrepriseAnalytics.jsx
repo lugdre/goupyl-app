@@ -6,7 +6,9 @@ import {
   BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid,
   Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend,
 } from 'recharts';
-import { Users, CalendarCheck, TrendingUp, Activity, UserCheck } from 'lucide-react';
+import { Users, CalendarCheck, TrendingUp, Activity, UserCheck, Download } from 'lucide-react';
+import toast from 'react-hot-toast';
+import { exportEmployeesUsageCsv } from '../../utils/exportCsv';
 
 const CATEGORY_COLORS = {
   SPORT: '#6366f1',
@@ -83,9 +85,24 @@ export default function EntrepriseAnalytics() {
   return (
     <div className="max-w-5xl space-y-6">
       {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900">Tableau de bord analytique</h1>
-        <p className="text-gray-500 mt-1">Suivi de l'activité bien-être de votre équipe — mois en cours</p>
+      <div className="flex items-start justify-between flex-wrap gap-3">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Tableau de bord analytique</h1>
+          <p className="text-gray-500 mt-1">Suivi de l'activité bien-être de votre équipe — mois en cours</p>
+        </div>
+        <button
+          onClick={async () => {
+            try {
+              await exportEmployeesUsageCsv();
+              toast.success('Export CSV téléchargé');
+            } catch {
+              toast.error("Erreur lors de l'export");
+            }
+          }}
+          className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-gray-300 text-sm font-medium text-gray-700 hover:border-primary-400 transition-colors"
+        >
+          <Download className="w-4 h-4" />Exporter CSV
+        </button>
       </div>
 
       {/* KPIs */}
