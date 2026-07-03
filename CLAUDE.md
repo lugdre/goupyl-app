@@ -4,170 +4,220 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project overview
 
-Goupyl Sport — a platform connecting sport/wellness professionals (intervenants) with clients. Full-stack monorepo: `backend/` (Node.js API) + `frontend/` (React SPA).
+Goupyl Sport — a B2B/B2C platform connecting sport & wellness professionals (INTERVENANT) with individual clients and companies. Companies (ENTREPRISE) buy per-collaborator subscriptions; their employees (CLIENT with `employerCompanyId`) book sessions covered by the plan; independent clients (CLIENT without employer) pay per session via Stripe.
+
+Full-stack monorepo, no shared workspace tooling — two independent npm projects:
+- `backend/` — Express 5 REST API (CommonJS), Prisma + PostgreSQL, Redis, Stripe, Resend
+- `frontend/` — React 19 SPA (ESM), Vite 8, Tailwind CSS v4, axios, react-router v7
 
 ## Running the project
 
-Both services must run simultaneously in separate terminals.
+Both services run simultaneously in separate terminals.
 
-**Backend** (port 3000):
 ```bash
-cd backend
-npm run dev
+cd backend && npm run dev     # nodemon, port 3000
+cd frontend && npm run dev    # Vite, port 5173
 ```
 
-**Frontend** (port 5173):
-```bash
-cd frontend
-npm run dev
-```
+The Vite dev server proxies `/api` and `/uploads` → `localhost:3000` (see `frontend/vite.config.js`), so no CORS config is needed in development.
 
-The Vite dev server proxies `/api` → `localhost:3000`, so no CORS config is needed during development.
+## Commands
 
-## Backend commands
-
-All Prisma commands require the explicit schema path because it is in a non-standard location (`src/prisma/schema.prisma`):
+All Prisma commands need the explicit schema path (non-standard location `src/prisma/schema.prisma`; also set via the `prisma.schema` key in `backend/package.json`):
 
 ```bash
-npm run db:migrate    # npx prisma migrate dev --schema=src/prisma/schema.prisma
-npm run db:seed       # node src/prisma/seed.js
+# backend/
 npm run db:generate   # regenerate Prisma client after schema changes
-npm run db:studio     # open Prisma Studio GUI
-npm run test          # jest --verbose (all tests)
+npm run db:seed       # ⚠️ DESTRUCTIVE: truncates every table, reseeds demo data
+npm run db:studio     # Prisma Studio GUI
+npm run test          # jest --verbose
 npm run lint          # eslint src/
+npx jest tests/unit/auth.test.js --verbose   # single test file
+
+# frontend/
+npm run build         # vite build → dist/
+npm run lint          # eslint
 ```
 
-Run a single test file:
+**Local schema sync — do not rely on migrations.** The committed migrations in `src/prisma/migrations/` lag behind `schema.prisma`. Push the schema directly instead of `prisma migrate dev`:
+
 ```bash
-cd backend && npx jest tests/unit/auth.test.js --verbose
+cd backend && npx prisma db push --schema=src/prisma/schema.prisma
 ```
+
+Tests: `backend/tests/unit/` mocks `../../src/config/database` and `../../src/config/redis` via `jest.mock`; `backend/tests/integration/` needs a real DB.
 
 ## Environment variables
 
-Required in `backend/.env`:
+`backend/.env` (local dev):
 
 ```
 PORT=3000
 NODE_ENV=development
 DATABASE_URL="postgresql://YOUR_MACOS_USERNAME@localhost:5432/goupyl_sport"
 REDIS_URL="redis://localhost:6379"
-JWT_SECRET="..."
+JWT_SECRET="..."                # read by config/jwt.js
 JWT_REFRESH_SECRET="..."
-FRONTEND_URL="http://localhost:5173"
-RESEND_API_KEY="re_..."        # transactional emails via Resend
-STRIPE_SECRET_KEY="sk_test_..." # ENTREPRISE subscriptions + appointment payments
+JWT_ACCESS_SECRET="..."         # read by utils/encryption.js — keep in sync with JWT_SECRET
+PARQ_ENCRYPTION_KEY="..."       # AES key for PARQ answers at rest (falls back to JWT_ACCESS_SECRET, then JWT_SECRET)
+CORS_ORIGIN="http://localhost:5173"
+FRONTEND_URL="http://localhost:5173"   # used in Stripe redirect URLs and email links
+RESEND_API_KEY="re_..."
+STRIPE_SECRET_KEY="sk_test_..."
+STRIPE_WEBHOOK_SECRET="whsec_..."
+PASSKEY_RP_ID="localhost"
+PASSKEY_ORIGIN="http://localhost:5173"
 ```
 
-## Infrastructure requirements
+`frontend/.env` (**committed to git**, unusual): `VITE_STRIPE_PUBLISHABLE_KEY` — baked into the bundle at build time (`import.meta.env`).
 
-- **PostgreSQL**: local database `goupyl_sport`. For macOS with Homebrew, use the current OS user (superuser) to avoid permission issues: `DATABASE_URL="postgresql://YOUR_MACOS_USERNAME@localhost:5432/goupyl_sport"`. Create with `createdb goupyl_sport`.
-- **Redis**: `brew install redis && brew services start redis`. Default URL: `redis://localhost:6379`. Stores refresh tokens (7-day TTL) and session challenge data for passkeys.
+**Graceful-degradation trap (has caused production 500s):** several configs degrade silently instead of failing at boot, so a missing var only surfaces at runtime:
+- missing `REDIS_URL` → `config/redis.js` falls back to an in-process `MemoryStore` → all refresh tokens/sessions lost on every restart
+- missing `RESEND_API_KEY` → `config/email.js` becomes a no-op, emails silently disabled
+- missing `PARQ_ENCRYPTION_KEY` **and** both JWT fallbacks → PARQ submit throws 500
+- missing `STRIPE_SECRET_KEY` → `getStripe()` is lazy; payment endpoints throw on first use, nothing at boot
 
-## Architecture
+## Deployment
 
-### Backend — layered request flow
+Production is split across two hosts:
 
-```
-HTTP Request → app.js (helmet/cors/rateLimit) → routes/index.js
-  → route file → validate.middleware (Zod) → auth.middleware (JWT) → role.middleware (RBAC)
-  → controller (thin, calls service) → service (business logic, Prisma + Redis)
-  → Prisma ORM → PostgreSQL
-```
+- **Frontend → Netlify.** `frontend/netlify.toml`: build `npm run build`, publish `dist/`; proxies `/api/*` and `/uploads/*` server-side to the Render backend (`https://goupyl-app.onrender.com`) with `status = 200` rewrites, SPA-fallback everything else to `index.html`. The browser always calls same-origin `/api` — no CORS in prod either.
+- **Backend → Render** (Web Service, free tier: sleeps on idle, Start Command re-runs on every wake). Env vars come from the Render dashboard, not a `.env` file.
 
-Key files:
-- `src/app.js` — Express setup, global rate limiter (100/min), auth limiter (10/min on login/register)
-- `src/routes/index.js` — mounts all routers under `/api`
-- `src/utils/apiError.js` — `ApiError` class with static helpers (`unauthorized`, `notFound`, etc.)
-- `src/middlewares/errorHandler.middleware.js` — catches `ApiError`, Prisma `P2002`/`P2025`, JWT errors
-- `src/config/jwt.js` — access tokens (15 min) + refresh tokens (7 days stored in Redis)
+**Render command discipline (has wiped production data):** never put `npm run db:seed`, `prisma migrate reset`, or `prisma db push --accept-data-loss` in the Start Command — `seed.js` truncates every table and the Start Command re-runs on every wake-from-sleep. Correct setup:
+- Build: `npm install && npx prisma generate --schema=src/prisma/schema.prisma && npx prisma db push --schema=src/prisma/schema.prisma`
+- Start: `npm start` (only)
 
-Backend uses **CommonJS** (`require`/`module.exports`).
+`server.js` eagerly connects Prisma (fatal on failure) and Redis (non-fatal, warns) before `app.listen` to avoid cold-start 504s on the first request.
 
-### Tests
+To diagnose production 500s: the errorHandler hides messages behind `Erreur interne.` outside development — read the Render logs for the `Erreur:` line with the real stack trace.
 
-Tests live in `backend/tests/unit/` (Prisma + Redis mocked via `jest.mock`) and `backend/tests/integration/` (real DB required). Unit tests mock `../../src/config/database` and `../../src/config/redis` directly.
+## Backend architecture
 
-### Frontend — component and routing structure
+### Layered request flow
 
 ```
-main.jsx → App.jsx (BrowserRouter + AuthProvider + Toaster)
-  → ProtectedRoute (checks isAuthenticated)
-    → RoleRoute (checks user.role)
-      → DashboardLayout (Navbar + VerificationBanner + Sidebar + <Outlet />)
-        → page components
+app.js (helmet → cors → morgan → rateLimit) → routes/index.js (mounts under /api)
+  → route file → authenticate (JWT) → authorize(...roles) → validate (Zod) → [injectActivePlan]
+  → controller (thin try/catch, calls service) → service (business logic: Prisma + Redis + Stripe)
 ```
 
-Auth state lives in `AuthContext` (localStorage for tokens + user object). The Axios instance in `src/services/api.js` auto-adds the Bearer token and auto-refreshes on 401 responses.
+Every domain follows the same file triple: `routes/X.routes.js` + `controllers/X.controller.js` + `services/X.service.js`, plus `validators/X.validator.js` (Zod schemas). 16 domains mounted in `routes/index.js`: auth, users, services, appointments, subscriptions, session-reports, documents, companies, payments, resources, analytics, reviews, coach-services, passkeys, notifications, parq.
 
-Frontend uses **ESM** (`import`/`export`), React 19, Tailwind CSS v4 (loaded via `@tailwindcss/vite` plugin — no PostCSS config needed).
+Key cross-cutting files:
+- `src/app.js` — global rate limit 100/min; stricter 10/min on `/api/auth/login` and `/api/auth/register`; `express.raw` mounted on `/api/payments/webhook` **before** `express.json` (Stripe signature needs the raw body); serves `/uploads/avatars` statically; `trust proxy 1`
+- `src/utils/apiError.js` — `ApiError` with static helpers (`badRequest`, `unauthorized`, `forbidden`, `notFound`, `conflict`); `isOperational` errors get their real message, everything else → 500
+- `src/middlewares/errorHandler.middleware.js` — maps `ApiError`, Prisma `P2002`→409 / `P2025`→404, JWT errors→401
+- `src/middlewares/validate.middleware.js` — **Zod 4**: reads `error.issues` (not the Zod-3 `error.errors`); returns `400 VALIDATION_ERROR` with joined messages
+- `src/middlewares/auth.middleware.js` — sets `req.user = { userId, role }` from the Bearer token
+- `src/middlewares/activePlan.middleware.js` — injects `req.activePlan`: ENTREPRISE's own subscription, or the employer's plan for CLIENT; a CANCELLED subscription still counts until its `endDate`
+- `src/config/jwt.js` — access token 15 min (`JWT_SECRET`), refresh token 7 days (`JWT_REFRESH_SECRET`, stored in Redis under `refresh_token:<userId>`)
+- `src/utils/encryption.js` — AES-256-GCM envelope (`iv:authTag:ciphertext` base64) for PARQ answers; key derived via scrypt from `PARQ_ENCRYPTION_KEY` → `JWT_ACCESS_SECRET` → `JWT_SECRET`
 
-UI primitives: `Button`, `Card`, `Input`, `Badge`, `Spinner` in `src/components/ui/`. Shared label maps in `src/utils/constants.js` (`CATEGORY_LABELS`, `STATUS_LABELS`, `LEVEL_LABELS`, `DAY_LABELS`, etc.).
+Backend is **CommonJS** (`require`/`module.exports`).
 
-Each backend domain has a matching frontend API service (e.g. `coachService.service.js` ↔ `coachService.api.js`). Public pages are in `src/pages/public/`, role-scoped pages in `src/pages/client/`, `src/pages/intervenant/`, `src/pages/entreprise/`, `src/pages/admin/`.
+### Data model (Prisma, 15 models)
 
-### RBAC roles
+`User` is the hub — one table for all four roles, self-relation `employerCompany`/`employees` links salaried CLIENTs to their ENTREPRISE. Key fields: `verificationStatus` (PENDING/VERIFIED/REJECTED), `joinCode` (unique per company, employees register with it), `stripeAccountId`/`stripeAccountStatus` (Connect, intervenants).
 
-Four roles with distinct dashboard paths:
-- `CLIENT` → `/dashboard/client`
-- `INTERVENANT` → `/dashboard/intervenant`
-- `ENTREPRISE` → `/dashboard/entreprise`
-- `ADMIN` → `/dashboard/admin`
+- `Profile` — 1:1 with User; coach data (bio, specialties/diplomas as Json, hourlyRate, city, courseLocations…) and client data (level, objectives)
+- `Service` — **B2B platform-defined** offerings; `availableInPlans` (Json) gates them by company plan
+- `CoachService` — **B2C coach-defined** offerings; `sessionType` SOLO/DUO/GROUP + `maxParticipants`; soft-delete via `active`
+- `Appointment` — points to **either** `serviceId` (B2B) **or** `coachServiceId` (B2C), both nullable; status PENDING→CONFIRMED→DONE/CANCELLED; `paymentStatus` string ('unpaid'/'paid')
+- `Payment` — 1:1 with Appointment; cents; `platformFee` + `intervenantShare`; refund fields
+- `Subscription` — ENTREPRISE plans (`ESSENTIEL_ENTREPRISE`/`BOOST_ENTREPRISE`/`ULTRA_ENTREPRISE`), MONTHLY/YEARLY
+- `Review` — 1:1 with Appointment; `coachReply` editable max 3 times (`coachReplyEdits`)
+- `SessionReport` — 1:1 with Appointment, written by the intervenant
+- `Document` — verification uploads (identity/diploma) with admin status
+- `CompanyInvite` — tokenized email invites to join a company
+- `Resource` — content library gated by `access` tier ESSENTIEL/BOOST/ULTRA
+- `Passkey`, `Notification`, `PARQQuestionnaire`
 
-`/dashboard` redirects to the role-appropriate path via `DashboardRedirect` in `App.jsx`.
+**Dual service type rule:** anywhere an appointment's service is displayed or serialized, use null-safe fallback `appt.coachService?.name || appt.service?.name`.
 
-### Dual appointment service type
+### Booking & scheduling
 
-Appointments can reference either a B2B `Service` (platform-defined, `serviceId`) or a B2C `CoachService` (coach-defined, `coachServiceId`). Both fields are nullable — always use null-safe access: `appt.coachService?.name || appt.service?.name`. This applies everywhere an appointment's service name is displayed (frontend) or serialized (backend).
+No availability model — scheduling works on **busy intervals + business hours**:
+- `GET /api/appointments/busy/:intervenantId` (public) returns `{start,end}` intervals for PENDING/CONFIRMED appointments; the frontend `SlotPicker` renders a Doctolib-style week grid between **07:00 and 21:00** and greys out overlaps (optionally also the client's own busy slots via `/appointments/me/busy-slots`)
+- `appointment.service.create` re-validates server-side: business hours 7h–21h, overlap detection for both intervenant and client, service belongs to the intervenant, and for B2B services that the employee's company plan includes the service (`availableInPlans`)
+- Status transitions are whitelisted (`PENDING→CONFIRMED|CANCELLED`, `CONFIRMED→DONE|CANCELLED`); CLIENTs can only cancel
+- **Payment gate:** CONFIRMED→DONE requires `paymentStatus === 'paid'` unless the client is a company employee (B2B sessions are invoiced to the company, coach is notified accordingly)
+- **Cancellation policy:** client cancel allowed only ≥ 48 h before the session; if already paid, Stripe partial refund with split **35% refunded to client / 30% kept for coach / 35% platform** (constants at top of `appointment.service.js`)
 
-`CoachService` has a `sessionType` enum (`SOLO` / `DUO` / `GROUP`) and optional `maxParticipants`.
+### Payments (Stripe, two distinct flows)
 
-### Payment (Stripe)
+1. **ENTREPRISE subscriptions** — one-shot Checkout Session (`mode: 'payment'`, not Stripe subscriptions). Priced **per collaborator/month**: Essentiel 5 400 cents, Boost 12 200 cents; YEARLY = monthly −20% × 12; `quantity` = attached collaborators (min 1). `ULTRA_ENTREPRISE` is sur devis — no online checkout. Activation happens twice-redundantly: via the webhook `checkout.session.completed` **and** via `GET /payments/verify-session` on the success redirect.
+2. **Marketplace (B2C sessions)** — Stripe **Connect**: intervenants onboard via account links (`/payments/onboard`, status polled at `/payments/onboard/status`); clients pay a confirmed appointment via PaymentIntent (`/payments/create-intent`) with `application_fee_amount` = **30% platform fee** and `transfer_data.destination` = the coach's account. Card + Klarna. Pending PaymentIntents are reused (React StrictMode double-invoke guard). Success recorded via webhook `payment_intent.succeeded` **and** `POST /payments/confirm` fallback called by the frontend after `stripe.confirmPayment()`.
 
-Two payment flows both use Stripe:
-1. **ENTREPRISE subscriptions** — Stripe Checkout sessions (`/api/payments/checkout`). Billed **per collaborator / month**: `ESSENTIEL_ENTREPRISE` 54€/collab/mo (5400 cents), `BOOST_ENTREPRISE` 122€/collab/mo (12200 cents); `ULTRA_ENTREPRISE` is **sur devis** (no online checkout — routes to `/#demo`). YEARLY = monthly rate −20% × 12. Stripe `quantity` = number of attached collaborators (min 1). Webhook at `/api/payments/webhook` activates subscriptions.
-2. **Appointment payments** — PaymentIntent with platform fee split between platform and intervenant (`Payment` model stores `platformFee` + `intervenantShare`).
+`GET /payments/earnings` aggregates an intervenant's paid (DONE) vs pending (paid but not DONE) totals.
 
-### Resource access tiers
+### Auth
 
-`Resource` model has `access` enum (`ESSENTIEL` / `BOOST` / `ULTRA`) matching the ENTREPRISE subscription plans (`ESSENTIEL_ENTREPRISE` / `BOOST_ENTREPRISE` / `ULTRA_ENTREPRISE`). Access is cumulative (Boost sees Essentiel+Boost; Ultra sees all) and gates content visibility by the client's company subscription tier.
+- Register: role CLIENT/INTERVENANT/ENTREPRISE. ENTREPRISE gets an auto-generated unique 8-hex `joinCode` and is auto-VERIFIED when a SIRET is provided (Pappers validation planned, not implemented). CLIENT may pass a `joinCode` — either a `CompanyInvite` token or a company's permanent code — to be attached as employee. INTERVENANT starts PENDING until admin validates documents.
+- Login returns `{ user, accessToken, refreshToken }`; refresh token stored in Redis (7-day TTL). Email verification token (`email_verify:<token>`, 24 h) sent via Resend; `POST /auth/verify-email` sets `emailVerifiedAt`.
+- **Passkeys/WebAuthn** (`/api/passkeys`, `@simplewebauthn/server`): challenges in Redis (5 min TTL, keys `passkey_challenge:<scope>:<id>`); authentication returns the same JWT pair as password login. `PASSKEY_RP_ID`/`PASSKEY_ORIGIN` must match the serving domain.
+- Redis `set` failures during login/register are caught and logged — a Redis hiccup must not fail an otherwise successful auth.
 
-### Passkey / WebAuthn
+### PARQ questionnaire (medical readiness)
 
-Routes at `/api/passkeys`. Uses `@simplewebauthn/server`. Registration challenge stored in Redis (short TTL). Passkey authentication returns same JWT token pair as password login; handled by `loginWithPasskey` in `AuthContext`.
+CLIENT-only, gates the booking flow. Routes `/api/parq`: `submit`, `status`, `me`. Seven boolean answers **encrypted at rest** (see encryption above) — never returned in plaintext to anyone but the owner. One record per user (resubmit overwrites, resets `coachCleared`), 1-year expiry. `GET /parq/status` returns `canBook`: false if missing/expired or `hasRisk && !coachCleared`.
 
-### Document upload & verification flow
+### Companies (B2B)
 
-INTERVENANTs must upload identity + diplomas before their account is activated:
-1. After registration, `verificationStatus` defaults to `PENDING`
-2. `DashboardLayout` shows a `VerificationBanner` for INTERVENANT with PENDING/REJECTED status
-3. Documents uploaded via `POST /api/documents/upload` (multer, stored in `backend/uploads/documents/`, UUID filenames, 5 MB max, PDF/JPG/PNG only)
-4. Admin reviews at `ManageVerifications` page: expand a user card → eye icon (inline preview via blob URL) or download icon
-5. Admin calls `PUT /api/users/:id/verify` with `{ status, note }` → updates `verificationStatus` on the user
+ENTREPRISE manages employees at `/api/companies`: list/remove employees, permanent `joinCode` (regenerable), tokenized email invites (7-day expiry, Resend), usage stats with per-plan session limits (`PLAN_LIMITS` in `company.service.js`), per-employee stats. Employees see their employer plan at `/dashboard/client/employer-plan`.
 
-ENTREPRISEs provide a SIRET at registration. SIRET validation via Pappers API is planned but not yet implemented — for now, verified automatically on registration.
+### Resources
 
-`GET /api/documents/:id/file` is ADMIN-only and returns the file as a binary stream; the frontend fetches it with `responseType: 'blob'` and creates an object URL.
+`Resource.access` tier maps cumulatively from the company plan (`PLAN_ACCESS_LEVEL` in `resource.service.js`): Essentiel plan sees ESSENTIEL, Boost sees +BOOST, Ultra sees all. The API returns **all** published resources with a computed `isLocked` flag — the frontend renders locked cards, it does not hide them.
 
-### Availability convention
+### Documents & verification
 
-`dayOfWeek` is an integer where **0 = Lundi (Monday)** through **6 = Dimanche (Sunday)** — matching the index of `DAY_LABELS` in `constants.js`. The backend returns availability arrays directly (not wrapped in an object).
+INTERVENANTs upload identity + diplomas (`POST /api/documents/upload`, multer → `backend/uploads/documents/`, UUID filenames, 5 MB, PDF/JPG/PNG). Admin reviews in `ManageVerifications` (inline blob preview via ADMIN-only `GET /api/documents/:id/file`), then `PATCH /api/users/:id/verify` sets `verificationStatus` + note. `DashboardLayout` shows a `VerificationBanner` for non-VERIFIED intervenants linking to the profile page (documents section lives inside the intervenant profile).
 
-### Reviews API shape
+## Frontend architecture
 
-`reviewApi.getForIntervenant()` returns `{ reviews, averageRating, reviewCount, totalSessions }` — not a direct array. Always destructure: `const { reviews } = res.data`.
+### Routing & guards
 
-### Landing page
+```
+main.jsx → App.jsx: ThemeProvider > BrowserRouter > AuthProvider > Toaster + Routes
+  ProtectedRoute (isAuthenticated, Spinner while loading)
+    RoleRoute (user.role whitelist)
+      DashboardLayout (Navbar + VerificationBanner + Sidebar + <Outlet/>)
+```
 
-`src/pages/public/Landing.jsx` is fully public (no auth required). It uses Tailwind's `dark:` variant for automatic light/dark switching via `prefers-color-scheme` — no JS toggle needed. Dual logos: `<img className="dark:hidden">` for the color logo, `<img className="hidden dark:block">` for the white logo. Coaches are fetched from the API and sorted by rating then profile completeness.
+Public routes: `/`, `/login`, `/register`, `/search`, `/coaches/:id`, `/verify-email`, `/cgu`, `/confidentialite`. `/dashboard` redirects by role via `DashboardRedirect`:
+- CLIENT → `/dashboard/client` (appointments, search, book/:intervenantId, employer-plan, services=B2B catalog, resources, profile)
+- INTERVENANT → `/dashboard/intervenant` (agenda, reviews, services=CoachService management, payments=Stripe onboarding+earnings merged, profile=identity+expertise+documents; legacy `earnings`/`documents` paths redirect)
+- ENTREPRISE → `/dashboard/entreprise` (employees, search, subscription, analytics, resources, profile)
+- ADMIN → `/dashboard/admin` (users, verifications)
 
-`/coaches/:id` renders `CoachPublicProfile.jsx` — also fully public, no auth required.
+Sidebar menus per role live in `components/layout/Sidebar.jsx`.
 
-### Seed data
+### Auth state & axios
 
-All seed users have password `Password1!`:
+`AuthContext` holds `user` (+ helpers `isClient`, `isIntervenant`, …) persisted in localStorage along with both tokens. The axios instance `services/api.js` (`baseURL: '/api'`):
+- request interceptor adds the Bearer token, drops Content-Type for FormData
+- response interceptor: on 401, transparently refreshes the access token (queueing concurrent 401s) and retries. **Auth routes `/auth/login|register|refresh` are excluded** — a 401 there means bad credentials and must surface. On refresh failure: clear storage + hard redirect to `/login`.
+
+Each backend domain has a matching thin API module in `src/services/*.api.js`.
+
+### Conventions & gotchas
+
+- Shared label maps in `src/utils/constants.js`: `CATEGORY_LABELS`, `STATUS_LABELS`, `PLAN_LABELS`, `BILLING_CYCLE_LABELS`, `LEVEL_LABELS`, `DAY_LABELS` (index 0 = Lundi)
+- `reviewApi.getForIntervenant()` returns `{ reviews, averageRating, reviewCount, totalSessions }` — destructure, it is not an array
+- UI primitives in `src/components/ui/` (`Button`, `Card`, `Input`, `Badge`, `Spinner`, `AvatarFallback`); `cn.js` for class merging
+- Public pages (Landing, Login, Register, CoachPublicProfile) use their own inline `<style>` CSS with an editorial design system (Archivo Narrow / Inter Tight / JetBrains Mono) — they do not use the dashboard Tailwind components
+- `ThemeContext` is currently **hard-pinned to light mode** (toggle is a no-op); Landing uses Tailwind `dark:` variants driven by `prefers-color-scheme` independently
+- `OnboardingChecklist` (per-role setup steps on each dashboard) auto-hides only when every step is `done` and **cannot be dismissed manually**
+- Booking UI: `BookAppointment.jsx` = pick CoachService → `SlotPicker` week grid → PARQ gate (`PARQModal`) → create appointment; payment happens later from `MyAppointments` via `PaymentModal` (Stripe Elements) once the coach confirmed
+- Dead files (not routed, do not extend): `pages/client/Profile.jsx`, `pages/client/MySubscription.jsx`
+
+## Seed data
+
+`npm run db:seed` (⚠️ wipes all tables first) creates users with password `Password1!`:
 - `admin@goupylsport.fr` — ADMIN
-- `marc.leroy@email.com`, `sophie.martin@email.com`, `julien.blanc@email.com` — INTERVENANT
-- `marvin.dupont@email.com`, `sarah.benali@email.com` — CLIENT
-- `rh@acmecorp.fr` (ESSENTIEL_ENTREPRISE), `wellness@techstart.fr` (BOOST_ENTREPRISE), `sport@industria.fr` (ULTRA_ENTREPRISE) — ENTREPRISE
+- `marc.leroy@email.com`, `sophie.martin@email.com`, `julien.blanc@email.com` (+ others) — INTERVENANT
+- `marvin.dupont@email.com`, `sarah.benali@email.com` (+ others) — CLIENT
+- `rh@acmecorp.fr` (ESSENTIEL), `wellness@techstart.fr` (BOOST), `sport@industria.fr` (ULTRA) — ENTREPRISE
 
-When updating `seed.js` cleanup order, `payment` and `review` must be deleted before `appointment` due to foreign key constraints.
+When changing the seed cleanup order: `payment` and `review` must be deleted before `appointment` (FK constraints).
