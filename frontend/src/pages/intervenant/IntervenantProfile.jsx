@@ -13,8 +13,7 @@ import DeleteAccountSection from '../../components/profile/DeleteAccountSection'
 import PasskeyManager from '../../components/PasskeyManager';
 import UploadDocuments from '../shared/UploadDocuments';
 import { useTheme } from '../../context/ThemeContext';
-
-const COURSE_LOCATION_OPTIONS = ['A domicile', 'En salle', 'A l\'exterieur', 'En entreprise'];
+import { COURSE_LOCATION_OPTIONS } from '../../utils/constants';
 
 export default function IntervenantProfile() {
   const { user: authUser, refreshUser } = useAuth();

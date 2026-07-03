@@ -17,6 +17,10 @@ const registerSchema = z.object({
     .optional(),
   joinCode: z.string().optional(),
   acceptedTerms: z.boolean().optional(),
+  // Questionnaire d'onboarding (CLIENT uniquement, facultatif)
+  level: z.enum(['DEBUTANT', 'INTERMEDIAIRE', 'AVANCE', 'ELITE']).optional(),
+  sportType: z.string().max(100).trim().optional(),
+  objectives: z.array(z.string().min(1).max(80)).max(10).optional(),
 });
 
 const loginSchema = z.object({

@@ -17,5 +17,6 @@ router.use('/coach-services', require('./coachService.routes'));
 router.use('/passkeys', require('./passkey.routes'));
 router.use('/notifications', require('./notification.routes'));
 router.use('/parq', require('./parq.routes'));
+router.use('/products', require('./product.routes'));
 
 module.exports = router;

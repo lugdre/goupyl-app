@@ -181,11 +181,17 @@ export default function EntrepriseSubscription() {
                 max={usage.limits.maxEmployees}
               />
               <UsageBar
-                label="Séances réservées"
+                label="Séances couvertes"
                 icon={Activity}
                 used={usage.sessionCount}
-                max={usage.limits.maxSessions}
+                max={usage.limits.totalQuota ?? usage.limits.maxSessions}
               />
+              {usage.limits.quotaPerEmployee != null && (
+                <p className="text-xs text-gray-500">
+                  Quota : {usage.limits.quotaPerEmployee} séances / collaborateur / mois
+                  {usage.limits.totalQuota != null && ` (soit ${usage.limits.totalQuota} au total pour ${usage.employeeCount} collaborateur(s))`}
+                </p>
+              )}
             </div>
           )}
         </div>

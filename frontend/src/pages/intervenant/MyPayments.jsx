@@ -69,8 +69,10 @@ function EarningsSection() {
 
   const payments = data?.payments || [];
   const pending = data?.pending || [];
+  const frozen = data?.frozen || [];
   const totalEarned = data?.totalEarned || 0;
   const totalPending = data?.totalPending || 0;
+  const totalFrozen = data?.totalFrozen || 0;
 
   return (
     <div className="space-y-6">
@@ -116,6 +118,23 @@ function EarningsSection() {
           </div>
         </Card>
       </div>
+
+      {/* Frozen section — séances sous litige */}
+      {frozen.length > 0 && (
+        <div>
+          <h3 className="text-lg font-semibold text-gray-900 mb-3 flex items-center gap-2">
+            <Clock className="w-5 h-5 text-red-500" />
+            Gains gelés (litiges en cours) — {(totalFrozen / 100).toFixed(2)} &euro;
+          </h3>
+          <div className="mb-2 px-1">
+            <p className="text-sm text-gray-500">
+              Un client conteste l'absence signalée sur ces séances. Les montants seront débloqués
+              (ou remboursés) après arbitrage par l'équipe Goupyl Sport.
+            </p>
+          </div>
+          <PaymentsTable rows={frozen} emptyText="" />
+        </div>
+      )}
 
       {/* Pending section */}
       {pending.length > 0 && (

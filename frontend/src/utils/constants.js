@@ -31,3 +31,23 @@ export const LEVEL_LABELS = {
 };
 
 export const DAY_LABELS = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche'];
+
+export const ATTENDANCE_LABELS = {
+  PRESENT: 'Présent',
+  ABSENT: 'Absent',
+};
+
+export const DISPUTE_STATUS_LABELS = {
+  OPEN: 'Litige en cours',
+  REJECTED: 'Litige rejeté',
+  RESOLVED_CLIENT: 'Litige résolu — remboursé',
+};
+
+export const ORDER_STATUS_LABELS = {
+  PENDING: 'En attente',
+  PAID: 'Payée',
+  CANCELLED: 'Annulée',
+};
+
+// Valeurs exactes attendues par le filtre backend (profile.courseLocations has)
+export const COURSE_LOCATION_OPTIONS = ['A domicile', 'En salle', "A l'exterieur", 'En entreprise'];

@@ -53,7 +53,25 @@ const CSS = `
   .auth-footer-link{color:var(--accent);font-weight:600;text-decoration:none}
   .auth-footer-link:hover{opacity:.75}
   .auth-divider-h{height:1px;background:var(--line);margin:8px 0}
+  .auth-chips{display:flex;flex-wrap:wrap;gap:6px}
+  .auth-chip{padding:7px 13px;border:1px solid var(--line);background:#fff;border-radius:999px;font-family:"Inter Tight",sans-serif;font-size:12.5px;font-weight:500;color:var(--ink-3);cursor:pointer;transition:border-color .15s,background .15s,color .15s}
+  .auth-chip:hover{border-color:rgba(0,0,0,.3)}
+  .auth-chip.selected{background:var(--ink);border-color:var(--ink);color:var(--bg)}
+  .auth-skip{background:none;border:none;font-family:"JetBrains Mono",monospace;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3);cursor:pointer;text-decoration:underline;text-underline-offset:3px;margin:6px auto 0;display:block}
+  .auth-skip:hover{color:var(--ink)}
 `;
+
+const OBJECTIVE_OPTIONS = [
+  'Perte de poids', 'Remise en forme', 'Prise de masse',
+  'Préparation compétition', 'Bien-être', 'Gestion du stress',
+];
+
+const LEVEL_OPTIONS = [
+  ['DEBUTANT', 'Débutant'],
+  ['INTERMEDIAIRE', 'Intermédiaire'],
+  ['AVANCE', 'Avancé'],
+  ['ELITE', 'Élite'],
+];
 
 const ROLES = [
   { value: 'PARTICULIER', label: 'Particulier', desc: 'Je réserve pour moi', icon: User },
@@ -95,13 +113,31 @@ export default function Register() {
   const [emailSent, setEmailSent] = useState(false);
   const [acceptedTerms, setAcceptedTerms] = useState(false);
 
+  // Étape 2 (questionnaire sportif) pour PARTICULIER / SALARIE
+  const [step, setStep] = useState(1);
+  const [profileForm, setProfileForm] = useState({ level: '', sportType: '', objectives: [] });
+  const isClientRole = selected === 'PARTICULIER' || selected === 'SALARIE';
+
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
     setErrors({ ...errors, [e.target.name]: '' });
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const selectRole = (value) => {
+    setSelected(value);
+    setStep(1);
+  };
+
+  const toggleObjective = (obj) => {
+    setProfileForm((p) => ({
+      ...p,
+      objectives: p.objectives.includes(obj)
+        ? p.objectives.filter((o) => o !== obj)
+        : [...p.objectives, obj],
+    }));
+  };
+
+  const doRegister = async (includeProfile) => {
     setLoading(true);
     setErrors({});
 
@@ -116,6 +152,11 @@ export default function Register() {
       if (selected === 'SALARIE' && form.joinCode) {
         payload.joinCode = form.joinCode;
       }
+      if (includeProfile) {
+        if (profileForm.level) payload.level = profileForm.level;
+        if (profileForm.sportType.trim()) payload.sportType = profileForm.sportType.trim();
+        if (profileForm.objectives.length) payload.objectives = profileForm.objectives;
+      }
 
       await register(payload);
       toast.success('Compte créé avec succès !');
@@ -126,9 +167,20 @@ export default function Register() {
       toast.error(message);
       if (errorCode === 'EMAIL_ALREADY_EXISTS') setErrors({ email: 'Cet email est déjà utilisé' });
       if (errorCode === 'INVALID_JOIN_CODE') setErrors({ joinCode: 'Code invalide ou expiré' });
+      if (errorCode === 'EMAIL_ALREADY_EXISTS' || errorCode === 'INVALID_JOIN_CODE') setStep(1);
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    // Particulier / collaborateur : le questionnaire sportif s'affiche en étape 2
+    if (isClientRole && step === 1) {
+      setStep(2);
+      return;
+    }
+    await doRegister(isClientRole);
   };
 
   if (emailSent) {
@@ -200,6 +252,72 @@ export default function Register() {
 
           <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
 
+            {/* Étape 2 — questionnaire sportif (particulier / collaborateur) */}
+            {isClientRole && step === 2 ? (
+              <>
+                <div className="auth-section-label">Votre profil sportif — étape 2/2</div>
+
+                <div>
+                  <label className="auth-field-label">Niveau physique</label>
+                  <div className="auth-chips">
+                    {LEVEL_OPTIONS.map(([value, label]) => (
+                      <button
+                        key={value}
+                        type="button"
+                        className={`auth-chip${profileForm.level === value ? ' selected' : ''}`}
+                        onClick={() => setProfileForm((p) => ({ ...p, level: p.level === value ? '' : value }))}
+                      >
+                        {label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <label className="auth-field-label">Sport pratiqué / souhaité</label>
+                  <input
+                    value={profileForm.sportType}
+                    onChange={(e) => setProfileForm((p) => ({ ...p, sportType: e.target.value }))}
+                    placeholder="Ex : fitness, running, yoga…"
+                    maxLength={100}
+                    className="auth-field-input"
+                  />
+                </div>
+
+                <div>
+                  <label className="auth-field-label">Vos objectifs</label>
+                  <div className="auth-chips">
+                    {OBJECTIVE_OPTIONS.map((obj) => (
+                      <button
+                        key={obj}
+                        type="button"
+                        className={`auth-chip${profileForm.objectives.includes(obj) ? ' selected' : ''}`}
+                        onClick={() => toggleObjective(obj)}
+                      >
+                        {obj}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <button type="submit" disabled={loading} className="auth-submit">
+                  {loading ? 'Création du compte…' : <>Créer mon compte <span>→</span></>}
+                </button>
+                <button type="button" className="auth-skip" onClick={() => doRegister(false)} disabled={loading}>
+                  Passer cette étape
+                </button>
+                <button
+                  type="button"
+                  className="auth-skip"
+                  style={{ marginTop: 0 }}
+                  onClick={() => setStep(1)}
+                  disabled={loading}
+                >
+                  ← Retour
+                </button>
+              </>
+            ) : (
+            <>
             {/* Role */}
             <div>
               <div className="auth-section-label">Je suis</div>
@@ -211,7 +329,7 @@ export default function Register() {
                       key={value}
                       type="button"
                       className={`auth-role${active ? ' selected' : ''}`}
-                      onClick={() => setSelected(value)}
+                      onClick={() => selectRole(value)}
                     >
                       <Icon size={14} style={{ marginTop: 2, flexShrink: 0, color: active ? '#0a0a0a' : '#aaa' }} />
                       <div>
@@ -283,8 +401,14 @@ export default function Register() {
             </label>
 
             <button type="submit" disabled={loading || !acceptedTerms} className="auth-submit">
-              {loading ? 'Création du compte…' : <>Créer mon compte <span>→</span></>}
+              {loading
+                ? 'Création du compte…'
+                : isClientRole
+                  ? <>Continuer <span>→</span></>
+                  : <>Créer mon compte <span>→</span></>}
             </button>
+            </>
+            )}
           </form>
 
           <p className="auth-footer-text">

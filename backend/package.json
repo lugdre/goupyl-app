@@ -18,6 +18,9 @@
   },
   "jest": {
     "testEnvironment": "node",
+    "setupFiles": [
+      "dotenv/config"
+    ],
     "testMatch": [
       "**/tests/**/*.test.js"
     ]

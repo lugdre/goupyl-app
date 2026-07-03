@@ -1,12 +1,40 @@
+const { randomUUID } = require('crypto');
 const prisma = require('../config/database');
 const ApiError = require('../utils/apiError');
 const getStripe = require('../config/stripe');
 const notificationService = require('./notification.service');
+const { PLAN_LIMITS, countCoveredSessions } = require('./company.service');
 
-const CANCELLATION_WINDOW_HOURS = 48;
-// Répartition sur annulation : 35% remboursé client, 30% coach, 35% plateforme
-const CANCEL_REFUND_RATE     = 0.35;
-const CANCEL_COACH_RATE      = 0.30;
+// ── Annulation dégressive ──────────────────────────────────────────────
+// ≥ 7 jours : remboursement intégral ; entre 48h et 7 jours : 50% remboursé
+// (le reste est repris au prorata 70/30 par Stripe : 35% coach, 15% plateforme) ;
+// < 48h : annulation possible mais aucun remboursement.
+const FULL_REFUND_HOURS    = 7 * 24;
+const PARTIAL_REFUND_HOURS = 48;
+const PARTIAL_REFUND_RATE  = 0.50;
+
+// Un RDV PENDING non confirmé expire au bout de 24h (ou dès que l'heure de
+// la séance est passée) pour ne pas verrouiller le créneau indéfiniment.
+const PENDING_TTL_HOURS = 24;
+
+// Filtre des RDV qui occupent réellement un créneau : les PENDING périmés
+// (pas encore balayés par le sweep) libèrent le créneau immédiatement.
+const activeAppointmentFilter = () => ({
+  OR: [
+    { status: 'CONFIRMED' },
+    {
+      status: 'PENDING',
+      createdAt: { gte: new Date(Date.now() - PENDING_TTL_HOURS * 3_600_000) },
+      scheduledAt: { gte: new Date() },
+    },
+  ],
+});
+
+// L'audit ne doit jamais faire échouer la transition
+const logStatus = (appointmentId, fromStatus, toStatus, changedBy) =>
+  prisma.appointmentStatusHistory
+    .create({ data: { appointmentId, fromStatus, toStatus, changedBy } })
+    .catch(() => {});
 
 const create = async (clientId, { intervenantId, serviceId, coachServiceId, scheduledAt, notes }) => {
   const intervenant = await prisma.user.findUnique({ where: { id: intervenantId } });
@@ -17,6 +45,7 @@ const create = async (clientId, { intervenantId, serviceId, coachServiceId, sche
   let durationMinutes;
   let resolvedServiceId = null;
   let resolvedCoachServiceId = null;
+  let coveredByCompany = false;
 
   if (coachServiceId) {
     // B2C flow — coach's own service
@@ -54,6 +83,20 @@ const create = async (clientId, { intervenantId, serviceId, coachServiceId, sche
       if (availablePlans.length > 0 && !availablePlans.includes(activeSub.plan)) {
         throw ApiError.forbidden("Ce service n'est pas inclus dans le forfait de votre entreprise.", 'SERVICE_NOT_IN_PLAN');
       }
+
+      // Quota mensuel par collaborateur, compté sur le mois calendaire de la
+      // séance demandée (réserver en août ne consomme pas le quota de juillet)
+      const quota = PLAN_LIMITS[activeSub.plan]?.maxSessions;
+      if (quota != null) {
+        const used = await countCoveredSessions(clientId, new Date(scheduledAt));
+        if (used >= quota) {
+          throw ApiError.forbidden(
+            `Quota mensuel atteint (${quota} séances couvertes par votre entreprise). Vous pouvez réserver une séance à titre personnel.`,
+            'QUOTA_EXHAUSTED'
+          );
+        }
+      }
+      coveredByCompany = true;
     }
 
     durationMinutes = service.durationMinutes;
@@ -80,7 +123,7 @@ const create = async (clientId, { intervenantId, serviceId, coachServiceId, sche
     prisma.appointment.findMany({
       where: {
         intervenantId,
-        status: { in: ['PENDING', 'CONFIRMED'] },
+        ...activeAppointmentFilter(),
         scheduledAt: { lt: endTime },
       },
       select: { scheduledAt: true, durationMinutes: true },
@@ -88,7 +131,7 @@ const create = async (clientId, { intervenantId, serviceId, coachServiceId, sche
     prisma.appointment.findMany({
       where: {
         clientId,
-        status: { in: ['PENDING', 'CONFIRMED'] },
+        ...activeAppointmentFilter(),
         scheduledAt: { lt: endTime },
       },
       select: { scheduledAt: true, durationMinutes: true },
@@ -114,6 +157,8 @@ const create = async (clientId, { intervenantId, serviceId, coachServiceId, sche
       durationMinutes,
       status: 'PENDING',
       notes,
+      coveredByCompany,
+      qrToken: randomUUID(),
     },
     include: {
       service: { select: { name: true, category: true, price: true } },
@@ -123,8 +168,10 @@ const create = async (clientId, { intervenantId, serviceId, coachServiceId, sche
     },
   });
 
-  // Notification B2B au coach si le client est un salarié d'entreprise
-  if (created.client.employerCompanyId) {
+  logStatus(created.id, null, 'PENDING', 'client');
+
+  // Notification B2B au coach si la séance est couverte par l'entreprise
+  if (created.coveredByCompany) {
     const companyName = created.client.employerCompany?.companyName || 'une entreprise partenaire';
     notificationService.create(intervenantId, {
       type: 'APPOINTMENT_B2B',
@@ -215,18 +262,15 @@ const updateStatus = async (appointmentId, userId, role, newStatus, cancelReason
       'INVALID_STATUS_TRANSITION'
     );
   }
-  if (role === 'CLIENT' && newStatus !== 'CANCELLED') {
-    throw ApiError.forbidden("Les clients ne peuvent qu'annuler un RDV.");
+  // Les annulations client passent exclusivement par POST /:id/cancel
+  // (politique de remboursement dégressive) — jamais par ce chemin générique.
+  if (role === 'CLIENT') {
+    throw ApiError.forbidden("Utilisez la procédure d'annulation dédiée.", 'USE_CANCEL_ENDPOINT');
   }
 
-  // Payment gate: CONFIRMED → DONE requires payment (sauf pour les salariés d'entreprise)
+  // Payment gate: CONFIRMED → DONE requires payment (sauf séances couvertes par l'entreprise)
   if (appointment.status === 'CONFIRMED' && newStatus === 'DONE') {
-    const clientUser = await prisma.user.findUnique({
-      where: { id: appointment.clientId },
-      select: { employerCompanyId: true },
-    });
-    const isB2B = clientUser?.employerCompanyId != null;
-    if (!isB2B && appointment.paymentStatus !== 'paid') {
+    if (!appointment.coveredByCompany && appointment.paymentStatus !== 'paid') {
       throw ApiError.badRequest(
         'Le paiement doit être effectué avant de clôturer la séance.',
         'PAYMENT_REQUIRED'
@@ -234,10 +278,11 @@ const updateStatus = async (appointmentId, userId, role, newStatus, cancelReason
     }
   }
 
-  return prisma.appointment.update({
+  const updated = await prisma.appointment.update({
     where: { id: appointmentId },
     data: {
       status: newStatus,
+      ...(newStatus === 'DONE' && { attendanceStatus: 'PRESENT' }),
       ...(cancelReason && { cancelReason, cancelledBy: role.toLowerCase() }),
     },
     include: {
@@ -246,6 +291,18 @@ const updateStatus = async (appointmentId, userId, role, newStatus, cancelReason
       client: { select: { firstName: true, lastName: true } },
     },
   });
+
+  logStatus(appointmentId, appointment.status, newStatus, role.toLowerCase());
+
+  if (appointment.status === 'PENDING' && newStatus === 'CONFIRMED') {
+    notificationService.create(appointment.clientId, {
+      type: 'APPOINTMENT_CONFIRMED',
+      title: 'Rendez-vous confirmé',
+      body: `Votre séance du ${new Date(appointment.scheduledAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' })} a été confirmée par le professionnel.`,
+    }).catch(() => {});
+  }
+
+  return updated;
 };
 
 const getBusySlots = async (intervenantId, from, to) => {
@@ -255,7 +312,7 @@ const getBusySlots = async (intervenantId, from, to) => {
   const appointments = await prisma.appointment.findMany({
     where: {
       intervenantId: parseInt(intervenantId),
-      status: { in: ['PENDING', 'CONFIRMED'] },
+      ...activeAppointmentFilter(),
       scheduledAt: { gte: fromDate, lt: toDate },
     },
     select: { scheduledAt: true, durationMinutes: true },
@@ -280,26 +337,31 @@ const cancelAppointment = async (appointmentId, clientId, reason) => {
     throw ApiError.badRequest('Ce rendez-vous ne peut plus être annulé.', 'INVALID_STATUS');
   }
 
+  // ── Politique dégressive ───────────────────────────────────────────────
   const hoursUntil = (new Date(appointment.scheduledAt).getTime() - Date.now()) / 3_600_000;
-  if (hoursUntil < CANCELLATION_WINDOW_HOURS) {
-    throw ApiError.badRequest(
-      "L'annulation n'est plus possible moins de 48h avant la séance.",
-      'CANCELLATION_TOO_LATE'
-    );
+  let tier = 'NONE';
+  let refundRate = 0;
+  if (hoursUntil >= FULL_REFUND_HOURS) {
+    tier = 'FULL';
+    refundRate = 1;
+  } else if (hoursUntil >= PARTIAL_REFUND_HOURS) {
+    tier = 'PARTIAL';
+    refundRate = PARTIAL_REFUND_RATE;
   }
 
-  // ── Remboursement Stripe partiel (35 %) si déjà payé ──────────────────
-  let refundInfo = null;
-  if (appointment.paymentStatus === 'paid' && appointment.payment) {
+  let refundInfo = { tier, refundRate, refundAmount: 0 };
+  if (appointment.paymentStatus === 'paid' && appointment.payment && refundRate > 0) {
     const { payment } = appointment;
-    const refundAmount   = Math.round(payment.amount * CANCEL_REFUND_RATE);
-    const coachRetains   = Math.round(payment.amount * CANCEL_COACH_RATE);
-    const platformRetains = payment.amount - refundAmount - coachRetains;
+    const refundAmount = Math.round(payment.amount * refundRate);
 
     try {
+      // reverse_transfer + refund_application_fee : Stripe reprend la part du
+      // coach (70%) et la commission plateforme (30%) au prorata du montant remboursé
       const refund = await getStripe().refunds.create({
         payment_intent: payment.stripePaymentIntentId,
         amount: refundAmount,
+        reverse_transfer: true,
+        refund_application_fee: true,
       });
 
       await prisma.payment.update({
@@ -311,11 +373,18 @@ const cancelAppointment = async (appointmentId, clientId, reason) => {
         },
       });
 
-      refundInfo = { refundAmount, coachRetains, platformRetains, stripeRefundId: refund.id };
+      refundInfo = {
+        tier,
+        refundRate,
+        refundAmount,
+        coachRetains: Math.round(payment.intervenantShare * (1 - refundRate)),
+        platformRetains: Math.round(payment.platformFee * (1 - refundRate)),
+        stripeRefundId: refund.id,
+      };
     } catch (err) {
       // Ne bloque pas l'annulation — traitement manuel possible
       console.error('[cancel] Stripe refund failed:', err.message);
-      refundInfo = { refundAmount: Math.round(payment.amount * CANCEL_REFUND_RATE), stripeError: err.message };
+      refundInfo = { tier, refundRate, refundAmount, stripeError: err.message };
     }
   }
 
@@ -325,8 +394,12 @@ const cancelAppointment = async (appointmentId, clientId, reason) => {
       status: 'CANCELLED',
       cancelledBy: 'client',
       cancelReason: reason || 'Annulé par le client',
+      // Remboursement intégral → le paiement sort des gains du coach
+      ...(refundInfo.stripeRefundId && refundRate === 1 && { paymentStatus: 'refunded' }),
     },
   });
+
+  logStatus(appointmentId, appointment.status, 'CANCELLED', 'client');
 
   // Notification au coach
   try {
@@ -347,7 +420,7 @@ const getMyBusySlots = async (userId, from, to) => {
   const appointments = await prisma.appointment.findMany({
     where: {
       clientId: userId,
-      status: { in: ['PENDING', 'CONFIRMED'] },
+      ...activeAppointmentFilter(),
       scheduledAt: { gte: fromDate, lt: toDate },
     },
     select: { scheduledAt: true, durationMinutes: true },
@@ -360,4 +433,216 @@ const getMyBusySlots = async (userId, from, to) => {
   }));
 };
 
-module.exports = { create, getMyAppointments, getAll, updateStatus, getBusySlots, getMyBusySlots, cancelAppointment };
+// ── Validation de séance par QR code ─────────────────────────────────────
+// code = uuid complet (scan caméra) ou les 8 premiers caractères (saisie manuelle)
+const validateQr = async (intervenantId, rawCode) => {
+  const code = String(rawCode || '').trim().toLowerCase();
+  if (code.length < 8) throw ApiError.badRequest('Code invalide.', 'QR_INVALID_CODE');
+
+  let appointment;
+  if (code.length >= 36) {
+    appointment = await prisma.appointment.findUnique({ where: { qrToken: code } });
+  } else {
+    appointment = await prisma.appointment.findFirst({
+      where: { intervenantId, status: 'CONFIRMED', qrToken: { startsWith: code } },
+    });
+  }
+
+  if (!appointment) throw ApiError.notFound('Aucune séance trouvée pour ce code.', 'QR_NOT_FOUND');
+  if (appointment.intervenantId !== intervenantId) throw ApiError.forbidden('Cette séance ne vous appartient pas.');
+  if (appointment.status !== 'CONFIRMED') {
+    throw ApiError.badRequest('Seule une séance confirmée peut être validée.', 'QR_INVALID_STATUS');
+  }
+  if (!appointment.coveredByCompany && appointment.paymentStatus !== 'paid') {
+    throw ApiError.badRequest(
+      'Le paiement doit être effectué avant de valider la séance.',
+      'PAYMENT_REQUIRED'
+    );
+  }
+
+  const updated = await prisma.appointment.update({
+    where: { id: appointment.id },
+    data: { status: 'DONE', attendanceStatus: 'PRESENT', validatedByQr: true },
+    include: {
+      service: { select: { name: true, category: true } },
+      coachService: { select: { name: true, category: true } },
+      client: { select: { firstName: true, lastName: true } },
+    },
+  });
+
+  logStatus(appointment.id, 'CONFIRMED', 'DONE', 'intervenant');
+  return updated;
+};
+
+// ── Absence client ────────────────────────────────────────────────────────
+// Pas de porte de paiement : un client absent ne paiera jamais, et bloquer
+// laisserait la séance en CONFIRMED indéfiniment.
+const markAbsent = async (appointmentId, intervenantId) => {
+  const appointment = await prisma.appointment.findUnique({ where: { id: appointmentId } });
+  if (!appointment) throw ApiError.notFound('Rendez-vous non trouvé.');
+  if (appointment.intervenantId !== intervenantId) throw ApiError.forbidden('Accès refusé.');
+  if (appointment.status !== 'CONFIRMED') {
+    throw ApiError.badRequest('Seule une séance confirmée peut être marquée absente.', 'INVALID_STATUS');
+  }
+  if (new Date(appointment.scheduledAt) > new Date()) {
+    throw ApiError.badRequest("La séance n'a pas encore commencé.", 'SESSION_NOT_STARTED');
+  }
+
+  const updated = await prisma.appointment.update({
+    where: { id: appointmentId },
+    data: { status: 'DONE', attendanceStatus: 'ABSENT' },
+  });
+
+  logStatus(appointmentId, 'CONFIRMED', 'DONE', 'intervenant');
+
+  notificationService.create(appointment.clientId, {
+    type: 'ABSENCE_MARKED',
+    title: 'Absence signalée',
+    body: `Le professionnel a signalé votre absence à la séance du ${new Date(appointment.scheduledAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' })}. Vous pouvez contester depuis vos rendez-vous.`,
+  }).catch(() => {});
+
+  return updated;
+};
+
+// ── Litiges ───────────────────────────────────────────────────────────────
+const openDispute = async (appointmentId, clientId, reason) => {
+  const appointment = await prisma.appointment.findUnique({ where: { id: appointmentId } });
+  if (!appointment) throw ApiError.notFound('Rendez-vous non trouvé.');
+  if (appointment.clientId !== clientId) throw ApiError.forbidden('Accès refusé.');
+  if (appointment.status !== 'DONE' || appointment.attendanceStatus !== 'ABSENT') {
+    throw ApiError.badRequest('Seule une séance marquée absente peut être contestée.', 'DISPUTE_NOT_ALLOWED');
+  }
+  if (appointment.disputeStatus) {
+    throw ApiError.conflict('Un litige existe déjà pour cette séance.', 'DISPUTE_ALREADY_EXISTS');
+  }
+
+  const updated = await prisma.appointment.update({
+    where: { id: appointmentId },
+    data: { disputeStatus: 'OPEN', disputeReason: reason, disputedAt: new Date() },
+  });
+
+  // Notifie tous les admins — le virement au coach est gelé en attendant
+  prisma.user
+    .findMany({ where: { role: 'ADMIN', isActive: true }, select: { id: true } })
+    .then((admins) =>
+      admins.forEach((admin) =>
+        notificationService.create(admin.id, {
+          type: 'DISPUTE_OPENED',
+          title: 'Nouveau litige',
+          body: `Un client conteste l'absence signalée sur la séance du ${new Date(appointment.scheduledAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' })}.`,
+        }).catch(() => {})
+      )
+    )
+    .catch(() => {});
+
+  return updated;
+};
+
+const listDisputes = async ({ status = 'OPEN' } = {}) => {
+  const where = status === 'ALL' ? { disputeStatus: { not: null } } : { disputeStatus: status };
+  return prisma.appointment.findMany({
+    where,
+    include: {
+      service: { select: { name: true, category: true } },
+      coachService: { select: { name: true, category: true } },
+      client: { select: { id: true, firstName: true, lastName: true, email: true } },
+      intervenant: { select: { id: true, firstName: true, lastName: true, email: true } },
+      payment: { select: { amount: true, intervenantShare: true, refundAmount: true } },
+    },
+    orderBy: { disputedAt: 'desc' },
+  });
+};
+
+const resolveDispute = async (appointmentId, resolution) => {
+  const appointment = await prisma.appointment.findUnique({
+    where: { id: appointmentId },
+    include: { payment: true },
+  });
+  if (!appointment) throw ApiError.notFound('Rendez-vous non trouvé.');
+  if (appointment.disputeStatus !== 'OPEN') {
+    throw ApiError.badRequest("Ce litige n'est pas ouvert.", 'DISPUTE_NOT_OPEN');
+  }
+
+  let refundInfo = null;
+  if (resolution === 'RESOLVED_CLIENT' && appointment.paymentStatus === 'paid' && appointment.payment) {
+    const { payment } = appointment;
+    const refund = await getStripe().refunds.create({
+      payment_intent: payment.stripePaymentIntentId,
+      amount: payment.amount,
+      reverse_transfer: true,
+      refund_application_fee: true,
+    });
+    await prisma.payment.update({
+      where: { appointmentId },
+      data: { refundAmount: payment.amount, refundStripeId: refund.id, refundStatus: refund.status },
+    });
+    refundInfo = { refundAmount: payment.amount, stripeRefundId: refund.id };
+  }
+
+  const updated = await prisma.appointment.update({
+    where: { id: appointmentId },
+    data: {
+      disputeStatus: resolution,
+      disputeResolvedAt: new Date(),
+      // paymentStatus 'refunded' sort la séance des gains du coach
+      ...(refundInfo && { paymentStatus: 'refunded' }),
+    },
+  });
+
+  const dateLabel = new Date(appointment.scheduledAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' });
+  const clientBody = resolution === 'RESOLVED_CLIENT'
+    ? `Votre litige sur la séance du ${dateLabel} a été tranché en votre faveur${refundInfo ? ' — vous serez intégralement remboursé' : ''}.`
+    : `Votre litige sur la séance du ${dateLabel} a été rejeté : l'absence signalée est confirmée.`;
+  const coachBody = resolution === 'RESOLVED_CLIENT'
+    ? `Le litige sur la séance du ${dateLabel} a été tranché en faveur du client${refundInfo ? ' — le paiement est intégralement remboursé' : ''}.`
+    : `Le litige sur la séance du ${dateLabel} a été rejeté : vos gains sont débloqués.`;
+  notificationService.create(appointment.clientId, { type: 'DISPUTE_RESOLVED', title: 'Litige résolu', body: clientBody }).catch(() => {});
+  notificationService.create(appointment.intervenantId, { type: 'DISPUTE_RESOLVED', title: 'Litige résolu', body: coachBody }).catch(() => {});
+
+  return updated;
+};
+
+// ── Expiration des PENDING (verrouillage de créneau limité dans le temps) ──
+const expirePendingAppointments = async () => {
+  const now = new Date();
+  const cutoff = new Date(now.getTime() - PENDING_TTL_HOURS * 3_600_000);
+  const stale = await prisma.appointment.findMany({
+    where: {
+      status: 'PENDING',
+      OR: [{ scheduledAt: { lt: now } }, { createdAt: { lt: cutoff } }],
+    },
+    select: { id: true },
+  });
+  if (!stale.length) return 0;
+
+  const ids = stale.map((s) => s.id);
+  await prisma.appointment.updateMany({
+    where: { id: { in: ids } },
+    data: {
+      status: 'CANCELLED',
+      cancelledBy: 'system',
+      cancelReason: 'Expiré : non confirmé par le professionnel dans les délais.',
+    },
+  });
+  await prisma.appointmentStatusHistory.createMany({
+    data: ids.map((id) => ({ appointmentId: id, fromStatus: 'PENDING', toStatus: 'CANCELLED', changedBy: 'system' })),
+  }).catch(() => {});
+
+  return ids.length;
+};
+
+module.exports = {
+  create,
+  getMyAppointments,
+  getAll,
+  updateStatus,
+  getBusySlots,
+  getMyBusySlots,
+  cancelAppointment,
+  validateQr,
+  markAbsent,
+  openDispute,
+  listDisputes,
+  resolveDispute,
+  expirePendingAppointments,
+};

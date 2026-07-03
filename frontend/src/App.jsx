@@ -23,6 +23,7 @@ import BookAppointment from './pages/client/BookAppointment';
 import MyEmployerPlan from './pages/client/MyEmployerPlan';
 import B2BServiceCatalog from './pages/client/B2BServiceCatalog';
 import ClientProfile from './pages/client/ClientProfile';
+import Marketplace from './pages/client/Marketplace';
 
 import IntervenantDashboard from './pages/intervenant/IntervenantDashboard';
 import MyAgenda from './pages/intervenant/MyAgenda';
@@ -34,6 +35,8 @@ import MyServices from './pages/intervenant/MyServices';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import ManageUsers from './pages/admin/ManageUsers';
 import ManageVerifications from './pages/admin/ManageVerifications';
+import ManageDisputes from './pages/admin/ManageDisputes';
+import ManageProducts from './pages/admin/ManageProducts';
 
 import EntrepriseDashboard from './pages/entreprise/EntrepriseDashboard';
 import EntrepriseProfile from './pages/entreprise/EntrepriseProfile';
@@ -104,6 +107,7 @@ export default function App() {
             <Route path="employer-plan" element={<MyEmployerPlan />} />
             <Route path="services" element={<B2BServiceCatalog />} />
             <Route path="resources" element={<ResourcesLibrary />} />
+            <Route path="marketplace" element={<Marketplace />} />
             <Route path="profile" element={<ClientProfile />} />
           </Route>
 
@@ -162,6 +166,8 @@ export default function App() {
             <Route index element={<AdminDashboard />} />
             <Route path="users" element={<ManageUsers />} />
             <Route path="verifications" element={<ManageVerifications />} />
+            <Route path="disputes" element={<ManageDisputes />} />
+            <Route path="products" element={<ManageProducts />} />
           </Route>
 
           {/* Fallback */}

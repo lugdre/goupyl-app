@@ -17,6 +17,7 @@ const CATEGORY_LABELS_MAP = { SPORT: 'Sport', NUTRITION: 'Nutrition', MENTAL: 'M
 export default function MyEmployerPlan() {
   const [planData, setPlanData] = useState(null);
   const [stats, setStats] = useState(null);
+  const [quota, setQuota] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -24,6 +25,7 @@ export default function MyEmployerPlan() {
     Promise.all([
       companyApi.getEmployerPlan().then(({ data }) => setPlanData(data)),
       companyApi.getEmployeeStats().then(({ data }) => setStats(data)),
+      companyApi.getMyQuota().then(({ data }) => setQuota(data)).catch(() => {}),
     ])
       .catch(() => setError('Impossible de charger les informations du forfait.'))
       .finally(() => setLoading(false));
@@ -69,6 +71,27 @@ export default function MyEmployerPlan() {
               <CalendarDays className="w-4 h-4" />
               <span>Valide jusqu'au {new Date(subscription.endDate).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}</span>
             </div>
+
+            {/* Quota mensuel de séances couvertes */}
+            {quota?.quota != null && (
+              <div className="bg-gray-50 rounded-xl p-4 mb-3">
+                <div className="flex items-center justify-between mb-2">
+                  <p className="text-sm font-medium text-gray-700">Séances couvertes ce mois ({quota.month})</p>
+                  <p className="text-sm font-bold text-gray-900">{quota.used} / {quota.quota}</p>
+                </div>
+                <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+                  <div
+                    className={cn('h-full rounded-full transition-all', quota.remaining === 0 ? 'bg-amber-500' : 'bg-primary-500')}
+                    style={{ width: `${Math.min((quota.used / quota.quota) * 100, 100)}%` }}
+                  />
+                </div>
+                <p className="text-xs text-gray-500 mt-2">
+                  {quota.remaining > 0
+                    ? `${quota.remaining} séance(s) restante(s) prise(s) en charge par votre entreprise.`
+                    : 'Quota atteint — les prochaines séances de ce mois seront à votre charge.'}
+                </p>
+              </div>
+            )}
 
             {/* Personal usage stats */}
             {stats && (

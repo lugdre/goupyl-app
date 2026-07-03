@@ -11,7 +11,7 @@ const REFRESH_TTL = 7 * 24 * 60 * 60;
 
 const generateJoinCode = () => crypto.randomBytes(4).toString('hex').toUpperCase();
 
-const register = async ({ email, password, firstName, lastName, role, companyName, siret, joinCode, acceptedTerms }) => {
+const register = async ({ email, password, firstName, lastName, role, companyName, siret, joinCode, acceptedTerms, level, sportType, objectives }) => {
   const existing = await prisma.user.findUnique({ where: { email } });
   if (existing) throw ApiError.conflict('Un compte existe deja avec cet email.', 'EMAIL_ALREADY_EXISTS');
 
@@ -66,6 +66,16 @@ const register = async ({ email, password, firstName, lastName, role, companyNam
       ...(companyJoinCode && { joinCode: companyJoinCode }),
       ...(employerCompanyId && { employerCompanyId }),
       ...(acceptedTerms && { acceptedTermsAt: new Date() }),
+      // Questionnaire d'onboarding (objectifs, niveau, sport) → Profile
+      ...(role === 'CLIENT' && (level || sportType || objectives?.length) && {
+        profile: {
+          create: {
+            ...(level && { level }),
+            ...(sportType && { sportType }),
+            ...(objectives?.length && { objectives }),
+          },
+        },
+      }),
     },
     select: {
       id: true,

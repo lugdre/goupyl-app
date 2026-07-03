@@ -6,8 +6,9 @@ import Badge from '../../components/ui/Badge';
 import Button from '../../components/ui/Button';
 import Spinner from '../../components/ui/Spinner';
 import MobileWeekCalendar from '../../components/appointment/MobileWeekCalendar';
-import { Calendar, ChevronLeft, ChevronRight, List, LayoutGrid, Star } from 'lucide-react';
-import { STATUS_LABELS } from '../../utils/constants';
+import QrScannerModal from '../../components/appointment/QrScannerModal';
+import { Calendar, ChevronLeft, ChevronRight, List, LayoutGrid, Star, ScanLine, UserX, CheckCircle } from 'lucide-react';
+import { STATUS_LABELS, DISPUTE_STATUS_LABELS } from '../../utils/constants';
 import { useIsMobile } from '../../hooks/useMediaQuery';
 import toast from 'react-hot-toast';
 
@@ -57,6 +58,7 @@ export default function MyAgenda() {
   const [reviewLoading, setReviewLoading] = useState(false);
   const [replyText, setReplyText] = useState('');
   const [replyLoading, setReplyLoading] = useState(false);
+  const [showScanner, setShowScanner] = useState(false);
 
   const fetchData = () => {
     setLoading(true);
@@ -96,6 +98,24 @@ export default function MyAgenda() {
       toast.error(err.response?.data?.message || 'Erreur');
     }
   };
+
+  const handleMarkAbsent = async (rdv) => {
+    const ok = window.confirm(
+      `Signaler l'absence de ${rdv.client.firstName} ${rdv.client.lastName} à la séance ? ` +
+      'La séance sera clôturée et le client pourra contester.'
+    );
+    if (!ok) return;
+    try {
+      await appointmentApi.markAbsent(rdv.id);
+      toast.success('Absence signalée — séance clôturée');
+      setSelected(null);
+      fetchData();
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Erreur');
+    }
+  };
+
+  const sessionStarted = (rdv) => new Date(rdv.scheduledAt) <= new Date();
 
   const handleReply = async () => {
     if (!replyText.trim() || !selectedReview) return;
@@ -149,6 +169,10 @@ export default function MyAgenda() {
           <h1 className="text-2xl font-semibold text-gray-900">Mon agenda</h1>
           <p className="text-gray-500 mt-1">Tous vos rendez-vous</p>
         </div>
+        <div className="flex items-center gap-2 flex-wrap">
+        <Button size="sm" onClick={() => setShowScanner(true)}>
+          <ScanLine className="w-4 h-4 mr-1.5" />Scanner un QR
+        </Button>
         <div style={{ display: 'flex', alignItems: 'center', gap: 4, border: '1px solid rgba(0,0,0,0.10)', borderRadius: 6, padding: 4, background: '#f4f4f2' }}>
           {[['week', LayoutGrid, 'Semaine'], ['list', List, 'Liste']].map(([v, Icon, label]) => (
             <button
@@ -166,6 +190,7 @@ export default function MyAgenda() {
               {label}
             </button>
           ))}
+        </div>
         </div>
       </div>
 
@@ -327,7 +352,7 @@ export default function MyAgenda() {
                   <p className="font-medium text-gray-900">{rdv.coachService?.name || rdv.service?.name}</p>
                   <p className="text-sm text-gray-500 flex items-center gap-2">
                     Client : {rdv.client.firstName} {rdv.client.lastName}
-                    {rdv.client.employerCompanyId && (
+                    {rdv.coveredByCompany && (
                       <span className="text-xs font-semibold px-1.5 py-0.5 bg-primary-500/15 text-primary-400 rounded-md">
                         Entreprise
                       </span>
@@ -343,6 +368,17 @@ export default function MyAgenda() {
                 </div>
                 <div className="flex flex-col items-end gap-2 shrink-0">
                   <Badge variant={rdv.status}>{STATUS_LABELS[rdv.status]}</Badge>
+                  {rdv.status === 'DONE' && rdv.validatedByQr && (
+                    <span className="inline-flex items-center gap-1 text-xs font-medium text-green-700">
+                      <CheckCircle className="w-3 h-3" />Validée par QR
+                    </span>
+                  )}
+                  {rdv.status === 'DONE' && rdv.attendanceStatus === 'ABSENT' && (
+                    <span className="inline-flex items-center gap-1 text-xs font-medium text-red-600">
+                      <UserX className="w-3 h-3" />Client absent
+                      {rdv.disputeStatus && ` · ${DISPUTE_STATUS_LABELS[rdv.disputeStatus]}`}
+                    </span>
+                  )}
                   <div className="flex gap-1">
                     {rdv.status === 'PENDING' && (
                       <>
@@ -356,18 +392,23 @@ export default function MyAgenda() {
                           <Button
                             size="sm"
                             onClick={() => handleAction(rdv.id, 'DONE')}
-                            disabled={rdv.paymentStatus !== 'paid' && !rdv.client.employerCompanyId}
-                            title={rdv.paymentStatus !== 'paid' && !rdv.client.employerCompanyId ? 'Le client doit payer avant de clôturer' : ''}
+                            disabled={rdv.paymentStatus !== 'paid' && !rdv.coveredByCompany}
+                            title={rdv.paymentStatus !== 'paid' && !rdv.coveredByCompany ? 'Le client doit payer avant de clôturer' : ''}
                           >
                             Terminer
                           </Button>
-                          {rdv.paymentStatus !== 'paid' && !rdv.client.employerCompanyId && (
+                          {rdv.paymentStatus !== 'paid' && !rdv.coveredByCompany && (
                             <span className="text-xs text-amber-600 font-medium">En attente de paiement</span>
                           )}
-                          {rdv.client.employerCompanyId && (
+                          {rdv.coveredByCompany && (
                             <span className="text-xs text-primary-400 font-medium">Paiement via Goupyl Sport</span>
                           )}
                         </div>
+                        {sessionStarted(rdv) && (
+                          <Button size="sm" variant="danger" onClick={() => handleMarkAbsent(rdv)}>
+                            <UserX className="w-3.5 h-3.5 mr-1" />Absent
+                          </Button>
+                        )}
                         <Button size="sm" variant="danger" onClick={() => handleAction(rdv.id, 'CANCELLED')}>Annuler</Button>
                       </>
                     )}
@@ -396,7 +437,7 @@ export default function MyAgenda() {
                 </p>
                 <p className="text-sm text-gray-500 flex items-center gap-2">
                   {selected.client.firstName} {selected.client.lastName}
-                  {selected.client.employerCompanyId && (
+                  {selected.coveredByCompany && (
                     <span className="text-xs font-semibold px-1.5 py-0.5 bg-primary-500/15 text-primary-400 rounded-md">
                       {selected.client.employerCompany?.companyName || 'Entreprise'}
                     </span>
@@ -487,11 +528,16 @@ export default function MyAgenda() {
                   <Button size="sm" variant="danger" onClick={() => handleAction(selected.id, 'CANCELLED')}>
                     Annuler
                   </Button>
+                  {sessionStarted(selected) && (
+                    <Button size="sm" variant="danger" onClick={() => handleMarkAbsent(selected)}>
+                      <UserX className="w-3.5 h-3.5 mr-1" />Client absent
+                    </Button>
+                  )}
                   <Button
                     size="sm"
                     onClick={() => handleAction(selected.id, 'DONE')}
-                    disabled={selected.paymentStatus !== 'paid'}
-                    title={selected.paymentStatus !== 'paid' ? 'Le client doit payer avant de clôturer' : ''}
+                    disabled={selected.paymentStatus !== 'paid' && !selected.coveredByCompany}
+                    title={selected.paymentStatus !== 'paid' && !selected.coveredByCompany ? 'Le client doit payer avant de clôturer' : ''}
                   >
                     Terminer
                   </Button>
@@ -503,6 +549,13 @@ export default function MyAgenda() {
             </div>
           </div>
         </div>
+      )}
+
+      {showScanner && (
+        <QrScannerModal
+          onClose={() => setShowScanner(false)}
+          onValidated={fetchData}
+        />
       )}
     </div>
   );
