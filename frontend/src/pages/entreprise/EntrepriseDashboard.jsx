@@ -6,7 +6,7 @@ import Card from '../../components/ui/Card';
 import Badge from '../../components/ui/Badge';
 import Button from '../../components/ui/Button';
 import Spinner from '../../components/ui/Spinner';
-import { CreditCard, Search, ArrowRight, Phone, CheckCircle, BarChart2, BookOpen } from 'lucide-react';
+import { CreditCard, Search, ArrowRight, Phone, CheckCircle, BarChart2 } from 'lucide-react';
 import OnboardingChecklist from '../../components/onboarding/OnboardingChecklist';
 import { userApi } from '../../services/user.api';
 import { companyApi } from '../../services/company.api';
@@ -90,13 +90,6 @@ export default function EntrepriseDashboard() {
             label: 'Explorer nos professionnels',
             description: 'Découvrez nos coachs sportifs, nutritionnistes et praticiens bien-être.',
             to: '/dashboard/entreprise/search',
-            done: false,
-          },
-          {
-            id: 'resources',
-            label: 'Accéder au centre de ressources',
-            description: 'Articles et vidéos bien-être inclus dans votre formule.',
-            to: '/dashboard/entreprise/resources',
             done: false,
           },
         ]}
@@ -185,20 +178,6 @@ export default function EntrepriseDashboard() {
                 <div className="min-w-0">
                   <p className="font-medium text-gray-900">Statistiques</p>
                   <p className="text-sm text-gray-500">Suivi de l'activité de votre équipe</p>
-                </div>
-                <ArrowRight className="w-5 h-5 text-gray-500 ml-auto shrink-0" />
-              </div>
-            </Card>
-          </Link>
-          <Link to="/dashboard/entreprise/resources">
-            <Card className="hover:border-violet-500/40 transition-colors cursor-pointer">
-              <div className="flex items-center gap-4">
-                <div className="p-3 bg-violet-500/15 rounded-lg shrink-0">
-                  <BookOpen className="w-6 h-6 text-violet-400" />
-                </div>
-                <div className="min-w-0">
-                  <p className="font-medium text-gray-900">Centre de ressources</p>
-                  <p className="text-sm text-gray-500">Articles & vidéos bien-être</p>
                 </div>
                 <ArrowRight className="w-5 h-5 text-gray-500 ml-auto shrink-0" />
               </div>

@@ -84,17 +84,6 @@ enum SessionType {
   GROUP
 }
 
-enum ResourceType {
-  ARTICLE
-  VIDEO
-}
-
-enum ResourceAccess {
-  ESSENTIEL
-  BOOST
-  ULTRA
-}
-
 enum Gender {
   HOMME
   FEMME
@@ -325,22 +314,6 @@ model SessionReport {
   intervenant User        @relation(fields: [intervenantId], references: [id])
 
   @@map("session_reports")
-}
-
-model Resource {
-  id          Int            @id @default(autoincrement())
-  title       String
-  description String
-  content     String?        @db.Text
-  videoUrl    String?        @map("video_url")
-  type        ResourceType
-  category    ServiceCategory
-  access      ResourceAccess @default(ESSENTIEL)
-  published   Boolean        @default(true)
-  createdAt   DateTime       @default(now()) @map("created_at")
-  updatedAt   DateTime       @updatedAt @map("updated_at")
-
-  @@map("resources")
 }
 
 model Payment {

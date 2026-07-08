@@ -53,7 +53,7 @@ export default function ClientDashboard() {
     {
       id: 'plan',
       label: 'Consulter votre forfait entreprise',
-      description: 'Découvrez les services inclus dans votre forfait.',
+      description: 'Découvrez votre quota mensuel de séances prises en charge.',
       to: '/dashboard/client/employer-plan',
       done: false,
     },
