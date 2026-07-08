@@ -10,7 +10,6 @@ router.use('/session-reports', require('./sessionReport.routes'));
 router.use('/documents', require('./document.routes'));
 router.use('/companies', require('./company.routes'));
 router.use('/payments', require('./payment.routes'));
-router.use('/resources', require('./resource.routes'));
 router.use('/analytics', require('./analytics.routes'));
 router.use('/reviews', require('./review.routes'));
 router.use('/coach-services', require('./coachService.routes'));

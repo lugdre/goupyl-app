@@ -6,14 +6,6 @@ import Spinner from '../../components/ui/Spinner';
 import { Building2, CalendarDays, Activity, CheckCircle, ChevronRight, Layers } from 'lucide-react';
 import { cn } from '../../utils/cn';
 
-const CATEGORY_COLORS = {
-  SPORT: 'bg-blue-50 text-blue-700 border-blue-100',
-  NUTRITION: 'bg-green-50 text-green-700 border-green-100',
-  MENTAL: 'bg-purple-50 text-purple-700 border-purple-100',
-  BIENETRE: 'bg-orange-50 text-orange-700 border-orange-100',
-};
-const CATEGORY_LABELS_MAP = { SPORT: 'Sport', NUTRITION: 'Nutrition', MENTAL: 'Mental', BIENETRE: 'Bien-être' };
-
 export default function MyEmployerPlan() {
   const [planData, setPlanData] = useState(null);
   const [stats, setStats] = useState(null);
@@ -35,14 +27,6 @@ export default function MyEmployerPlan() {
   if (error) return <p className="text-red-600 p-6">{error}</p>;
 
   const { company, subscription } = planData;
-
-  const grouped = {};
-  if (stats?.services) {
-    stats.services.forEach((s) => {
-      if (!grouped[s.category]) grouped[s.category] = [];
-      grouped[s.category].push(s);
-    });
-  }
 
   return (
     <div className="max-w-3xl space-y-6">
@@ -108,12 +92,12 @@ export default function MyEmployerPlan() {
             )}
 
             <Link
-              to="/dashboard/client/services"
+              to="/dashboard/client/search"
               className="flex items-center justify-between p-4 bg-primary-50 rounded-xl hover:bg-primary-100 transition-colors group"
             >
               <div className="flex items-center gap-3">
                 <Activity className="w-5 h-5 text-primary-600" />
-                <span className="text-sm font-semibold text-primary-700">Accéder au catalogue de services</span>
+                <span className="text-sm font-semibold text-primary-700">Trouver un coach et réserver une séance</span>
               </div>
               <ChevronRight className="w-4 h-4 text-primary-500 group-hover:translate-x-0.5 transition-transform" />
             </Link>
@@ -126,33 +110,27 @@ export default function MyEmployerPlan() {
         )}
       </div>
 
-      {/* Services available */}
-      {stats?.services?.length > 0 && (
-        <div>
-          <div className="flex items-center gap-2 mb-4">
-            <Layers className="w-5 h-5 text-gray-600" />
-            <h2 className="text-lg font-semibold text-gray-900">Services inclus dans votre forfait</h2>
-          </div>
-          <div className="space-y-4">
-            {Object.entries(grouped).map(([cat, services]) => (
-              <div key={cat}>
-                <p className="text-xs font-semibold uppercase tracking-wide text-gray-400 mb-2">{CATEGORY_LABELS_MAP[cat] || cat}</p>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                  {services.map((s) => (
-                    <div key={s.id} className={cn('rounded-xl border p-3 flex items-center gap-3', CATEGORY_COLORS[s.category] || 'bg-gray-50 text-gray-700 border-gray-100')}>
-                      <CheckCircle className="w-4 h-4 shrink-0" />
-                      <div className="min-w-0">
-                        <p className="text-sm font-medium truncate">{s.name}</p>
-                        <p className="text-xs opacity-70">{s.durationMinutes} min</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ))}
-          </div>
+      {/* Comment ça marche */}
+      <div className="bg-white rounded-2xl border border-gray-200 p-6">
+        <div className="flex items-center gap-2 mb-3">
+          <Layers className="w-5 h-5 text-gray-600" />
+          <h2 className="text-lg font-semibold text-gray-900">Comment fonctionne votre forfait</h2>
         </div>
-      )}
+        <ul className="space-y-2 text-sm text-gray-600">
+          <li className="flex items-start gap-2">
+            <CheckCircle className="w-4 h-4 shrink-0 mt-0.5 text-primary-500" />
+            Réservez n'importe quelle séance auprès d'un coach, comme tout le monde — sport, nutrition, mental ou bien-être.
+          </li>
+          <li className="flex items-start gap-2">
+            <CheckCircle className="w-4 h-4 shrink-0 mt-0.5 text-primary-500" />
+            Tant qu'il vous reste du quota mensuel, la séance est automatiquement prise en charge par votre entreprise.
+          </li>
+          <li className="flex items-start gap-2">
+            <CheckCircle className="w-4 h-4 shrink-0 mt-0.5 text-primary-500" />
+            Quota épuisé ? Vous pouvez continuer à réserver : la séance est alors à votre charge (paiement en ligne sécurisé).
+          </li>
+        </ul>
+      </div>
     </div>
   );
 }

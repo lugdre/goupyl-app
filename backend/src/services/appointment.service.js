@@ -48,12 +48,40 @@ const create = async (clientId, { intervenantId, serviceId, coachServiceId, sche
   let coveredByCompany = false;
 
   if (coachServiceId) {
-    // B2C flow — coach's own service
+    // Canal unique de réservation — prestation définie par le coach.
     const coachService = await prisma.coachService.findUnique({ where: { id: coachServiceId } });
     if (!coachService || !coachService.active) throw ApiError.notFound('Service non trouve ou inactif.');
     if (coachService.intervenantId !== intervenantId) throw ApiError.badRequest("Ce service n'appartient pas a cet intervenant.");
     durationMinutes = coachService.durationMinutes;
     resolvedCoachServiceId = coachServiceId;
+
+    // Prise en charge entreprise : si le client est salarié d'une entreprise
+    // avec un abonnement actif ET qu'il reste du quota mensuel, la séance est
+    // couverte. Sinon (pas d'abonnement / quota épuisé) elle reste à sa charge
+    // — même canal, pas de blocage.
+    const client = await prisma.user.findUnique({
+      where: { id: clientId },
+      select: { employerCompanyId: true },
+    });
+    if (client?.employerCompanyId) {
+      const employer = await prisma.user.findUnique({
+        where: { id: client.employerCompanyId },
+        include: {
+          subscriptions: {
+            where: { status: 'ACTIVE' },
+            orderBy: { startDate: 'desc' },
+            take: 1,
+          },
+        },
+      });
+      const activeSub = employer?.subscriptions?.[0];
+      const quota = activeSub ? PLAN_LIMITS[activeSub.plan]?.maxSessions : null;
+      if (quota != null) {
+        // Quota compté sur le mois calendaire de la séance demandée
+        const used = await countCoveredSessions(clientId, new Date(scheduledAt));
+        coveredByCompany = used < quota;
+      }
+    }
   } else if (serviceId) {
     // B2B flow — global platform service
     const service = await prisma.service.findUnique({ where: { id: serviceId } });

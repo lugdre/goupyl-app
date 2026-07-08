@@ -21,7 +21,6 @@ import MyAppointments from './pages/client/MyAppointments';
 import SearchIntervenants from './pages/client/SearchIntervenants';
 import BookAppointment from './pages/client/BookAppointment';
 import MyEmployerPlan from './pages/client/MyEmployerPlan';
-import B2BServiceCatalog from './pages/client/B2BServiceCatalog';
 import ClientProfile from './pages/client/ClientProfile';
 import Marketplace from './pages/client/Marketplace';
 
@@ -43,8 +42,6 @@ import EntrepriseProfile from './pages/entreprise/EntrepriseProfile';
 import ManageEmployees from './pages/entreprise/ManageEmployees';
 import EntrepriseAnalytics from './pages/entreprise/EntrepriseAnalytics';
 import EntrepriseSubscription from './pages/entreprise/EntrepriseSubscription';
-
-import ResourcesLibrary from './pages/shared/ResourcesLibrary';
 
 function DashboardRedirect() {
   const { user } = useAuth();
@@ -105,8 +102,8 @@ export default function App() {
             <Route path="search" element={<SearchIntervenants />} />
             <Route path="book/:intervenantId" element={<BookAppointment />} />
             <Route path="employer-plan" element={<MyEmployerPlan />} />
-            <Route path="services" element={<B2BServiceCatalog />} />
-            <Route path="resources" element={<ResourcesLibrary />} />
+            {/* Ancien catalogue B2B — la réservation passe par les prestations du coach */}
+            <Route path="services" element={<Navigate to="/dashboard/client/search" replace />} />
             <Route path="marketplace" element={<Marketplace />} />
             <Route path="profile" element={<ClientProfile />} />
           </Route>
@@ -148,7 +145,6 @@ export default function App() {
             <Route path="search" element={<SearchIntervenants />} />
             <Route path="subscription" element={<EntrepriseSubscription />} />
             <Route path="analytics" element={<EntrepriseAnalytics />} />
-            <Route path="resources" element={<ResourcesLibrary />} />
             <Route path="profile" element={<EntrepriseProfile />} />
           </Route>
 

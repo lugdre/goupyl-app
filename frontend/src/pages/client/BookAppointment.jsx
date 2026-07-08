@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { userApi } from '../../services/user.api';
-import { serviceApi } from '../../services/service.api';
 import { coachServiceApi } from '../../services/coachService.api';
 import { appointmentApi } from '../../services/appointment.api';
 import { parqApi } from '../../services/parq.api';
@@ -12,7 +11,7 @@ import Button from '../../components/ui/Button';
 import Spinner from '../../components/ui/Spinner';
 import SlotPicker from '../../components/booking/SlotPicker';
 import PARQModal from '../../components/booking/PARQModal';
-import { MapPin, ArrowLeft, Building2, Euro, Clock, Zap, Leaf, Heart, ShieldAlert } from 'lucide-react';
+import { MapPin, ArrowLeft, Building2, Clock, Zap, Leaf, Heart, ShieldAlert } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { CATEGORY_LABELS } from '../../utils/constants';
 
@@ -40,18 +39,13 @@ export default function BookAppointment() {
 
   const isSalarie = !!user?.employerCompanyId;
 
-  // Quota mensuel de séances couvertes par l'entreprise. Quota épuisé (ou pas
-  // d'abonnement actif) → le salarié bascule sur le flux B2C payant.
+  // Quota mensuel de séances couvertes par l'entreprise (salariés). Le canal
+  // de réservation est le même pour tous (prestations du coach) : s'il reste
+  // du quota la séance est prise en charge, sinon elle est à la charge du client.
   const [quota, setQuota] = useState(null);
-  const [useCompanyFlow, setUseCompanyFlow] = useState(false);
 
-  // B2C state (coach services as cards)
   const [coachServices, setCoachServices] = useState([]);
   const [selectedCoachServiceId, setSelectedCoachServiceId] = useState(null);
-
-  // B2B state (platform services as select)
-  const [platformServices, setPlatformServices] = useState([]);
-  const [selectedPlatformServiceId, setSelectedPlatformServiceId] = useState('');
 
   const [scheduledAt, setScheduledAt] = useState('');
   const [notes, setNotes] = useState('');
@@ -65,33 +59,21 @@ export default function BookAppointment() {
   useEffect(() => {
     const load = async () => {
       try {
-        const [{ data: iv }, { data: parq }] = await Promise.all([
+        const [{ data: iv }, { data: parq }, { data: svcs }] = await Promise.all([
           userApi.getIntervenantById(intervenantId),
           parqApi.getStatus(),
+          coachServiceApi.getByIntervenant(intervenantId),
         ]);
         setIntervenant(iv);
         setParqStatus(parq);
+        setCoachServices(svcs);
 
-        let q = null;
         if (isSalarie) {
           try {
-            q = (await companyApi.getMyQuota()).data;
+            setQuota((await companyApi.getMyQuota()).data);
           } catch {
-            // pas d'employeur / pas d'abonnement actif → flux personnel
+            // pas d'abonnement employeur actif → séances à la charge du client
           }
-          setQuota(q);
-        }
-
-        const companyFlow = isSalarie && q?.quota != null && q.remaining > 0;
-        setUseCompanyFlow(companyFlow);
-
-        if (companyFlow) {
-          const { data: svcs } = await serviceApi.getAll();
-          setPlatformServices(svcs);
-          if (svcs.length > 0) setSelectedPlatformServiceId(svcs[0].id);
-        } else {
-          const { data: svcs } = await coachServiceApi.getByIntervenant(intervenantId);
-          setCoachServices(svcs);
         }
       } catch {
         toast.error('Erreur de chargement');
@@ -103,17 +85,15 @@ export default function BookAppointment() {
   }, [intervenantId, isSalarie]);
 
   const selectedCoachService = coachServices.find((s) => s.id === selectedCoachServiceId);
-  const selectedPlatformService = platformServices.find((s) => s.id === parseInt(selectedPlatformServiceId));
+
+  // La séance sera-t-elle prise en charge par l'entreprise ? (le serveur
+  // reste la source de vérité au moment de la création)
+  const willBeCovered = isSalarie && quota?.quota != null && quota.remaining > 0;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!scheduledAt) { toast.error('Choisissez une date'); return; }
-
-    if (!useCompanyFlow && !selectedCoachServiceId) {
-      toast.error('Sélectionnez un service');
-      return;
-    }
-    if (useCompanyFlow && !selectedPlatformServiceId) {
+    if (!selectedCoachServiceId) {
       toast.error('Sélectionnez un service');
       return;
     }
@@ -133,39 +113,21 @@ export default function BookAppointment() {
 
     setBooking(true);
     try {
-      const payload = {
+      const { data: created } = await appointmentApi.create({
         intervenantId: parseInt(intervenantId),
+        coachServiceId: selectedCoachServiceId,
         scheduledAt: new Date(scheduledAt).toISOString(),
         notes: notes || undefined,
-      };
+      });
 
-      if (useCompanyFlow) {
-        payload.serviceId = parseInt(selectedPlatformServiceId);
-      } else {
-        payload.coachServiceId = selectedCoachServiceId;
-      }
-
-      await appointmentApi.create(payload);
-      toast.success('Rendez-vous réservé !');
+      toast.success(
+        created.coveredByCompany
+          ? 'Rendez-vous réservé — séance prise en charge par votre entreprise !'
+          : 'Rendez-vous réservé !'
+      );
       navigate('/dashboard/client/appointments');
     } catch (err) {
-      // Le serveur reste la source de vérité sur le quota : si épuisé entre
-      // temps, on bascule sur le flux personnel payant.
-      if (err.response?.data?.error === 'QUOTA_EXHAUSTED') {
-        toast.error('Quota mensuel atteint — vous pouvez réserver une séance à titre personnel.');
-        setUseCompanyFlow(false);
-        setScheduledAt('');
-        try {
-          const [{ data: svcs }, { data: q }] = await Promise.all([
-            coachServiceApi.getByIntervenant(intervenantId),
-            companyApi.getMyQuota(),
-          ]);
-          setCoachServices(svcs);
-          setQuota(q);
-        } catch { /* affichage dégradé */ }
-      } else {
-        toast.error(err.response?.data?.message || 'Erreur lors de la réservation');
-      }
+      toast.error(err.response?.data?.message || 'Erreur lors de la réservation');
     } finally {
       setBooking(false);
     }
@@ -174,9 +136,7 @@ export default function BookAppointment() {
   if (loading) return <Spinner />;
   if (!intervenant) return <div className="text-gray-500">Professionnel non trouvé.</div>;
 
-  const durationMinutes = useCompanyFlow
-    ? selectedPlatformService?.durationMinutes || 60
-    : selectedCoachService?.durationMinutes || 60;
+  const durationMinutes = selectedCoachService?.durationMinutes || 60;
 
   return (
     <div className="space-y-6 max-w-2xl">
@@ -207,36 +167,33 @@ export default function BookAppointment() {
         </div>
       </Card>
 
-      {/* Bannière forfait entreprise + compteur de quota */}
-      {useCompanyFlow && (
+      {/* Prise en charge entreprise (salariés) — même canal de réservation */}
+      {willBeCovered && (
         <div className="bg-primary-50 border border-primary-100 rounded-xl px-4 py-3 text-sm text-primary-700 space-y-1">
           <div className="flex items-center gap-3">
             <Building2 className="w-4 h-4 shrink-0" />
-            <span>Séance prise en charge par le forfait de votre entreprise (selon services inclus)</span>
+            <span>Cette séance sera prise en charge par le forfait de votre entreprise</span>
           </div>
-          {quota?.quota != null && (
-            <p className="font-medium pl-7">
-              Séances couvertes restantes ce mois : {quota.remaining} / {quota.quota}
-            </p>
-          )}
+          <p className="font-medium pl-7">
+            Séances couvertes restantes ce mois : {quota.remaining} / {quota.quota}
+          </p>
         </div>
       )}
 
-      {/* Quota épuisé : le salarié réserve à titre personnel */}
-      {isSalarie && !useCompanyFlow && quota?.quota != null && (
+      {/* Quota épuisé : la séance est à la charge du salarié */}
+      {isSalarie && !willBeCovered && quota?.quota != null && (
         <div className="flex items-start gap-3 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 text-sm text-amber-700">
           <Building2 className="w-4 h-4 shrink-0 mt-0.5" />
           <span>
             Votre quota mensuel de séances couvertes est atteint ({quota.used} / {quota.quota}).
-            Vous pouvez réserver une séance à titre personnel — elle sera à votre charge.
+            Cette séance sera à votre charge.
           </span>
         </div>
       )}
 
-      {/* B2C: Coach service cards */}
-      {!useCompanyFlow && (
-        <div>
-          <label className="block text-sm font-medium text-gray-900 mb-3">Choisissez un service</label>
+      {/* Prestations du coach */}
+      <div>
+        <label className="block text-sm font-medium text-gray-900 mb-3">Choisissez un service</label>
           {coachServices.length === 0 ? (
             <Card>
               <p className="text-sm text-gray-500 text-center py-4">
@@ -280,39 +237,10 @@ export default function BookAppointment() {
               })}
             </div>
           )}
-        </div>
-      )}
-
-      {/* B2B: Platform service select */}
-      {useCompanyFlow && (
-        <Card>
-          <label className="block text-sm font-medium text-gray-900 mb-2">Service</label>
-          <select
-            value={selectedPlatformServiceId}
-            onChange={(e) => {
-              setSelectedPlatformServiceId(e.target.value);
-              setScheduledAt('');
-            }}
-            className="w-full h-11 px-3 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-brand-400"
-            required
-          >
-            {platformServices.map((s) => (
-              <option key={s.id} value={s.id}>
-                {s.name} — {s.durationMinutes} min
-              </option>
-            ))}
-          </select>
-          {selectedPlatformService && (
-            <p className="text-xs text-gray-400 mt-2 flex items-center gap-1">
-              <Euro className="w-3 h-3" />
-              Prix catalogue : {Number(selectedPlatformService.price).toFixed(2)} € · couvert par votre forfait
-            </p>
-          )}
-        </Card>
-      )}
+      </div>
 
       {/* Slot picker — shown once a service is chosen */}
-      {((useCompanyFlow && selectedPlatformServiceId) || (!useCompanyFlow && selectedCoachServiceId)) && (
+      {selectedCoachServiceId && (
         <div>
           <label className="block text-sm font-medium text-gray-900 mb-2">
             Choisissez un créneau
@@ -345,12 +273,16 @@ export default function BookAppointment() {
       {scheduledAt && (
         <Card>
           <form onSubmit={handleSubmit} className="space-y-4">
-            {!useCompanyFlow && selectedCoachService && (
+            {selectedCoachService && (
               <div className="flex items-center justify-between pb-3 border-b border-gray-100">
                 <p className="text-sm font-medium text-gray-900">{selectedCoachService.name}</p>
-                <p className="text-sm font-semibold text-gray-900">
-                  {Number(selectedCoachService.price).toFixed(2)} €
-                </p>
+                {willBeCovered ? (
+                  <p className="text-sm font-semibold text-primary-600">Couvert par votre entreprise</p>
+                ) : (
+                  <p className="text-sm font-semibold text-gray-900">
+                    {Number(selectedCoachService.price).toFixed(2)} €
+                  </p>
+                )}
               </div>
             )}
             <div>
