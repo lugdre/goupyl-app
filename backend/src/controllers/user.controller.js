@@ -59,8 +59,18 @@ const deleteMe = async (req, res, next) => {
 const uploadAvatar = async (req, res, next) => {
   try {
     if (!req.file) return res.status(400).json({ message: 'Aucun fichier fourni.' });
-    res.status(200).json(await userService.uploadAvatar(req.user.userId, req.file.filename));
+    res.status(200).json(await userService.uploadAvatar(req.user.userId, req.file));
   } catch (e) { next(e); }
 };
 
-module.exports = { getMe, updateMe, getIntervenants, getIntervenantById, getAllUsers, deactivateUser, activateUser, getPendingVerifications, verifyUser, deleteMe, uploadAvatar };
+const getAvatar = async (req, res, next) => {
+  try {
+    const { data, mimeType } = await userService.getAvatar(parseInt(req.params.id));
+    res.setHeader('Content-Type', mimeType);
+    // Cache long : l'URL change à chaque upload via le paramètre ?v=
+    res.setHeader('Cache-Control', 'public, max-age=86400');
+    res.send(Buffer.from(data));
+  } catch (e) { next(e); }
+};
+
+module.exports = { getMe, updateMe, getIntervenants, getIntervenantById, getAllUsers, deactivateUser, activateUser, getPendingVerifications, verifyUser, deleteMe, uploadAvatar, getAvatar };

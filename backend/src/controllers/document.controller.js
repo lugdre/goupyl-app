@@ -23,10 +23,10 @@ const getMyDocuments = async (req, res, next) => {
 
 const downloadDocument = async (req, res, next) => {
   try {
-    const { doc, filePath } = await documentService.getDocumentFile(parseInt(req.params.id));
+    const doc = await documentService.getDocumentFile(parseInt(req.params.id));
     res.setHeader('Content-Type', doc.mimeType);
     res.setHeader('Content-Disposition', `inline; filename="${doc.originalName}"`);
-    res.sendFile(filePath);
+    res.send(Buffer.from(doc.data));
   } catch (e) {
     next(e);
   }

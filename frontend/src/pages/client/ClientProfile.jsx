@@ -131,6 +131,11 @@ export default function ClientProfile() {
               src={avatarUrl || (form.gender === 'FEMME' ? avatarFemale : avatarMale)}
               alt="Avatar"
               className="w-16 h-16 rounded-full object-cover"
+              onError={(e) => {
+                // URL d'avatar morte (ancien stockage disque) → avatar par défaut
+                e.currentTarget.onerror = null;
+                e.currentTarget.src = form.gender === 'FEMME' ? avatarFemale : avatarMale;
+              }}
             />
             <button
               onClick={() => fileInputRef.current?.click()}

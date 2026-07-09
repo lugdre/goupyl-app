@@ -19,7 +19,7 @@ cd backend && npm run dev     # nodemon, port 3000
 cd frontend && npm run dev    # Vite, port 5173
 ```
 
-The Vite dev server proxies `/api` and `/uploads` → `localhost:3000` (see `frontend/vite.config.js`), so no CORS config is needed in development.
+The Vite dev server proxies `/api` → `localhost:3000` (see `frontend/vite.config.js`), so no CORS config is needed in development.
 
 ## Commands
 
@@ -81,7 +81,7 @@ PASSKEY_ORIGIN="http://localhost:5173"
 
 Production is split across two hosts:
 
-- **Frontend → Netlify.** `frontend/netlify.toml`: build `npm run build`, publish `dist/`; proxies `/api/*` and `/uploads/*` server-side to the Render backend (`https://goupyl-app.onrender.com`) with `status = 200` rewrites, SPA-fallback everything else to `index.html`. The browser always calls same-origin `/api` — no CORS in prod either.
+- **Frontend → Netlify.** `frontend/netlify.toml`: build `npm run build`, publish `dist/`; proxies `/api/*` server-side to the Render backend (`https://goupyl-app.onrender.com`) with `status = 200` rewrites, SPA-fallback everything else to `index.html`. The browser always calls same-origin `/api` — no CORS in prod either.
 - **Backend → Render** (Web Service, free tier: sleeps on idle, Start Command re-runs on every wake). Env vars come from the Render dashboard, not a `.env` file.
 
 **Render command discipline (has wiped production data):** never put `npm run db:seed`, `prisma migrate reset`, or `prisma db push --accept-data-loss` in the Start Command — `seed.js` truncates every table and the Start Command re-runs on every wake-from-sleep. Correct setup:
@@ -105,7 +105,7 @@ app.js (helmet → cors → morgan → rateLimit) → routes/index.js (mounts un
 Every domain follows the same file triple: `routes/X.routes.js` + `controllers/X.controller.js` + `services/X.service.js`, plus `validators/X.validator.js` (Zod schemas). 16 domains mounted in `routes/index.js`: auth, users, services, appointments, subscriptions, session-reports, documents, companies, payments, analytics, reviews, coach-services, passkeys, notifications, parq, products.
 
 Key cross-cutting files:
-- `src/app.js` — global rate limit 100/min; stricter 10/min on `/api/auth/login` and `/api/auth/register`; `express.raw` mounted on `/api/payments/webhook` **before** `express.json` (Stripe signature needs the raw body); serves `/uploads/avatars` statically; `trust proxy 1`
+- `src/app.js` — global rate limit 100/min; stricter 10/min on `/api/auth/login` and `/api/auth/register`; `express.raw` mounted on `/api/payments/webhook` **before** `express.json` (Stripe signature needs the raw body); `trust proxy 1`. **No static file serving**: avatars and verification documents are stored in Postgres (`bytea`) and served through `/api` — the Render free-tier filesystem is ephemeral (wiped on every deploy/wake), so nothing user-uploaded may ever live on disk
 - `src/utils/apiError.js` — `ApiError` with static helpers (`badRequest`, `unauthorized`, `forbidden`, `notFound`, `conflict`); `isOperational` errors get their real message, everything else → 500
 - `src/middlewares/errorHandler.middleware.js` — maps `ApiError`, Prisma `P2002`→409 / `P2025`→404, JWT errors→401
 - `src/middlewares/validate.middleware.js` — **Zod 4**: reads `error.issues` (not the Zod-3 `error.errors`); returns `400 VALIDATION_ERROR` with joined messages
@@ -118,7 +118,7 @@ Backend is **CommonJS** (`require`/`module.exports`).
 
 ### Data model (Prisma, 17 models)
 
-`User` is the hub — one table for all four roles, self-relation `employerCompany`/`employees` links salaried CLIENTs to their ENTREPRISE. Key fields: `verificationStatus` (PENDING/VERIFIED/REJECTED), `joinCode` (unique per company, employees register with it), `stripeAccountId`/`stripeAccountStatus` (Connect, intervenants).
+`User` is the hub — one table for all four roles, self-relation `employerCompany`/`employees` links salaried CLIENTs to their ENTREPRISE. Key fields: `verificationStatus` (PENDING/VERIFIED/REJECTED), `joinCode` (unique per company, employees register with it), `stripeAccountId`/`stripeAccountStatus` (Connect, intervenants), `avatarData`/`avatarMimeType` (avatar bytes in Postgres, served by the **public** `GET /api/users/:id/avatar` — `avatarUrl` stores that path with a `?v=<timestamp>` cache-buster refreshed on each upload).
 
 - `Profile` — 1:1 with User; coach data (bio, specialties/diplomas as Json, hourlyRate, city, courseLocations…) and client data (level, objectives)
 - `Service` — **legacy** platform-defined B2B offerings (`availableInPlans` gating); no longer part of the booking UX — all bookings go through CoachService, coverage is quota-based
@@ -130,7 +130,7 @@ Backend is **CommonJS** (`require`/`module.exports`).
 - `Subscription` — ENTREPRISE plans (`ESSENTIEL_ENTREPRISE`/`BOOST_ENTREPRISE`/`ULTRA_ENTREPRISE`), MONTHLY/YEARLY
 - `Review` — 1:1 with Appointment; `coachReply` editable max 3 times (`coachReplyEdits`)
 - `SessionReport` — 1:1 with Appointment, written by the intervenant
-- `Document` — verification uploads (identity/diploma) with admin status
+- `Document` — verification uploads (identity/diploma) with admin status; file bytes in `data` (bytea)
 - `CompanyInvite` — tokenized email invites to join a company
 - `Passkey`, `Notification`, `PARQQuestionnaire`
 
@@ -173,7 +173,7 @@ ENTREPRISE manages employees at `/api/companies`: list/remove employees, permane
 
 ### Documents & verification
 
-INTERVENANTs upload identity + diplomas (`POST /api/documents/upload`, multer → `backend/uploads/documents/`, UUID filenames, 5 MB, PDF/JPG/PNG). Admin reviews in `ManageVerifications` (inline blob preview via ADMIN-only `GET /api/documents/:id/file`), then `PATCH /api/users/:id/verify` sets `verificationStatus` + note. `DashboardLayout` shows a `VerificationBanner` for non-VERIFIED intervenants linking to the profile page (documents section lives inside the intervenant profile).
+INTERVENANTs upload identity + diplomas (`POST /api/documents/upload`, multer **memoryStorage** → `Document.data` bytea in Postgres, 5 MB, PDF/JPG/PNG; pre-migration rows with `data IS NULL` 404 with a re-upload message). Admin reviews in `ManageVerifications` (inline blob preview via ADMIN-only `GET /api/documents/:id/file`), then `PATCH /api/users/:id/verify` sets `verificationStatus` + note. `DashboardLayout` shows a `VerificationBanner` for non-VERIFIED intervenants linking to the profile page (documents section lives inside the intervenant profile).
 
 ## Frontend architecture
 

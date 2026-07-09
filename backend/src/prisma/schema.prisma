@@ -107,6 +107,8 @@ model User {
   companyName        String?            @map("company_name")
   siret              String?
   avatarUrl          String?            @map("avatar_url")
+  avatarData         Bytes?             @map("avatar_data")
+  avatarMimeType     String?            @map("avatar_mime_type")
   gender             Gender?
   isActive           Boolean            @default(true) @map("is_active")
   verificationStatus VerificationStatus @default(PENDING) @map("verification_status")
@@ -181,6 +183,7 @@ model Document {
   originalName String         @map("original_name")
   mimeType     String         @map("mime_type")
   sizeBytes    Int            @map("size_bytes")
+  data         Bytes?
   status       DocumentStatus @default(PENDING)
   adminNote    String?        @map("admin_note")
   expiresAt    DateTime?      @map("expires_at")
