@@ -73,4 +73,33 @@ const getAvatar = async (req, res, next) => {
   } catch (e) { next(e); }
 };
 
-module.exports = { getMe, updateMe, getIntervenants, getIntervenantById, getAllUsers, deactivateUser, activateUser, getPendingVerifications, verifyUser, deleteMe, uploadAvatar, getAvatar };
+const listPhotos = async (req, res, next) => {
+  try { res.json(await userService.listPhotos(parseInt(req.params.id))); }
+  catch (e) { next(e); }
+};
+
+const addPhoto = async (req, res, next) => {
+  try {
+    if (!req.file) return res.status(400).json({ message: 'Aucun fichier fourni.' });
+    res.status(201).json(await userService.addPhoto(req.user.userId, req.file));
+  } catch (e) { next(e); }
+};
+
+const getPhoto = async (req, res, next) => {
+  try {
+    const { data, mimeType } = await userService.getPhoto(parseInt(req.params.id), parseInt(req.params.photoId));
+    res.setHeader('Content-Type', mimeType);
+    // Une photo est immuable : cache long sans invalidation nécessaire
+    res.setHeader('Cache-Control', 'public, max-age=604800');
+    res.send(Buffer.from(data));
+  } catch (e) { next(e); }
+};
+
+const deletePhoto = async (req, res, next) => {
+  try {
+    await userService.deletePhoto(req.user.userId, parseInt(req.params.photoId));
+    res.status(204).send();
+  } catch (e) { next(e); }
+};
+
+module.exports = { getMe, updateMe, getIntervenants, getIntervenantById, getAllUsers, deactivateUser, activateUser, getPendingVerifications, verifyUser, deleteMe, uploadAvatar, getAvatar, listPhotos, addPhoto, getPhoto, deletePhoto };

@@ -26,6 +26,11 @@ export default function IntervenantProfile() {
   const [specialtyInput, setSpecialtyInput] = useState('');
   const [diplomaInput, setDiplomaInput] = useState('');
 
+  // Galerie photos (séances, matériel, lieux…)
+  const [photos, setPhotos] = useState([]);
+  const [photoUploading, setPhotoUploading] = useState(false);
+  const galleryInputRef = useRef(null);
+
   const [form, setForm] = useState({
     firstName: '',
     lastName: '',
@@ -70,6 +75,44 @@ export default function IntervenantProfile() {
       })
       .finally(() => setLoading(false));
   }, []);
+
+  useEffect(() => {
+    if (!authUser?.id) return;
+    userApi
+      .getPhotos(authUser.id)
+      .then(({ data }) => setPhotos(data))
+      .catch(() => {});
+  }, [authUser?.id]);
+
+  const handleAddPhotos = async (e) => {
+    const files = Array.from(e.target.files || []);
+    if (files.length === 0) return;
+    setPhotoUploading(true);
+    try {
+      for (const file of files) {
+        const fd = new FormData();
+        fd.append('photo', file);
+        const { data } = await userApi.uploadPhoto(fd);
+        setPhotos((prev) => [...prev, data]);
+      }
+      toast.success(files.length > 1 ? `${files.length} photos ajoutées` : 'Photo ajoutée');
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Erreur lors de l'upload");
+    } finally {
+      setPhotoUploading(false);
+      e.target.value = '';
+    }
+  };
+
+  const handleDeletePhoto = async (photoId) => {
+    try {
+      await userApi.deletePhoto(photoId);
+      setPhotos((prev) => prev.filter((p) => p.id !== photoId));
+      toast.success('Photo supprimée');
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Erreur lors de la suppression');
+    }
+  };
 
   const handleAvatarChange = async (e) => {
     const file = e.target.files?.[0];
@@ -349,6 +392,55 @@ export default function IntervenantProfile() {
               </div>
             )}
           </div>
+        </Card>
+
+        {/* Galerie photos */}
+        <Card>
+          <div className="flex items-start justify-between gap-3 mb-1">
+            <div>
+              <h2 className="text-base font-semibold text-gray-900 mb-1">Galerie photos</h2>
+              <p className="text-sm text-gray-500">
+                Montrez vos séances, votre matériel, vos lieux d'entraînement — visible sur votre profil public ({photos.length}/12).
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => galleryInputRef.current?.click()}
+              disabled={photoUploading || photos.length >= 12}
+              className="shrink-0 px-4 py-1.5 text-sm font-medium bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors disabled:opacity-50"
+            >
+              {photoUploading ? 'Envoi…' : 'Ajouter des photos'}
+            </button>
+            <input
+              ref={galleryInputRef}
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              multiple
+              className="hidden"
+              onChange={handleAddPhotos}
+            />
+          </div>
+          {photos.length === 0 ? (
+            <p className="text-sm text-gray-400 italic mt-3">
+              Aucune photo pour le moment. JPG, PNG ou WebP, 5 Mo max par photo.
+            </p>
+          ) : (
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 mt-4">
+              {photos.map((photo) => (
+                <div key={photo.id} className="relative group aspect-square rounded-xl overflow-hidden bg-gray-100">
+                  <img src={photo.url} alt="Photo de la galerie" className="w-full h-full object-cover" />
+                  <button
+                    type="button"
+                    onClick={() => handleDeletePhoto(photo.id)}
+                    className="absolute top-1.5 right-1.5 w-7 h-7 rounded-full bg-black/60 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600"
+                    title="Supprimer cette photo"
+                  >
+                    ×
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
         </Card>
 
         {/* Caractéristiques & séance type */}

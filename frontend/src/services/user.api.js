@@ -12,4 +12,7 @@ export const userApi = {
   verifyUser: (id, status, note) => api.patch(`/users/${id}/verify`, { status, note }),
   deleteMe: () => api.delete('/users/me'),
   uploadAvatar: (formData) => api.post('/users/me/avatar', formData),
+  getPhotos: (intervenantId) => api.get(`/users/${intervenantId}/photos`),
+  uploadPhoto: (formData) => api.post('/users/me/photos', formData),
+  deletePhoto: (photoId) => api.delete(`/users/me/photos/${photoId}`),
 };

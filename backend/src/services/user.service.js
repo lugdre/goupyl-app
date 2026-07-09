@@ -293,4 +293,50 @@ const getAvatar = async (userId) => {
   return { data: user.avatarData, mimeType: user.avatarMimeType || 'image/jpeg' };
 };
 
-module.exports = { getMe, updateMe, getIntervenants, getIntervenantById, getAllUsers, toggleUserActive, getPendingVerifications, verifyUser, deleteMe, uploadAvatar, getAvatar };
+// ── Galerie photos coach (séances, matériel, lieux…) ─────────────────────
+
+const MAX_GALLERY_PHOTOS = 12;
+
+const listPhotos = async (intervenantId) => {
+  const photos = await prisma.coachPhoto.findMany({
+    where: { intervenantId },
+    select: { id: true, createdAt: true }, // jamais les octets dans un listing
+    orderBy: { createdAt: 'asc' },
+  });
+  return photos.map((p) => ({
+    id: p.id,
+    url: `/api/users/${intervenantId}/photos/${p.id}`,
+    createdAt: p.createdAt,
+  }));
+};
+
+const addPhoto = async (userId, file) => {
+  const user = await prisma.user.findUnique({ where: { id: userId }, select: { role: true } });
+  if (user?.role !== 'INTERVENANT') throw ApiError.forbidden('Réservé aux professionnels.');
+
+  const count = await prisma.coachPhoto.count({ where: { intervenantId: userId } });
+  if (count >= MAX_GALLERY_PHOTOS) {
+    throw ApiError.badRequest(`Galerie pleine (${MAX_GALLERY_PHOTOS} photos maximum). Supprimez une photo avant d'en ajouter.`, 'GALLERY_FULL');
+  }
+
+  const photo = await prisma.coachPhoto.create({
+    data: { intervenantId: userId, data: file.buffer, mimeType: file.mimetype },
+    select: { id: true, createdAt: true },
+  });
+  return { id: photo.id, url: `/api/users/${userId}/photos/${photo.id}`, createdAt: photo.createdAt };
+};
+
+const getPhoto = async (intervenantId, photoId) => {
+  const photo = await prisma.coachPhoto.findUnique({ where: { id: photoId } });
+  if (!photo || photo.intervenantId !== intervenantId) throw ApiError.notFound('Photo non trouvée.');
+  return { data: photo.data, mimeType: photo.mimeType };
+};
+
+const deletePhoto = async (userId, photoId) => {
+  const photo = await prisma.coachPhoto.findUnique({ where: { id: photoId }, select: { id: true, intervenantId: true } });
+  if (!photo) throw ApiError.notFound('Photo non trouvée.');
+  if (photo.intervenantId !== userId) throw ApiError.forbidden('Accès refusé.');
+  await prisma.coachPhoto.delete({ where: { id: photoId } });
+};
+
+module.exports = { getMe, updateMe, getIntervenants, getIntervenantById, getAllUsers, toggleUserActive, getPendingVerifications, verifyUser, deleteMe, uploadAvatar, getAvatar, listPhotos, addPhoto, getPhoto, deletePhoto };
