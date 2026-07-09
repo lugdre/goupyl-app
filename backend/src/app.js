@@ -4,7 +4,6 @@ const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
 const rateLimit = require('express-rate-limit');
-const path = require('path');
 const routes = require('./routes');
 const errorHandler = require('./middlewares/errorHandler.middleware');
 
@@ -48,7 +47,8 @@ app.get('/api/health', (req, res) => {
   });
 });
 
-app.use('/uploads/avatars', express.static(path.join(__dirname, '../uploads/avatars')));
+// Avatars et documents sont stockés en base et servis via /api — plus aucun
+// fichier statique sur le disque (éphémère sur Render free tier).
 app.use('/api', routes);
 
 app.use((req, res) => {

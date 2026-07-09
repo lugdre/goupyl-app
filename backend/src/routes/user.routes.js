@@ -10,6 +10,8 @@ const avatarUpload = require('../middlewares/avatar-upload.middleware');
 // Public routes
 router.get('/intervenants', userController.getIntervenants);
 router.get('/intervenants/:id', userController.getIntervenantById);
+// Public : l'avatar est chargé par une balise <img> (pas de header Authorization)
+router.get('/:id/avatar', userController.getAvatar);
 
 router.use(authenticate);
 
