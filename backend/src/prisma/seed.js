@@ -2,8 +2,47 @@ require('dotenv').config();
 const { PrismaClient } = require('@prisma/client');
 const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
+const zlib = require('zlib');
 
 const prisma = new PrismaClient();
+
+// PNG uni généré sans dépendance — sert de photo de démo pour la galerie coach
+const crc32 = (buf) => {
+  let crc = ~0;
+  for (let i = 0; i < buf.length; i++) {
+    crc ^= buf[i];
+    for (let k = 0; k < 8; k++) crc = (crc >>> 1) ^ (0xedb88320 & -(crc & 1));
+  }
+  return ~crc >>> 0;
+};
+const pngChunk = (type, data) => {
+  const len = Buffer.alloc(4);
+  len.writeUInt32BE(data.length);
+  const body = Buffer.concat([Buffer.from(type), data]);
+  const crc = Buffer.alloc(4);
+  crc.writeUInt32BE(crc32(body));
+  return Buffer.concat([len, body, crc]);
+};
+const makeSolidPng = (w, h, [r, g, b]) => {
+  const ihdr = Buffer.alloc(13);
+  ihdr.writeUInt32BE(w, 0);
+  ihdr.writeUInt32BE(h, 4);
+  ihdr[8] = 8; // bit depth
+  ihdr[9] = 2; // truecolor
+  const row = Buffer.alloc(1 + w * 3);
+  for (let x = 0; x < w; x++) {
+    row[1 + x * 3] = r;
+    row[2 + x * 3] = g;
+    row[3 + x * 3] = b;
+  }
+  const raw = Buffer.concat(Array.from({ length: h }, () => row));
+  return Buffer.concat([
+    Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]),
+    pngChunk('IHDR', ihdr),
+    pngChunk('IDAT', zlib.deflateSync(raw)),
+    pngChunk('IEND', Buffer.alloc(0)),
+  ]);
+};
 
 async function main() {
   console.log('Debut du seeding...');
@@ -327,6 +366,30 @@ async function main() {
   });
 
   console.log('Services coach B2C crees');
+
+  // --- Galerie photos coach (PNG unis de démo) ---
+  const galleryColors = [
+    [37, 45, 98],    // bleu Goupyl
+    [74, 124, 89],   // vert séance
+    [180, 130, 60],  // ocre matériel
+    [120, 90, 140],  // violet bien-être
+  ];
+  await prisma.coachPhoto.createMany({
+    data: [
+      ...galleryColors.map((rgb) => ({
+        intervenantId: coach.id,
+        data: makeSolidPng(480, 360, rgb),
+        mimeType: 'image/png',
+      })),
+      ...galleryColors.slice(0, 3).map((rgb) => ({
+        intervenantId: extraCoaches[0].id, // Emma
+        data: makeSolidPng(480, 360, [rgb[2], rgb[0], rgb[1]]),
+        mimeType: 'image/png',
+      })),
+    ],
+  });
+
+  console.log('Galeries photos coach creees');
 
   // --- Abonnements entreprises ---
   const now = new Date();

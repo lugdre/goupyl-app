@@ -23,6 +23,8 @@ export default function CoachPublicProfile() {
   const [coach, setCoach] = useState(null);
   const [services, setServices] = useState([]);
   const [reviews, setReviews] = useState([]);
+  const [photos, setPhotos] = useState([]);
+  const [lightboxPhoto, setLightboxPhoto] = useState(null);
   const [showAllReviews, setShowAllReviews] = useState(false);
   const [reviewSort, setReviewSort] = useState('recent'); // 'recent' | 'high' | 'low'
   const [loading, setLoading] = useState(true);
@@ -42,6 +44,9 @@ export default function CoachPublicProfile() {
       })
       .catch(() => setError('Profil introuvable'))
       .finally(() => setLoading(false));
+
+    // Galerie — non bloquante pour le reste du profil
+    userApi.getPhotos(id).then(({ data }) => setPhotos(data)).catch(() => {});
   }, [id]);
 
   const sortedReviews = useMemo(() => {
@@ -181,6 +186,14 @@ export default function CoachPublicProfile() {
         .cpp-grid{display:grid;grid-template-columns:1fr 340px;gap:56px;align-items:start}
 
         .cpp-section{display:flex;flex-direction:column;gap:18px}
+  .cpp-gallery{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line);border:1px solid var(--line)}
+  @media(max-width:640px){.cpp-gallery{grid-template-columns:repeat(2,1fr)}}
+  .cpp-gallery-item{aspect-ratio:1/1;overflow:hidden;background:var(--bg-soft);border:none;padding:0;cursor:zoom-in;display:block;width:100%}
+  .cpp-gallery-item img{width:100%;height:100%;object-fit:cover;filter:grayscale(15%);transition:transform .3s ease,filter .3s ease}
+  .cpp-gallery-item:hover img{transform:scale(1.04);filter:grayscale(0%)}
+  .cpp-lightbox{position:fixed;inset:0;z-index:100;background:rgba(10,10,10,.92);display:flex;align-items:center;justify-content:center;padding:32px;cursor:zoom-out}
+  .cpp-lightbox img{max-width:92vw;max-height:88vh;object-fit:contain}
+  .cpp-lightbox-close{position:absolute;top:20px;right:24px;background:none;border:1px solid rgba(255,255,255,.25);color:#f4f4f2;width:40px;height:40px;border-radius:999px;font-size:18px;cursor:pointer}
         .cpp-section-head{display:flex;align-items:center;gap:10px;margin-bottom:6px}
         .cpp-section-h{font-family:"JetBrains Mono",monospace;font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--ink-3);font-weight:500;margin:0}
         .cpp-section-count{font-family:"JetBrains Mono",monospace;font-size:11px;color:var(--ink-4);letter-spacing:.12em}
@@ -413,6 +426,29 @@ export default function CoachPublicProfile() {
               </section>
             )}
 
+            {/* Galerie */}
+            {photos.length > 0 && (
+              <section className="cpp-section">
+                <div className="cpp-section-head">
+                  <h2 className="cpp-section-h">{'Galerie'}</h2>
+                  <span className="cpp-section-count">— {String(photos.length).padStart(2, '0')}</span>
+                </div>
+                <div className="cpp-gallery">
+                  {photos.map((photo) => (
+                    <button
+                      key={photo.id}
+                      type="button"
+                      className="cpp-gallery-item"
+                      onClick={() => setLightboxPhoto(photo)}
+                      title="Agrandir"
+                    >
+                      <img src={photo.url} alt={`Séance de ${coach.firstName}`} loading="lazy" />
+                    </button>
+                  ))}
+                </div>
+              </section>
+            )}
+
             {/* Séance type */}
             {profile.typicalSession && (
               <section className="cpp-section">
@@ -614,6 +650,25 @@ export default function CoachPublicProfile() {
 
         </div>
       </div>
+
+      {/* Lightbox galerie */}
+      {lightboxPhoto && (
+        <div className="cpp-lightbox" onClick={() => setLightboxPhoto(null)}>
+          <button
+            type="button"
+            className="cpp-lightbox-close"
+            onClick={() => setLightboxPhoto(null)}
+            title="Fermer"
+          >
+            ×
+          </button>
+          <img
+            src={lightboxPhoto.url}
+            alt={`Séance de ${coach.firstName}`}
+            onClick={(e) => e.stopPropagation()}
+          />
+        </div>
+      )}
     </div>
   );
 }
