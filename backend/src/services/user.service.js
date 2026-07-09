@@ -240,6 +240,26 @@ const verifyUser = async (id, status, note) => {
   if (!['VERIFIED', 'REJECTED'].includes(status)) {
     throw ApiError.badRequest('Statut invalide.');
   }
+
+  // Un INTERVENANT ne peut être validé qu'avec un dossier complet :
+  // pièce d'identité + au moins un diplôme (exigence du cahier des charges)
+  if (status === 'VERIFIED') {
+    const user = await prisma.user.findUnique({ where: { id }, select: { role: true } });
+    if (user?.role === 'INTERVENANT') {
+      const docs = await prisma.document.findMany({
+        where: { userId: id, status: { not: 'REJECTED' } },
+        select: { type: true },
+      });
+      const types = new Set(docs.map((d) => d.type));
+      if (!types.has('ID_CARD') || !types.has('DIPLOMA')) {
+        throw ApiError.badRequest(
+          "Dossier incomplet : une pièce d'identité et au moins un diplôme sont requis pour valider un professionnel.",
+          'INCOMPLETE_VERIFICATION_FILE'
+        );
+      }
+    }
+  }
+
   return prisma.user.update({
     where: { id },
     data: { verificationStatus: status, ...(note !== undefined && { verificationNote: note }) },
