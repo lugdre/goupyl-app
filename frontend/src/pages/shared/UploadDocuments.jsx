@@ -68,10 +68,12 @@ export default function UploadDocuments() {
     setUploading(true);
     let hasError = false;
     const failed = {};
+    const uploadedTypes = new Set();
     for (const [type, files] of Object.entries(pendingFiles)) {
       for (const file of files) {
         try {
           await documentApi.upload(type, file);
+          uploadedTypes.add(type);
         } catch (err) {
           hasError = true;
           failed[type] = [...(failed[type] || []), file];
@@ -81,7 +83,20 @@ export default function UploadDocuments() {
     }
 
     if (!hasError) {
-      toast.success('Documents envoyés avec succès');
+      // État du dossier après cet envoi : documents déjà en base + fichiers envoyés
+      const dossierTypes = new Set([...documents.map((d) => d.type), ...uploadedTypes]);
+      const missing = [];
+      if (!dossierTypes.has('ID_CARD')) missing.push("votre pièce d'identité");
+      if (!dossierTypes.has('DIPLOMA')) missing.push('au moins un diplôme');
+
+      if (missing.length > 0) {
+        toast(
+          `Documents envoyés, mais votre dossier est incomplet : il manque ${missing.join(' et ')}.`,
+          { icon: '⚠️', duration: 6000 }
+        );
+      } else {
+        toast.success('Documents envoyés — votre dossier est complet !');
+      }
     }
 
     // Ne garde en attente que les fichiers dont l'envoi a échoué
@@ -258,16 +273,22 @@ export default function UploadDocuments() {
       )}
 
       {/* Summary + CTA */}
-      <div className={`rounded-2xl p-5 mb-6 flex items-center gap-3 ${dossierComplet ? 'bg-green-50 border border-green-200' : 'bg-gray-50 border border-gray-200'}`}>
-        <CheckCircle className={`w-5 h-5 shrink-0 ${dossierComplet ? 'text-green-500' : 'text-gray-400'}`} />
-        <p className={`text-sm font-medium ${dossierComplet ? 'text-green-800' : 'text-gray-500'}`}>
+      <div className={`rounded-2xl p-5 mb-6 flex items-center gap-3 ${
+        dossierComplet
+          ? 'bg-green-50 border border-green-200'
+          : documents.length > 0
+            ? 'bg-amber-50 border border-amber-200'
+            : 'bg-gray-50 border border-gray-200'
+      }`}>
+        <CheckCircle className={`w-5 h-5 shrink-0 ${dossierComplet ? 'text-green-500' : documents.length > 0 ? 'text-amber-500' : 'text-gray-400'}`} />
+        <p className={`text-sm font-medium ${dossierComplet ? 'text-green-800' : documents.length > 0 ? 'text-amber-800' : 'text-gray-500'}`}>
           {dossierComplet
             ? `${documents.length} document${documents.length > 1 ? 's' : ''} envoyé${documents.length > 1 ? 's' : ''} — votre dossier est complet`
             : !hasIdCard && !hasDiploma
               ? "Envoyez votre pièce d'identité et au moins un diplôme"
               : !hasIdCard
-                ? "Il manque votre pièce d'identité"
-                : 'Il manque au moins un diplôme ou une certification'}
+                ? "Dossier incomplet — il manque votre pièce d'identité"
+                : 'Dossier incomplet — il manque au moins un diplôme ou une certification'}
         </p>
       </div>
 
