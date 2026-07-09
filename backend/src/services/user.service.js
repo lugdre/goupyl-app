@@ -228,7 +228,9 @@ const getPendingVerifications = async () => {
       siret: true,
       createdAt: true,
       documents: {
-        select: { id: true, type: true, originalName: true, mimeType: true, sizeBytes: true, createdAt: true },
+        // status/adminNote/expiresAt indispensables : sans eux l'UI admin
+        // retombe sur « En attente » pour des documents déjà validés
+        select: { id: true, type: true, originalName: true, mimeType: true, sizeBytes: true, status: true, adminNote: true, expiresAt: true, createdAt: true },
         orderBy: { createdAt: 'desc' },
       },
     },
