@@ -174,7 +174,7 @@ ENTREPRISE manages employees at `/api/companies`: list/remove employees, permane
 
 ### Documents & verification
 
-INTERVENANTs upload identity + diplomas (`POST /api/documents/upload`, multer **memoryStorage** → `Document.data` bytea in Postgres, 5 MB, PDF/JPG/PNG; pre-migration rows with `data IS NULL` 404 with a re-upload message). Admin reviews in `ManageVerifications` (inline blob preview via ADMIN-only `GET /api/documents/:id/file`), then `PATCH /api/users/:id/verify` sets `verificationStatus` + note. `DashboardLayout` shows a `VerificationBanner` for non-VERIFIED intervenants linking to the profile page (documents section lives inside the intervenant profile).
+INTERVENANTs upload identity + diplomas (`POST /api/documents/upload`, multer **memoryStorage** → `Document.data` bytea in Postgres, 5 MB, PDF/JPG/PNG; pre-migration rows with `data IS NULL` 404 with a re-upload message). Multiple files per type are allowed (several diplomas, ID recto/verso). **Admin cannot set an INTERVENANT to VERIFIED without at least one non-rejected ID_CARD AND one DIPLOMA document** (400 `INCOMPLETE_VERIFICATION_FILE` in `user.service.verifyUser`). Admin reviews in `ManageVerifications` (inline blob preview via ADMIN-only `GET /api/documents/:id/file`), then `PATCH /api/users/:id/verify` sets `verificationStatus` + note. `DashboardLayout` shows a `VerificationBanner` for non-VERIFIED intervenants linking to the profile page (documents section lives inside the intervenant profile).
 
 ## Frontend architecture
 

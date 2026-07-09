@@ -9,7 +9,7 @@ import { Upload, FileText, Trash2, CheckCircle, Clock, ShieldCheck } from 'lucid
 
 const DOC_TYPES = [
   { value: 'ID_CARD', label: "Pièce d'identité", desc: "Carte nationale d'identité ou passeport", required: true },
-  { value: 'DIPLOMA', label: 'Diplôme / Certification', desc: 'Diplôme ou certification professionnelle', required: false },
+  { value: 'DIPLOMA', label: 'Diplômes / Certifications', desc: 'Ajoutez tous vos diplômes et certifications professionnelles', required: true },
   { value: 'OTHER', label: 'Autre document', desc: 'Tout autre justificatif utile', required: false },
 ];
 
@@ -41,35 +41,42 @@ export default function UploadDocuments() {
 
   useEffect(fetchDocs, []);
 
+  // pendingFiles : { [type]: File[] } — on peut sélectionner plusieurs
+  // fichiers par type (ex. plusieurs diplômes, recto/verso d'une pièce d'identité)
   const handleFileSelect = (type, e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setPendingFiles(prev => ({ ...prev, [type]: file }));
+    const files = Array.from(e.target.files || []);
+    if (files.length === 0) return;
+    setPendingFiles(prev => ({ ...prev, [type]: [...(prev[type] || []), ...files] }));
     e.target.value = '';
   };
 
-  const handleRemovePending = (type) => {
+  const handleRemovePending = (type, index) => {
     setPendingFiles(prev => {
+      const remaining = (prev[type] || []).filter((_, i) => i !== index);
       const next = { ...prev };
-      delete next[type];
+      if (remaining.length === 0) delete next[type];
+      else next[type] = remaining;
       return next;
     });
   };
 
+  const pendingCount = Object.values(pendingFiles).reduce((sum, files) => sum + files.length, 0);
+
   const handleSubmit = async () => {
-    const typesToUpload = Object.keys(pendingFiles);
-    if (typesToUpload.length === 0) return;
+    if (pendingCount === 0) return;
 
     setUploading(true);
     let hasError = false;
-    let successfulTypes = [];
-    for (const type of typesToUpload) {
-      try {
-        await documentApi.upload(type, pendingFiles[type]);
-        successfulTypes.push(type);
-      } catch (err) {
-        hasError = true;
-        toast.error(`Erreur (${TYPE_LABELS[type]}) : ${err.response?.data?.message || 'Erreur lors de l\'envoi'}`);
+    const failed = {};
+    for (const [type, files] of Object.entries(pendingFiles)) {
+      for (const file of files) {
+        try {
+          await documentApi.upload(type, file);
+        } catch (err) {
+          hasError = true;
+          failed[type] = [...(failed[type] || []), file];
+          toast.error(`Erreur (${TYPE_LABELS[type]} — ${file.name}) : ${err.response?.data?.message || 'Erreur lors de l\'envoi'}`);
+        }
       }
     }
 
@@ -77,11 +84,8 @@ export default function UploadDocuments() {
       toast.success('Documents envoyés avec succès');
     }
 
-    setPendingFiles(prev => {
-      const next = { ...prev };
-      successfulTypes.forEach(t => delete next[t]);
-      return next;
-    });
+    // Ne garde en attente que les fichiers dont l'envoi a échoué
+    setPendingFiles(failed);
 
     fetchDocs();
     if (refreshUser) refreshUser();
@@ -102,6 +106,9 @@ export default function UploadDocuments() {
   };
 
   const hasIdCard = documents.some((d) => d.type === 'ID_CARD');
+  const hasDiploma = documents.some((d) => d.type === 'DIPLOMA');
+  // Dossier complet = pièce d'identité + au moins un diplôme
+  const dossierComplet = hasIdCard && hasDiploma;
 
   return (
     <div className="max-w-2xl mx-auto">
@@ -144,7 +151,7 @@ export default function UploadDocuments() {
         </h1>
         <p className="text-gray-500 mt-1 text-sm">
           Déposez vos documents pour accélérer la validation de votre profil.
-          {user?.role === 'INTERVENANT' && ' Une pièce d\'identité est obligatoire.'}
+          {user?.role === 'INTERVENANT' && " Une pièce d'identité et au moins un diplôme sont obligatoires."}
         </p>
       </div>
 
@@ -173,28 +180,31 @@ export default function UploadDocuments() {
                     type="file"
                     className="hidden"
                     accept=".pdf,.jpg,.jpeg,.png"
+                    multiple
                     disabled={uploading}
                     onChange={(e) => handleFileSelect(value, e)}
                   />
                 </label>
               </div>
 
-              {pendingFiles[value] && (
+              {pendingFiles[value]?.length > 0 && (
                 <div className="mb-3 space-y-2">
-                  <div className="flex items-center gap-3 bg-blue-50 border border-blue-200 rounded-xl p-3">
-                    <FileText className="w-4 h-4 text-blue-400 shrink-0" />
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm text-blue-800 truncate">{pendingFiles[value].name}</p>
-                      <p className="text-xs text-blue-500">{formatSize(pendingFiles[value].size)} (en attente d'envoi)</p>
+                  {pendingFiles[value].map((file, index) => (
+                    <div key={`${file.name}-${index}`} className="flex items-center gap-3 bg-blue-50 border border-blue-200 rounded-xl p-3">
+                      <FileText className="w-4 h-4 text-blue-400 shrink-0" />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm text-blue-800 truncate">{file.name}</p>
+                        <p className="text-xs text-blue-500">{formatSize(file.size)} (en attente d'envoi)</p>
+                      </div>
+                      <button
+                        onClick={() => handleRemovePending(value, index)}
+                        disabled={uploading}
+                        className="text-blue-400 hover:text-red-500 transition-colors shrink-0"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
                     </div>
-                    <button
-                      onClick={() => handleRemovePending(value)}
-                      disabled={uploading}
-                      className="text-blue-400 hover:text-red-500 transition-colors shrink-0"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </div>
+                  ))}
                 </div>
               )}
 
@@ -219,8 +229,10 @@ export default function UploadDocuments() {
                 </div>
               )}
 
-              {existing.length === 0 && !pendingFiles[value] && (
-                <p className="text-xs text-gray-400 italic">Aucun document envoyé — PDF, JPG ou PNG, max 5 Mo</p>
+              {existing.length === 0 && !pendingFiles[value]?.length && (
+                <p className="text-xs text-gray-400 italic">
+                  Aucun document envoyé — PDF, JPG ou PNG, max 5 Mo. Vous pouvez sélectionner plusieurs fichiers.
+                </p>
               )}
             </div>
           );
@@ -232,7 +244,7 @@ export default function UploadDocuments() {
       )}
 
       {/* Submit Button */}
-      {Object.keys(pendingFiles).length > 0 && (
+      {pendingCount > 0 && (
         <div className="mb-6">
           <Button
             onClick={handleSubmit}
@@ -240,27 +252,31 @@ export default function UploadDocuments() {
             className="w-full text-base py-3"
             variant="primary"
           >
-            Envoyer les {Object.keys(pendingFiles).length} document(s) sélectionné(s)
+            {pendingCount > 1 ? `Envoyer les ${pendingCount} documents sélectionnés` : 'Envoyer le document sélectionné'}
           </Button>
         </div>
       )}
 
       {/* Summary + CTA */}
-      <div className={`rounded-2xl p-5 mb-6 flex items-center gap-3 ${hasIdCard ? 'bg-green-50 border border-green-200' : 'bg-gray-50 border border-gray-200'}`}>
-        <CheckCircle className={`w-5 h-5 shrink-0 ${hasIdCard ? 'text-green-500' : 'text-gray-400'}`} />
-        <p className={`text-sm font-medium ${hasIdCard ? 'text-green-800' : 'text-gray-500'}`}>
-          {hasIdCard
+      <div className={`rounded-2xl p-5 mb-6 flex items-center gap-3 ${dossierComplet ? 'bg-green-50 border border-green-200' : 'bg-gray-50 border border-gray-200'}`}>
+        <CheckCircle className={`w-5 h-5 shrink-0 ${dossierComplet ? 'text-green-500' : 'text-gray-400'}`} />
+        <p className={`text-sm font-medium ${dossierComplet ? 'text-green-800' : 'text-gray-500'}`}>
+          {dossierComplet
             ? `${documents.length} document${documents.length > 1 ? 's' : ''} envoyé${documents.length > 1 ? 's' : ''} — votre dossier est complet`
-            : 'Envoyez au minimum votre pièce d\'identité'}
+            : !hasIdCard && !hasDiploma
+              ? "Envoyez votre pièce d'identité et au moins un diplôme"
+              : !hasIdCard
+                ? "Il manque votre pièce d'identité"
+                : 'Il manque au moins un diplôme ou une certification'}
         </p>
       </div>
 
       <Button
         onClick={() => navigate(dashPath)}
         className="w-full"
-        variant={hasIdCard ? 'primary' : 'outline'}
+        variant={dossierComplet ? 'primary' : 'outline'}
       >
-        {hasIdCard ? 'Accéder à mon tableau de bord' : 'Passer cette étape pour l\'instant'}
+        {dossierComplet ? 'Accéder à mon tableau de bord' : 'Passer cette étape pour l\'instant'}
       </Button>
     </div>
   );
