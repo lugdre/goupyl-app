@@ -5,7 +5,7 @@ import { documentApi } from '../../services/document.api';
 import Spinner from '../../components/ui/Spinner';
 import Button from '../../components/ui/Button';
 import toast from 'react-hot-toast';
-import { Upload, FileText, Trash2, CheckCircle, Clock, ShieldCheck } from 'lucide-react';
+import { Upload, FileText, Trash2, CheckCircle, Clock, ShieldCheck, XCircle, AlertTriangle } from 'lucide-react';
 
 const DOC_TYPES = [
   { value: 'ID_CARD', label: "Pièce d'identité", desc: "Carte nationale d'identité ou passeport", required: true },
@@ -14,6 +14,14 @@ const DOC_TYPES = [
 ];
 
 const TYPE_LABELS = { ID_CARD: "Pièce d'identité", DIPLOMA: 'Diplôme', OTHER: 'Autre' };
+
+// Statut de chaque document, tel que décidé par l'admin
+const DOC_STATUS_BADGE = {
+  PENDING:   { cls: 'bg-amber-100 text-amber-700', label: 'En attente de validation', Icon: Clock },
+  VALIDATED: { cls: 'bg-green-100 text-green-700', label: 'Validé', Icon: CheckCircle },
+  REJECTED:  { cls: 'bg-red-100 text-red-700', label: 'Refusé', Icon: XCircle },
+  EXPIRED:   { cls: 'bg-gray-100 text-gray-500', label: 'Expiré', Icon: AlertTriangle },
+};
 
 function formatSize(bytes) {
   if (bytes < 1024) return `${bytes} o`;
@@ -225,22 +233,42 @@ export default function UploadDocuments() {
 
               {existing.length > 0 && (
                 <div className="space-y-2">
-                  {existing.map((doc) => (
-                    <div key={doc.id} className="flex items-center gap-3 bg-gray-50 rounded-xl p-3">
-                      <FileText className="w-4 h-4 text-gray-400 shrink-0" />
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm text-gray-700 truncate">{doc.originalName}</p>
-                        <p className="text-xs text-gray-400">{formatSize(doc.sizeBytes)}</p>
+                  {existing.map((doc) => {
+                    const badge = DOC_STATUS_BADGE[doc.status] || DOC_STATUS_BADGE.PENDING;
+                    const BadgeIcon = badge.Icon;
+                    return (
+                      <div key={doc.id} className="bg-gray-50 rounded-xl p-3 space-y-1.5">
+                        <div className="flex items-center gap-3">
+                          <FileText className="w-4 h-4 text-gray-400 shrink-0" />
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm text-gray-700 truncate">{doc.originalName}</p>
+                            <p className="text-xs text-gray-400">
+                              {formatSize(doc.sizeBytes)}
+                              {doc.expiresAt && ` · expire le ${new Date(doc.expiresAt).toLocaleDateString('fr-FR')}`}
+                            </p>
+                          </div>
+                          <span className={`inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full shrink-0 ${badge.cls}`}>
+                            <BadgeIcon className="w-3 h-3" />{badge.label}
+                          </span>
+                          <button
+                            onClick={() => handleDelete(doc.id)}
+                            disabled={deleting === doc.id || uploading}
+                            className="text-gray-400 hover:text-red-500 transition-colors shrink-0"
+                          >
+                            {deleting === doc.id ? <Spinner size="sm" /> : <Trash2 className="w-4 h-4" />}
+                          </button>
+                        </div>
+                        {doc.status === 'REJECTED' && doc.adminNote && (
+                          <p className="text-xs text-red-600 bg-red-50 border border-red-100 rounded-lg px-2.5 py-1.5">
+                            <span className="font-semibold">Motif du refus :</span> {doc.adminNote}
+                          </p>
+                        )}
+                        {doc.status !== 'REJECTED' && doc.adminNote && (
+                          <p className="text-xs text-gray-500 italic pl-7">Note : {doc.adminNote}</p>
+                        )}
                       </div>
-                      <button
-                        onClick={() => handleDelete(doc.id)}
-                        disabled={deleting === doc.id || uploading}
-                        className="text-gray-400 hover:text-red-500 transition-colors shrink-0"
-                      >
-                        {deleting === doc.id ? <Spinner size="sm" /> : <Trash2 className="w-4 h-4" />}
-                      </button>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
 
