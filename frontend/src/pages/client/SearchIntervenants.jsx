@@ -11,6 +11,9 @@ import avatarFemale from '../../assets/avatar-default-female.svg';
 
 const CATEGORIES = ['Tous', 'SPORT', 'NUTRITION', 'MENTAL', 'BIENETRE'];
 
+// Nombre de coachs affichés avant le bouton « Voir plus »
+const INITIAL_VISIBLE = 15;
+
 const SI_CSS = `
   :root{
     --bg:#f4f4f2;--bg-soft:#ebebe7;--bg-dark:#0a0a0a;
@@ -72,6 +75,7 @@ export default function SearchIntervenants() {
   const [activeCategory, setActiveCategory] = useState(
     CATEGORIES.includes(searchParams.get('category')) ? searchParams.get('category') : 'Tous'
   );
+  const [showAll, setShowAll] = useState(false);
 
   const isInDashboard = location.pathname.startsWith('/dashboard');
 
@@ -85,8 +89,11 @@ export default function SearchIntervenants() {
 
   const fetchIntervenants = () => {
     setLoading(true);
+    setShowAll(false);
     userApi
       .getIntervenants({
+        // On charge tout le catalogue : l'affichage est limité à 15 + « Voir plus »
+        limit: 200,
         ...(city && { city }),
         ...(courseLocation && { courseLocation }),
         ...(maxRate && { maxRate }),
@@ -136,6 +143,11 @@ export default function SearchIntervenants() {
     </div>
   );
 
+  // Repli sur les 15 premiers quand la recherche texte / catégorie change
+  useEffect(() => {
+    setShowAll(false);
+  }, [query, activeCategory]);
+
   const filtered = intervenants.filter((i) => {
     const q = query.toLowerCase();
     const name = `${i.firstName} ${i.lastName}`.toLowerCase();
@@ -147,6 +159,18 @@ export default function SearchIntervenants() {
     );
     return matchQuery && matchCat;
   });
+
+  // 15 premiers résultats, le reste derrière « Voir plus »
+  const visible = showAll ? filtered : filtered.slice(0, INITIAL_VISIBLE);
+  const hiddenCount = filtered.length - visible.length;
+
+  const showMoreButton = hiddenCount > 0 && (
+    <div style={{ display: 'flex', justifyContent: 'center', marginTop: 28 }}>
+      <button type="button" onClick={() => setShowAll(true)} className="si-btn si-btn-ghost">
+        Voir plus ({hiddenCount} autre{hiddenCount > 1 ? 's' : ''})
+      </button>
+    </div>
+  );
 
   // ── Dashboard (authenticated) ──────────────────────────────────────
   const dashboardContent = (
@@ -193,7 +217,7 @@ export default function SearchIntervenants() {
         <>
           <p className="si-count">{String(filtered.length).padStart(2, '0')} professionnel{filtered.length > 1 ? 's' : ''} trouvé{filtered.length > 1 ? 's' : ''}</p>
           <div className="si-grid">
-            {filtered.map((intervenant) => {
+            {visible.map((intervenant) => {
               const specialty = intervenant.profile?.specialties?.[0]
                 ? CATEGORY_LABELS[intervenant.profile.specialties[0]] || intervenant.profile.specialties[0]
                 : null;
@@ -221,6 +245,7 @@ export default function SearchIntervenants() {
               );
             })}
           </div>
+          {showMoreButton}
         </>
       )}
     </>
@@ -256,7 +281,7 @@ export default function SearchIntervenants() {
             {String(filtered.length).padStart(2, '0')} professionnel{filtered.length > 1 ? 's' : ''} trouvé{filtered.length > 1 ? 's' : ''}
           </p>
           <div className="si-grid">
-            {filtered.map((intervenant) => {
+            {visible.map((intervenant) => {
               const specialty = intervenant.profile?.specialties?.[0]
                 ? CATEGORY_LABELS[intervenant.profile.specialties[0]] || intervenant.profile.specialties[0]
                 : null;
@@ -294,6 +319,7 @@ export default function SearchIntervenants() {
               );
             })}
           </div>
+          {showMoreButton}
 
           {!user && (
             <div className="si-banner" style={{ marginTop: 48 }}>
