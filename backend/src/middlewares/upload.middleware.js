@@ -1,17 +1,7 @@
 const multer = require('multer');
-const path = require('path');
-const { randomUUID: uuidv4 } = require('crypto');
 
-const uploadDir = path.join(__dirname, '../../uploads/documents');
-
-const storage = multer.diskStorage({
-  destination: uploadDir,
-  filename: (req, file, cb) => {
-    const ext = path.extname(file.originalname).toLowerCase();
-    cb(null, `${uuidv4()}${ext}`);
-  },
-});
-
+// Stockage en mémoire : le document est persisté en base (bytea), jamais sur
+// le disque — le filesystem de Render (free tier) est éphémère.
 const fileFilter = (req, file, cb) => {
   const allowed = ['image/jpeg', 'image/png', 'application/pdf'];
   if (allowed.includes(file.mimetype)) {
@@ -22,7 +12,7 @@ const fileFilter = (req, file, cb) => {
 };
 
 const upload = multer({
-  storage,
+  storage: multer.memoryStorage(),
   fileFilter,
   limits: { fileSize: 5 * 1024 * 1024 }, // 5 MB max
 });

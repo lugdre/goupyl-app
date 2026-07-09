@@ -200,7 +200,7 @@ export default function SearchIntervenants() {
               const avatarSrc = intervenant.avatarUrl || (intervenant.gender === 'FEMME' ? avatarFemale : avatarMale);
               return (
                 <Link key={intervenant.id} to={`/coaches/${intervenant.id}`} className="si-card">
-                  <div className="si-card-avatar"><img src={avatarSrc} alt={intervenant.firstName} /></div>
+                  <div className="si-card-avatar"><img src={avatarSrc} alt={intervenant.firstName} onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = intervenant.gender === 'FEMME' ? avatarFemale : avatarMale; }} /></div>
                   <div>
                     <div className="si-card-name">{intervenant.firstName} {intervenant.lastName}</div>
                     {specialty && <div className="si-card-role">{specialty}</div>}
@@ -264,7 +264,7 @@ export default function SearchIntervenants() {
               return (
                 <Link key={intervenant.id} to={`/coaches/${intervenant.id}`} className="si-card">
                   <div className="si-card-avatar">
-                    <img src={avatarSrc} alt={intervenant.firstName} />
+                    <img src={avatarSrc} alt={intervenant.firstName} onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = intervenant.gender === 'FEMME' ? avatarFemale : avatarMale; }} />
                   </div>
                   <div>
                     <div className="si-card-name">{intervenant.firstName} {intervenant.lastName}</div>

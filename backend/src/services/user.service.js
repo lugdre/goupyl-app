@@ -1,11 +1,6 @@
 const prisma = require('../config/database');
 const redis = require('../config/redis');
 const ApiError = require('../utils/apiError');
-const fs = require('fs');
-const path = require('path');
-
-const UPLOAD_DIR = path.join(__dirname, '../../uploads/documents');
-const AVATAR_DIR = path.join(__dirname, '../../uploads/avatars');
 
 const getMe = async (userId) => {
   const user = await prisma.user.findUnique({
@@ -256,14 +251,8 @@ const deleteMe = async (userId) => {
   // Révoquer le refresh token
   await redis.del('refresh_token:' + userId);
 
-  // Supprimer les fichiers de documents uploadés
-  const docs = await prisma.document.findMany({ where: { userId } });
-  for (const d of docs) {
-    const filePath = path.join(UPLOAD_DIR, d.storedName);
-    if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
-  }
-
-  // Suppression en ordre pour respecter les FK
+  // Suppression en ordre pour respecter les FK (documents et avatars vivent
+  // en base : rien à nettoyer sur disque)
   await prisma.$transaction([
     prisma.review.deleteMany({ where: { OR: [{ clientId: userId }, { intervenantId: userId }] } }),
     prisma.payment.deleteMany({ where: { appointment: { OR: [{ clientId: userId }, { intervenantId: userId }] } } }),
@@ -280,20 +269,28 @@ const deleteMe = async (userId) => {
   return { success: true };
 };
 
-const uploadAvatar = async (userId, filename) => {
-  const user = await prisma.user.findUnique({ where: { id: userId }, select: { avatarUrl: true } });
-
-  if (user?.avatarUrl) {
-    const oldFilename = path.basename(user.avatarUrl);
-    const oldPath = path.join(AVATAR_DIR, oldFilename);
-    if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath);
-  }
-
+// L'image est stockée en base (bytea) et servie par GET /api/users/:id/avatar.
+// Le paramètre ?v= (timestamp d'upload) invalide le cache navigateur à chaque
+// changement de photo.
+const uploadAvatar = async (userId, file) => {
   return prisma.user.update({
     where: { id: userId },
-    data: { avatarUrl: `/uploads/avatars/${filename}` },
+    data: {
+      avatarData: file.buffer,
+      avatarMimeType: file.mimetype,
+      avatarUrl: `/api/users/${userId}/avatar?v=${Date.now()}`,
+    },
     select: { id: true, email: true, firstName: true, lastName: true, role: true, avatarUrl: true },
   });
 };
 
-module.exports = { getMe, updateMe, getIntervenants, getIntervenantById, getAllUsers, toggleUserActive, getPendingVerifications, verifyUser, deleteMe, uploadAvatar };
+const getAvatar = async (userId) => {
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { avatarData: true, avatarMimeType: true },
+  });
+  if (!user?.avatarData) throw ApiError.notFound('Aucun avatar pour cet utilisateur.');
+  return { data: user.avatarData, mimeType: user.avatarMimeType || 'image/jpeg' };
+};
+
+module.exports = { getMe, updateMe, getIntervenants, getIntervenantById, getAllUsers, toggleUserActive, getPendingVerifications, verifyUser, deleteMe, uploadAvatar, getAvatar };

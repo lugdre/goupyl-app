@@ -1,9 +1,6 @@
-const path = require('path');
-const fs = require('fs');
+const { randomUUID } = require('crypto');
 const prisma = require('../config/database');
 const ApiError = require('../utils/apiError');
-
-const UPLOAD_DIR = path.join(__dirname, '../../uploads/documents');
 
 const ALLOWED_TYPES = ['ID_CARD', 'DIPLOMA', 'RC_PRO', 'OTHER'];
 
@@ -33,14 +30,16 @@ const saveDocument = async (userId, type, file) => {
     });
   }
 
+  // Le contenu est stocké en base (bytea) — le disque de Render est éphémère.
   return prisma.document.create({
     data: {
       userId,
       type,
-      storedName: file.filename,
+      storedName: randomUUID(),
       originalName: file.originalname,
       mimeType: file.mimetype,
       sizeBytes: file.size,
+      data: file.buffer,
       status: 'PENDING',
     },
     select: DOC_SELECT,
@@ -71,17 +70,17 @@ const getMyDocuments = async (userId) => {
 const getDocumentFile = async (documentId) => {
   const doc = await prisma.document.findUnique({ where: { id: documentId } });
   if (!doc) throw ApiError.notFound('Document non trouvé.');
-  const filePath = path.join(UPLOAD_DIR, doc.storedName);
-  if (!fs.existsSync(filePath)) throw ApiError.notFound('Fichier introuvable sur le serveur.');
-  return { doc, filePath };
+  if (!doc.data) {
+    // Document d'avant la migration : le fichier vivait sur le disque (perdu)
+    throw ApiError.notFound('Fichier indisponible — demandez un nouvel envoi du document.');
+  }
+  return doc;
 };
 
 const deleteDocument = async (userId, documentId) => {
-  const doc = await prisma.document.findUnique({ where: { id: documentId } });
+  const doc = await prisma.document.findUnique({ where: { id: documentId }, select: { id: true, userId: true } });
   if (!doc) throw ApiError.notFound('Document non trouvé.');
   if (doc.userId !== userId) throw ApiError.forbidden('Accès refusé.');
-  const filePath = path.join(UPLOAD_DIR, doc.storedName);
-  if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
   await prisma.document.delete({ where: { id: documentId } });
 };
 
