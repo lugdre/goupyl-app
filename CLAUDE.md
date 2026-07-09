@@ -116,9 +116,10 @@ Key cross-cutting files:
 
 Backend is **CommonJS** (`require`/`module.exports`).
 
-### Data model (Prisma, 17 models)
+### Data model (Prisma, 18 models)
 
 `User` is the hub — one table for all four roles, self-relation `employerCompany`/`employees` links salaried CLIENTs to their ENTREPRISE. Key fields: `verificationStatus` (PENDING/VERIFIED/REJECTED), `joinCode` (unique per company, employees register with it), `stripeAccountId`/`stripeAccountStatus` (Connect, intervenants), `avatarData`/`avatarMimeType` (avatar bytes in Postgres, served by the **public** `GET /api/users/:id/avatar` — `avatarUrl` stores that path with a `?v=<timestamp>` cache-buster refreshed on each upload).
+- `CoachPhoto` — coach gallery (sessions, equipment…), max 12 per coach, bytes in Postgres; public `GET /api/users/:id/photos` (metadata list) and `GET /api/users/:id/photos/:photoId` (bytes, immutable → cache 7 d); INTERVENANT-only `POST /api/users/me/photos` / `DELETE /api/users/me/photos/:photoId`. Managed in IntervenantProfile ('Galerie photos' card), displayed with a lightbox on CoachPublicProfile
 
 - `Profile` — 1:1 with User; coach data (bio, specialties/diplomas as Json, hourlyRate, city, courseLocations…) and client data (level, objectives)
 - `Service` — **legacy** platform-defined B2B offerings (`availableInPlans` gating); no longer part of the booking UX — all bookings go through CoachService, coverage is quota-based
