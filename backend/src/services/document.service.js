@@ -78,9 +78,14 @@ const getDocumentFile = async (documentId) => {
 };
 
 const deleteDocument = async (userId, documentId) => {
-  const doc = await prisma.document.findUnique({ where: { id: documentId }, select: { id: true, userId: true } });
+  const doc = await prisma.document.findUnique({ where: { id: documentId }, select: { id: true, userId: true, status: true } });
   if (!doc) throw ApiError.notFound('Document non trouvé.');
   if (doc.userId !== userId) throw ApiError.forbidden('Accès refusé.');
+  // Un document validé par l'admin fait partie du dossier de vérification :
+  // il ne peut plus être retiré par le professionnel.
+  if (doc.status === 'VALIDATED') {
+    throw ApiError.forbidden('Un document validé ne peut plus être supprimé.', 'DOCUMENT_LOCKED');
+  }
   await prisma.document.delete({ where: { id: documentId } });
 };
 

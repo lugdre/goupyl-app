@@ -250,13 +250,16 @@ export default function UploadDocuments() {
                           <span className={`inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full shrink-0 ${badge.cls}`}>
                             <BadgeIcon className="w-3 h-3" />{badge.label}
                           </span>
-                          <button
-                            onClick={() => handleDelete(doc.id)}
-                            disabled={deleting === doc.id || uploading}
-                            className="text-gray-400 hover:text-red-500 transition-colors shrink-0"
-                          >
-                            {deleting === doc.id ? <Spinner size="sm" /> : <Trash2 className="w-4 h-4" />}
-                          </button>
+                          {doc.status !== 'VALIDATED' && (
+                            <button
+                              onClick={() => handleDelete(doc.id)}
+                              disabled={deleting === doc.id || uploading}
+                              className="text-gray-400 hover:text-red-500 transition-colors shrink-0"
+                              title="Supprimer ce document"
+                            >
+                              {deleting === doc.id ? <Spinner size="sm" /> : <Trash2 className="w-4 h-4" />}
+                            </button>
+                          )}
                         </div>
                         {doc.status === 'REJECTED' && doc.adminNote && (
                           <p className="text-xs text-red-600 bg-red-50 border border-red-100 rounded-lg px-2.5 py-1.5">
