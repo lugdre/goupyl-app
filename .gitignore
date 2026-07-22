@@ -39,3 +39,7 @@ backend/node_modules/.prisma/
 
 # Coverage
 coverage/
+
+CLAUDE.md
+
+.claude
