@@ -27,6 +27,7 @@ export const LEVEL_LABELS = {
   DEBUTANT: 'Débutant',
   INTERMEDIAIRE: 'Intermédiaire',
   AVANCE: 'Avancé',
+  PRO: 'Pro',
   ELITE: 'Élite',
 };
 

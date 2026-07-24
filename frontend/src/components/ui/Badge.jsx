@@ -7,6 +7,7 @@ const variants = {
   NUTRITION: { bg: 'rgba(74,124,89,0.10)', color: '#4A7C59', border: 'rgba(74,124,89,0.22)' },
   MENTAL: { bg: 'rgba(123,74,140,0.10)', color: '#7B4A8C', border: 'rgba(123,74,140,0.22)' },
   BIENETRE: { bg: 'rgba(196,149,106,0.12)', color: '#92400e', border: 'rgba(196,149,106,0.25)' },
+  PRO: { bg: 'rgba(37,45,98,0.10)', color: '#252d62', border: 'rgba(37,45,98,0.22)' },
   ELITE: { bg: 'rgba(196,149,106,0.12)', color: '#92400e', border: 'rgba(196,149,106,0.25)' },
   ACTIVE: { bg: 'rgba(74,124,89,0.12)', color: '#4A7C59', border: 'rgba(74,124,89,0.25)' },
   EXPIRED: { bg: 'rgba(0,0,0,0.05)', color: '#555', border: 'rgba(0,0,0,0.12)' },

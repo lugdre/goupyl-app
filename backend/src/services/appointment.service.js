@@ -222,7 +222,7 @@ const getMyAppointments = async (userId, role, { page = 1, limit = 10, status })
         service: { select: { name: true, category: true, price: true } },
         coachService: { select: { name: true, price: true, durationMinutes: true, category: true } },
         intervenant: { select: { id: true, firstName: true, lastName: true } },
-        client: { select: { id: true, firstName: true, lastName: true, employerCompanyId: true, employerCompany: { select: { companyName: true } } } },
+        client: { select: { id: true, firstName: true, lastName: true, employerCompanyId: true, employerCompany: { select: { companyName: true } }, profile: { select: { level: true, sportType: true, objectives: true, specificNeed: true, constraints: true } } } },
         sessionReport: { select: { id: true } },
         review: { select: { id: true } },
       },

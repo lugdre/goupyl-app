@@ -8,8 +8,9 @@ const updateProfileSchema = z.object({
   gender: z.enum(['HOMME', 'FEMME']).nullable().optional(),
   profile: z
     .object({
-      level: z.enum(['DEBUTANT', 'INTERMEDIAIRE', 'AVANCE', 'ELITE']).optional(),
+      level: z.enum(['DEBUTANT', 'INTERMEDIAIRE', 'AVANCE', 'PRO', 'ELITE']).optional(),
       objectives: z.array(z.string()).optional(),
+      specificNeed: z.string().max(1000).optional(),
       sportType: z.string().max(100).optional(),
       constraints: z.string().max(500).optional(),
       bio: z.string().max(1000).optional(),

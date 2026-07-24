@@ -8,7 +8,7 @@ import Spinner from '../../components/ui/Spinner';
 import MobileWeekCalendar from '../../components/appointment/MobileWeekCalendar';
 import QrScannerModal from '../../components/appointment/QrScannerModal';
 import { Calendar, ChevronLeft, ChevronRight, List, LayoutGrid, Star, ScanLine, UserX, CheckCircle } from 'lucide-react';
-import { STATUS_LABELS, DISPUTE_STATUS_LABELS } from '../../utils/constants';
+import { STATUS_LABELS, DISPUTE_STATUS_LABELS, LEVEL_LABELS } from '../../utils/constants';
 import { useIsMobile } from '../../hooks/useMediaQuery';
 import toast from 'react-hot-toast';
 
@@ -458,6 +458,43 @@ export default function MyAgenda() {
                 <span className="font-medium text-gray-400">Notes client : </span>
                 {selected.notes}
               </p>
+            )}
+
+            {/* Profil sportif du client (réponses au questionnaire d'inscription) */}
+            {selected.client.profile && (
+              selected.client.profile.level ||
+              selected.client.profile.sportType ||
+              selected.client.profile.specificNeed ||
+              selected.client.profile.objectives?.length ||
+              selected.client.profile.constraints
+            ) && (
+              <div className="mb-4 p-3 rounded" style={{ background: 'rgba(37,45,98,0.04)', border: '1px solid rgba(37,45,98,0.12)' }}>
+                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Profil sportif du client</p>
+                <div className="space-y-1.5 text-sm text-gray-600">
+                  {selected.client.profile.level && (
+                    <p><span className="font-medium text-gray-400">Niveau : </span>{LEVEL_LABELS[selected.client.profile.level] || selected.client.profile.level}</p>
+                  )}
+                  {selected.client.profile.sportType && (
+                    <p><span className="font-medium text-gray-400">Sport : </span>{selected.client.profile.sportType}</p>
+                  )}
+                  {['PRO', 'ELITE'].includes(selected.client.profile.level) && selected.client.profile.specificNeed ? (
+                    <div>
+                      <span className="font-medium text-gray-400">Besoin spécifique : </span>
+                      <p className="mt-0.5 whitespace-pre-wrap">{selected.client.profile.specificNeed}</p>
+                    </div>
+                  ) : selected.client.profile.objectives?.length ? (
+                    <div className="flex flex-wrap gap-1.5 items-center">
+                      <span className="font-medium text-gray-400">Objectifs : </span>
+                      {selected.client.profile.objectives.map((obj, i) => (
+                        <span key={i} className="text-xs px-2 py-0.5 rounded-full" style={{ background: 'rgba(37,45,98,0.08)', color: '#252d62' }}>{obj}</span>
+                      ))}
+                    </div>
+                  ) : null}
+                  {selected.client.profile.constraints && (
+                    <p><span className="font-medium text-gray-400">Contraintes : </span>{selected.client.profile.constraints}</p>
+                  )}
+                </div>
+              </div>
             )}
 
             {/* Review section — visible on DONE appointments */}

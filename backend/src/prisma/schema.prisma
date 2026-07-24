@@ -18,6 +18,7 @@ enum Level {
   DEBUTANT
   INTERMEDIAIRE
   AVANCE
+  PRO
   ELITE
 }
 
@@ -201,6 +202,7 @@ model Profile {
   userId      Int      @unique @map("user_id")
   level       Level    @default(DEBUTANT)
   objectives  Json?
+  specificNeed String? @map("specific_need") @db.Text
   sportType   String?  @map("sport_type")
   constraints String?
   bio         String?

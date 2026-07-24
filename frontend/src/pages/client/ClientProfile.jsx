@@ -17,8 +17,12 @@ const LEVELS = [
   { value: 'DEBUTANT', label: 'Débutant' },
   { value: 'INTERMEDIAIRE', label: 'Intermédiaire' },
   { value: 'AVANCE', label: 'Avancé' },
+  { value: 'PRO', label: 'Pro' },
   { value: 'ELITE', label: 'Élite' },
 ];
+
+// Niveaux avec accompagnement sur-mesure : besoin spécifique (texte libre) au lieu d'objectifs
+const SPECIFIC_NEED_LEVELS = ['PRO', 'ELITE'];
 
 export default function ClientProfile() {
   const { user: authUser, refreshUser } = useAuth();
@@ -39,6 +43,7 @@ export default function ClientProfile() {
       sportType: '',
       constraints: '',
       objectives: [],
+      specificNeed: '',
     },
   });
 
@@ -58,6 +63,7 @@ export default function ClientProfile() {
             sportType: data.profile?.sportType || '',
             constraints: data.profile?.constraints || '',
             objectives: data.profile?.objectives || [],
+            specificNeed: data.profile?.specificNeed || '',
           },
         });
       })
@@ -245,7 +251,21 @@ export default function ClientProfile() {
             />
           </div>
 
-          {/* Objectives tag input */}
+          {/* Besoin spécifique (PRO / ELITE) — sinon objectifs */}
+          {SPECIFIC_NEED_LEVELS.includes(form.profile.level) ? (
+            <div className="space-y-1">
+              <label className="block text-sm font-medium text-gray-900">Besoin spécifique</label>
+              <textarea
+                value={form.profile.specificNeed}
+                onChange={(e) => setProfileField('specificNeed', e.target.value)}
+                placeholder="Décrivez précisément votre objectif de performance, votre discipline, vos échéances de compétition, vos contraintes…"
+                rows={4}
+                maxLength={1000}
+                className="w-full px-3 py-2 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-primary-400 resize-none"
+              />
+              <p className="text-xs text-gray-500">Réservé aux niveaux Pro et Élite — un accompagnement sur-mesure.</p>
+            </div>
+          ) : (
           <div className="space-y-2">
             <label className="block text-sm font-medium text-gray-900">Objectifs</label>
             <div className="flex gap-2">
@@ -285,6 +305,7 @@ export default function ClientProfile() {
               </div>
             )}
           </div>
+          )}
 
           <div className="pt-2">
             <Button type="submit" loading={saving}>

@@ -70,7 +70,18 @@ const LEVEL_OPTIONS = [
   ['DEBUTANT', 'Débutant'],
   ['INTERMEDIAIRE', 'Intermédiaire'],
   ['AVANCE', 'Avancé'],
+  ['PRO', 'Pro'],
   ['ELITE', 'Élite'],
+];
+
+// Niveaux qui déclenchent un accompagnement sur-mesure (besoin spécifique au lieu d'objectifs)
+const SPECIFIC_NEED_LEVELS = ['PRO', 'ELITE'];
+
+// Règles de mot de passe (miroir du validateur backend) pour le retour visuel immédiat
+const PASSWORD_RULES = [
+  { test: (v) => v.length >= 8, label: '8 caractères minimum' },
+  { test: (v) => /[A-Z]/.test(v), label: 'une majuscule' },
+  { test: (v) => /[0-9]/.test(v), label: 'un chiffre' },
 ];
 
 const ROLES = [
@@ -115,8 +126,9 @@ export default function Register() {
 
   // Étape 2 (questionnaire sportif) pour PARTICULIER / SALARIE
   const [step, setStep] = useState(1);
-  const [profileForm, setProfileForm] = useState({ level: '', sportType: '', objectives: [] });
+  const [profileForm, setProfileForm] = useState({ level: '', sportType: '', objectives: [], specificNeed: '' });
   const isClientRole = selected === 'PARTICULIER' || selected === 'SALARIE';
+  const needsSpecific = SPECIFIC_NEED_LEVELS.includes(profileForm.level);
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -155,7 +167,12 @@ export default function Register() {
       if (includeProfile) {
         if (profileForm.level) payload.level = profileForm.level;
         if (profileForm.sportType.trim()) payload.sportType = profileForm.sportType.trim();
-        if (profileForm.objectives.length) payload.objectives = profileForm.objectives;
+        // PRO / ELITE : besoin spécifique (texte libre) ; sinon objectifs prédéfinis
+        if (SPECIFIC_NEED_LEVELS.includes(profileForm.level)) {
+          if (profileForm.specificNeed.trim()) payload.specificNeed = profileForm.specificNeed.trim();
+        } else if (profileForm.objectives.length) {
+          payload.objectives = profileForm.objectives;
+        }
       }
 
       await register(payload);
@@ -173,8 +190,17 @@ export default function Register() {
     }
   };
 
+  const passwordChecks = PASSWORD_RULES.map((r) => ({ label: r.label, ok: r.test(form.password) }));
+  const passwordValid = passwordChecks.every((c) => c.ok);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    // Validation immédiate du mot de passe avant toute suite
+    if (!passwordValid) {
+      const missing = passwordChecks.filter((c) => !c.ok).map((c) => c.label).join(', ');
+      setErrors((prev) => ({ ...prev, password: `Mot de passe invalide — il manque : ${missing}` }));
+      return;
+    }
     // Particulier / collaborateur : le questionnaire sportif s'affiche en étape 2
     if (isClientRole && step === 1) {
       setStep(2);
@@ -284,21 +310,39 @@ export default function Register() {
                   />
                 </div>
 
-                <div>
-                  <label className="auth-field-label">Vos objectifs</label>
-                  <div className="auth-chips">
-                    {OBJECTIVE_OPTIONS.map((obj) => (
-                      <button
-                        key={obj}
-                        type="button"
-                        className={`auth-chip${profileForm.objectives.includes(obj) ? ' selected' : ''}`}
-                        onClick={() => toggleObjective(obj)}
-                      >
-                        {obj}
-                      </button>
-                    ))}
+                {needsSpecific ? (
+                  <div>
+                    <label className="auth-field-label">Votre besoin spécifique</label>
+                    <textarea
+                      value={profileForm.specificNeed}
+                      onChange={(e) => setProfileForm((p) => ({ ...p, specificNeed: e.target.value }))}
+                      placeholder="Décrivez précisément votre objectif de performance, votre discipline, vos échéances de compétition, vos contraintes…"
+                      maxLength={1000}
+                      rows={5}
+                      className="auth-field-input"
+                      style={{ height: 'auto', padding: '12px 14px', resize: 'vertical', lineHeight: 1.5 }}
+                    />
+                    <p className="auth-field-hint">
+                      Un conseiller dédié vous recontactera pour construire un accompagnement sur-mesure.
+                    </p>
                   </div>
-                </div>
+                ) : (
+                  <div>
+                    <label className="auth-field-label">Vos objectifs</label>
+                    <div className="auth-chips">
+                      {OBJECTIVE_OPTIONS.map((obj) => (
+                        <button
+                          key={obj}
+                          type="button"
+                          className={`auth-chip${profileForm.objectives.includes(obj) ? ' selected' : ''}`}
+                          onClick={() => toggleObjective(obj)}
+                        >
+                          {obj}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
 
                 <button type="submit" disabled={loading} className="auth-submit">
                   {loading ? 'Création du compte…' : <>Créer mon compte <span>→</span></>}
@@ -387,7 +431,25 @@ export default function Register() {
 
             <div>
               <label className="auth-field-label">Mot de passe</label>
-              <input name="password" type="password" placeholder="Min 8 car., 1 majuscule, 1 chiffre" value={form.password} onChange={handleChange} required className="auth-field-input" />
+              <input name="password" type="password" placeholder="Min 8 car., 1 majuscule, 1 chiffre" value={form.password} onChange={handleChange} required className={`auth-field-input${errors.password ? ' has-error' : ''}`} />
+              {errors.password && <p className="auth-field-error">{errors.password}</p>}
+              {form.password && !passwordValid && (
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px 12px', marginTop: 6 }}>
+                  {passwordChecks.map((c) => (
+                    <span
+                      key={c.label}
+                      style={{
+                        fontFamily: '"JetBrains Mono", monospace',
+                        fontSize: 10.5,
+                        letterSpacing: '.02em',
+                        color: c.ok ? '#4A7C59' : 'var(--ink-4)',
+                      }}
+                    >
+                      {c.ok ? '✓' : '○'} {c.label}
+                    </span>
+                  ))}
+                </div>
+              )}
             </div>
 
             <label className="auth-cgu-row">
