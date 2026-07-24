@@ -218,7 +218,9 @@ const login = async ({ email, password }) => {
 
 // Connexion / inscription via Google (Google Identity Services — ID token vérifié côté serveur)
 const googleAuth = async ({ credential, joinCode }) => {
-  if (!process.env.GOOGLE_CLIENT_ID) {
+  // Trim défensif : un espace/retour-ligne collé dans la variable d'env casse la vérif d'audience
+  const clientId = process.env.GOOGLE_CLIENT_ID?.trim();
+  if (!clientId) {
     throw ApiError.badRequest('Connexion Google non configurée sur le serveur.', 'GOOGLE_NOT_CONFIGURED');
   }
 
@@ -226,10 +228,12 @@ const googleAuth = async ({ credential, joinCode }) => {
   try {
     const ticket = await googleClient.verifyIdToken({
       idToken: credential,
-      audience: process.env.GOOGLE_CLIENT_ID,
+      audience: clientId,
     });
     payload = ticket.getPayload();
-  } catch {
+  } catch (err) {
+    // On loggue la vraie cause (audience mismatch, expiré, malformé…) sans l'exposer au client
+    console.error('Echec verifyIdToken Google:', err.message);
     throw ApiError.unauthorized('Jeton Google invalide ou expiré.');
   }
 

@@ -6,8 +6,9 @@ import Input from '../../components/ui/Input';
 import Button from '../../components/ui/Button';
 import Badge from '../../components/ui/Badge';
 import Spinner from '../../components/ui/Spinner';
-import { Moon, Sun, Camera } from 'lucide-react';
+import { Camera } from 'lucide-react';
 import AvatarFallback from '../../components/ui/AvatarFallback';
+import ThemeSelector from '../../components/ThemeSelector';
 import toast from 'react-hot-toast';
 import DeleteAccountSection from '../../components/profile/DeleteAccountSection';
 import PasskeyManager from '../../components/PasskeyManager';
@@ -15,9 +16,15 @@ import UploadDocuments from '../shared/UploadDocuments';
 import { useTheme } from '../../context/ThemeContext';
 import { COURSE_LOCATION_OPTIONS } from '../../utils/constants';
 
+const THEME_MODE_HINT = {
+  light: 'Toujours en mode clair',
+  dark: 'Toujours en mode sombre',
+  system: 'Suit le thème de votre appareil',
+};
+
 export default function IntervenantProfile() {
   const { user: authUser, refreshUser } = useAuth();
-  const { isDark, toggle } = useTheme();
+  const { mode } = useTheme();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState(null);
@@ -531,23 +538,12 @@ export default function IntervenantProfile() {
       <div>
         <h2 className="text-lg font-semibold text-gray-900 mb-3">Préférences</h2>
         <Card>
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              {isDark
-                ? <Moon className="w-5 h-5 text-primary-400" />
-                : <Sun className="w-5 h-5 text-amber-400" />}
-              <div>
-                <p className="text-sm font-medium text-gray-900">Thème de l'interface</p>
-                <p className="text-xs text-gray-500">{isDark ? 'Mode sombre activé' : 'Mode clair activé'}</p>
-              </div>
+          <div className="flex items-center justify-between gap-4 flex-wrap">
+            <div>
+              <p className="text-sm font-medium text-gray-900">Thème de l'interface</p>
+              <p className="text-xs text-gray-500">{THEME_MODE_HINT[mode]}</p>
             </div>
-            <button
-              onClick={toggle}
-              className={`relative w-12 h-6 rounded-full transition-colors duration-200 ${isDark ? 'bg-primary-500' : 'bg-[#D1D5DB]'}`}
-              aria-label="Basculer le thème"
-            >
-              <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform duration-200 ${isDark ? 'translate-x-6' : 'translate-x-0'}`} />
-            </button>
+            <ThemeSelector />
           </div>
         </Card>
       </div>

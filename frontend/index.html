@@ -7,6 +7,19 @@
   <link rel="icon" type="image/png" href="/logo-goupyl-white.png" media="(prefers-color-scheme: dark)" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Goupyl Sport</title>
+  <script>
+    // Applique le thème avant le rendu React pour éviter tout flash de couleur
+    (function () {
+      try {
+        var m = localStorage.getItem('goupyl-theme');
+        if (['light', 'dark', 'system'].indexOf(m) === -1) m = 'system';
+        var dark = m === 'dark' || (m === 'system' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+        document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
+      } catch (e) {
+        document.documentElement.setAttribute('data-theme', 'light');
+      }
+    })();
+  </script>
 </head>
 
 <body>
