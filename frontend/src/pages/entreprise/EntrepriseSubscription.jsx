@@ -142,7 +142,7 @@ export default function EntrepriseSubscription() {
 
       {/* Current plan + usage */}
       {sub.active ? (
-        <div className="bg-white rounded-2xl border border-gray-200 p-6 space-y-6">
+        <div className="bg-surface rounded-2xl border border-gray-200 p-6 space-y-6">
           <div className="flex items-start justify-between">
             <div className="flex items-start gap-4">
               <div className="p-3 bg-primary-50 rounded-xl shrink-0">
@@ -196,7 +196,7 @@ export default function EntrepriseSubscription() {
           )}
         </div>
       ) : (
-        <div className="bg-white rounded-2xl border border-gray-200 p-6">
+        <div className="bg-surface rounded-2xl border border-gray-200 p-6">
           <p className="text-gray-500 text-sm">Vous n'avez pas d'abonnement actif.</p>
         </div>
       )}
@@ -228,7 +228,7 @@ export default function EntrepriseSubscription() {
               <div
                 key={plan.value}
                 className={cn(
-                  'relative bg-white rounded-2xl border p-5',
+                  'relative bg-surface rounded-2xl border p-5',
                   isActive ? 'border-primary-600 ring-1 ring-primary-600' : 'border-gray-200',
                   plan.popular ? 'border-primary-400' : ''
                 )}
@@ -289,7 +289,7 @@ export default function EntrepriseSubscription() {
       {sub.history?.length > 0 && (
         <div>
           <h2 className="text-base font-semibold text-gray-900 mb-3">Historique</h2>
-          <div className="bg-white rounded-2xl border border-gray-200 divide-y divide-gray-100">
+          <div className="bg-surface rounded-2xl border border-gray-200 divide-y divide-gray-100">
             {sub.history.map((h) => (
               <div key={h.id} className="flex items-center justify-between px-5 py-3 text-sm">
                 <span className="text-gray-700">{PLAN_LABELS[h.plan]}</span>
@@ -308,7 +308,7 @@ export default function EntrepriseSubscription() {
           onClick={() => !cancelling && setShowCancelModal(false)}
         >
           <div
-            className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6"
+            className="bg-surface rounded-2xl shadow-2xl max-w-md w-full p-6"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-start justify-between mb-5">

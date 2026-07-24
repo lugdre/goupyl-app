@@ -86,20 +86,20 @@ export default function Sidebar() {
                     borderRadius: 4,
                     fontSize: 13, fontWeight: 500, letterSpacing: '.01em',
                     background: isActive ? '#252d62' : 'transparent',
-                    color: isActive ? '#ffffff' : '#555555',
+                    color: isActive ? '#ffffff' : 'var(--color-gray-500)',
                     cursor: 'pointer',
                     transition: 'background .15s, color .15s',
                   }}
                   onMouseOver={e => {
                     if (!isActive) {
-                      e.currentTarget.style.background = 'rgba(0,0,0,0.05)';
-                      e.currentTarget.style.color = '#0a0a0a';
+                      e.currentTarget.style.background = 'var(--color-gray-100)';
+                      e.currentTarget.style.color = 'var(--color-gray-900)';
                     }
                   }}
                   onMouseOut={e => {
                     if (!isActive) {
                       e.currentTarget.style.background = 'transparent';
-                      e.currentTarget.style.color = '#555555';
+                      e.currentTarget.style.color = 'var(--color-gray-500)';
                     }
                   }}
                 >
@@ -130,7 +130,7 @@ export default function Sidebar() {
               display: 'flex', flex: 1, flexDirection: 'column',
               alignItems: 'center', justifyContent: 'center',
               gap: 3, textDecoration: 'none', fontWeight: 500,
-              color: isActive ? '#252d62' : '#888',
+              color: isActive ? 'var(--color-primary-500)' : 'var(--color-gray-400)',
               transition: 'color .15s',
             })}
           >

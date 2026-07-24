@@ -44,7 +44,7 @@ function StatCard({ icon: Icon, label, value, sub, color = 'violet' }) {
 const CustomTooltip = ({ active, payload, label }) => {
   if (active && payload && payload.length) {
     return (
-      <div className="bg-white border border-gray-200 rounded-lg shadow-lg px-4 py-3 text-sm">
+      <div className="bg-surface border border-gray-200 rounded-lg shadow-lg px-4 py-3 text-sm">
         <p className="font-semibold text-gray-900 mb-1">{label}</p>
         {payload.map((p, i) => (
           <p key={i} style={{ color: p.color }}>{p.name} : {p.value}</p>

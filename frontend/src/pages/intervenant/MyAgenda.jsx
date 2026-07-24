@@ -42,7 +42,7 @@ const STATUS_COLORS = {
 const STATUS_BG = {
   PENDING:   { background: 'rgba(217,119,6,0.10)', borderColor: 'rgba(217,119,6,0.25)' },
   CONFIRMED: { background: 'rgba(74,124,89,0.10)', borderColor: 'rgba(74,124,89,0.25)' },
-  DONE:      { background: 'rgba(0,0,0,0.04)',     borderColor: 'rgba(0,0,0,0.12)' },
+  DONE:      { background: 'var(--color-gray-100)',     borderColor: 'rgba(0,0,0,0.12)' },
   CANCELLED: { background: 'rgba(220,38,38,0.08)', borderColor: 'rgba(220,38,38,0.20)' },
 };
 
@@ -173,7 +173,7 @@ export default function MyAgenda() {
         <Button size="sm" onClick={() => setShowScanner(true)}>
           <ScanLine className="w-4 h-4 mr-1.5" />Scanner un QR
         </Button>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 4, border: '1px solid rgba(0,0,0,0.10)', borderRadius: 6, padding: 4, background: '#f4f4f2' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 4, border: '1px solid var(--color-surface-border)', borderRadius: 6, padding: 4, background: 'var(--color-gray-100)' }}>
           {[['week', LayoutGrid, 'Semaine'], ['list', List, 'Liste']].map(([v, Icon, label]) => (
             <button
               key={v}
@@ -257,12 +257,12 @@ export default function MyAgenda() {
             <div className="min-w-[700px]">
               {/* Header row */}
               <div className="grid grid-cols-[48px_repeat(7,1fr)] gap-px bg-gray-100 rounded-t-lg overflow-hidden">
-                <div className="bg-white" />
+                <div className="bg-surface" />
                 {weekDays.map((day, idx) => {
                   const isToday = day.toDateString() === new Date().toDateString();
                   return (
                     <div key={idx} style={{ padding: '8px 4px', textAlign: 'center', background: isToday ? 'rgba(37,45,98,0.10)' : '#ebebe7' }}>
-                      <p style={{ fontSize: 10, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '.10em', color: '#888', margin: 0, fontFamily: '"JetBrains Mono", monospace' }}>
+                      <p style={{ fontSize: 10, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '.10em', color: 'var(--color-gray-400)', margin: 0, fontFamily: '"JetBrains Mono", monospace' }}>
                         {DAY_LABELS_SHORT[idx]}
                       </p>
                       <p style={{ fontSize: 14, fontWeight: 700, color: isToday ? '#252d62' : '#0a0a0a', margin: '2px 0 0' }}>
@@ -276,7 +276,7 @@ export default function MyAgenda() {
               {/* Time grid */}
               <div className="grid grid-cols-[48px_repeat(7,1fr)] gap-px bg-gray-100">
                 {/* Hour labels column */}
-                <div className="bg-white" style={{ height: hours.length * HOUR_HEIGHT }}>
+                <div className="bg-surface" style={{ height: hours.length * HOUR_HEIGHT }}>
                   {hours.map((h) => (
                     <div
                       key={h}
@@ -296,7 +296,7 @@ export default function MyAgenda() {
                   return (
                     <div
                       key={dayIdx}
-                      className="bg-white relative"
+                      className="bg-surface relative"
                       style={{ height: hours.length * HOUR_HEIGHT }}
                     >
                       {hours.map((h) => (
@@ -427,7 +427,7 @@ export default function MyAgenda() {
           onClick={() => setSelected(null)}
         >
           <div
-            style={{ background: '#fff', border: '1px solid rgba(0,0,0,0.10)', borderRadius: 8, boxShadow: '0 8px 40px rgba(0,0,0,0.15)', maxWidth: 448, width: '100%', padding: 24 }}
+            style={{ background: 'var(--color-surface)', border: '1px solid var(--color-surface-border)', borderRadius: 8, boxShadow: 'var(--shadow-modal)', maxWidth: 448, width: '100%', padding: 24 }}
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-start justify-between mb-4">
@@ -454,7 +454,7 @@ export default function MyAgenda() {
               {' '}({selected.durationMinutes} min)
             </p>
             {selected.notes && (
-              <p className="text-sm text-gray-500 mb-4 p-3 rounded" style={{ background: 'rgba(0,0,0,0.04)', border: '1px solid rgba(0,0,0,0.07)' }}>
+              <p className="text-sm text-gray-500 mb-4 p-3 rounded" style={{ background: 'var(--color-gray-100)', border: '1px solid var(--color-gray-200)' }}>
                 <span className="font-medium text-gray-400">Notes client : </span>
                 {selected.notes}
               </p>
@@ -499,7 +499,7 @@ export default function MyAgenda() {
 
             {/* Review section — visible on DONE appointments */}
             {selected.status === 'DONE' && (
-              <div className="mb-4 p-4 rounded" style={{ background: 'rgba(0,0,0,0.03)', border: '1px solid rgba(0,0,0,0.08)' }}>
+              <div className="mb-4 p-4 rounded" style={{ background: 'var(--color-gray-100)', border: '1px solid var(--color-gray-200)' }}>
                 <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Avis du client</p>
                 {reviewLoading ? (
                   <p className="text-sm text-gray-400">Chargement…</p>
@@ -531,7 +531,7 @@ export default function MyAgenda() {
                           onChange={(e) => setReplyText(e.target.value)}
                           rows={2}
                           placeholder="Répondre à cet avis (une seule fois)…"
-                          style={{ width: '100%', fontSize: 13, background: '#fff', border: '1px solid rgba(0,0,0,0.14)', borderRadius: 4, padding: '8px 12px', resize: 'none', outline: 'none', color: '#0a0a0a' }}
+                          style={{ width: '100%', fontSize: 13, background: 'var(--color-surface)', border: '1px solid var(--color-gray-300)', borderRadius: 4, padding: '8px 12px', resize: 'none', outline: 'none', color: 'var(--color-gray-900)' }}
                         />
                         <button
                           onClick={handleReply}
@@ -549,7 +549,7 @@ export default function MyAgenda() {
               </div>
             )}
 
-            <div className="flex gap-2 justify-end pt-3" style={{ borderTop: '1px solid rgba(0,0,0,0.08)' }}>
+            <div className="flex gap-2 justify-end pt-3" style={{ borderTop: '1px solid var(--color-gray-200)' }}>
               {selected.status === 'PENDING' && (
                 <>
                   <Button size="sm" variant="danger" onClick={() => handleAction(selected.id, 'CANCELLED')}>

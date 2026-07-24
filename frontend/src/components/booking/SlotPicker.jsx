@@ -112,7 +112,7 @@ export default function SlotPicker({
   const canGoPrev = weekStart > todayMidnight;
 
   return (
-    <div className="rounded-xl border border-gray-200 bg-white overflow-hidden">
+    <div className="rounded-xl border border-gray-200 bg-surface overflow-hidden">
       <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
         <button
           type="button"
@@ -144,7 +144,7 @@ export default function SlotPicker({
             const slots = slotsForDay(day);
             const availableCount = slots.filter((s) => !s.disabled).length;
             return (
-              <div key={idx} className="bg-white min-h-[280px]">
+              <div key={idx} className="bg-surface min-h-[280px]">
                 <div className="px-2 py-2 text-center border-b border-gray-100">
                   <p className="text-xs font-medium text-gray-500 uppercase">
                     {DAY_LABELS_SHORT[idx]}

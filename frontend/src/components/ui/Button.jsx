@@ -7,8 +7,8 @@ const variants = {
     hover: { background: '#1a2050', borderColor: '#1a2050' },
   },
   secondary: {
-    style: { background: 'transparent', color: '#0a0a0a', borderColor: 'rgba(0,0,0,0.18)' },
-    hover: { borderColor: '#0a0a0a' },
+    style: { background: 'transparent', color: 'var(--color-gray-900)', borderColor: 'var(--color-gray-300)' },
+    hover: { borderColor: 'var(--color-gray-900)' },
   },
   success: {
     style: { background: '#4A7C59', color: '#ffffff', borderColor: '#4A7C59' },
@@ -19,8 +19,8 @@ const variants = {
     hover: { background: '#1a2050' },
   },
   ghost: {
-    style: { background: 'transparent', color: '#555555', borderColor: 'rgba(0,0,0,0.12)' },
-    hover: { color: '#0a0a0a', borderColor: 'rgba(0,0,0,0.30)' },
+    style: { background: 'transparent', color: 'var(--color-gray-500)', borderColor: 'var(--color-gray-300)' },
+    hover: { color: 'var(--color-gray-900)', borderColor: 'var(--color-gray-400)' },
   },
   danger: {
     style: { background: '#dc2626', color: '#ffffff', borderColor: '#dc2626' },

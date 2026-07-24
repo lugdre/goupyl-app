@@ -174,7 +174,7 @@ export default function ManageUsers() {
                       </span>
                     </div>
                   </td>
-                  <td style={{ fontFamily: '"JetBrains Mono",monospace', fontSize: 10.5, color: '#888' }}>
+                  <td style={{ fontFamily: '"JetBrains Mono",monospace', fontSize: 10.5, color: 'var(--color-gray-400)' }}>
                     {user.createdAt
                       ? new Date(user.createdAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: '2-digit' })
                       : '—'}

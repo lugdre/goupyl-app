@@ -114,7 +114,7 @@ export default function SearchIntervenants() {
         onChange={(e) => setCourseLocation(e.target.value)}
         style={{
           height: 38, padding: '0 12px', borderRadius: 4, fontSize: 13,
-          border: '1px solid rgba(0,0,0,0.14)', background: '#fff', color: courseLocation ? '#0a0a0a' : '#888',
+          border: '1px solid var(--color-gray-300)', background: 'var(--color-surface)', color: courseLocation ? 'var(--color-gray-900)' : 'var(--color-gray-400)',
           fontFamily: '"Inter Tight", sans-serif', cursor: 'pointer', outline: 'none',
         }}
       >
@@ -134,11 +134,11 @@ export default function SearchIntervenants() {
           onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); fetchIntervenants(); } }}
           style={{
             height: 38, width: 100, padding: '0 12px', borderRadius: 4, fontSize: 13,
-            border: '1px solid rgba(0,0,0,0.14)', background: '#fff', color: '#0a0a0a',
+            border: '1px solid var(--color-gray-300)', background: 'var(--color-surface)', color: 'var(--color-gray-900)',
             fontFamily: '"Inter Tight", sans-serif', outline: 'none',
           }}
         />
-        <span style={{ fontSize: 12, color: '#888', fontFamily: '"JetBrains Mono", monospace' }}>€/h</span>
+        <span style={{ fontSize: 12, color: 'var(--color-gray-400)', fontFamily: '"JetBrains Mono", monospace' }}>€/h</span>
       </div>
     </div>
   );
@@ -176,17 +176,17 @@ export default function SearchIntervenants() {
   const dashboardContent = (
     <>
       <div style={{ marginBottom: 24 }}>
-        <h1 className="display" style={{ fontSize: 'clamp(28px,3.5vw,48px)', color: '#0a0a0a' }}>Nos professionnels</h1>
-        <p style={{ color: '#555', fontSize: 14, marginTop: 6 }}>
+        <h1 className="display" style={{ fontSize: 'clamp(28px,3.5vw,48px)', color: 'var(--color-gray-900)' }}>Nos professionnels</h1>
+        <p style={{ color: 'var(--color-gray-500)', fontSize: 14, marginTop: 6 }}>
           Coachs sportifs, nutritionnistes, psychologues du sport et praticiens bien-être.
         </p>
       </div>
 
       <form onSubmit={(e) => { e.preventDefault(); fetchIntervenants(); }} className="si-searchbar" style={{ marginBottom: 20 }}>
-        <Search size={16} style={{ color: '#888', flexShrink: 0, marginLeft: 8 }} />
+        <Search size={16} style={{ color: 'var(--color-gray-400)', flexShrink: 0, marginLeft: 8 }} />
         <input type="text" placeholder="Nom, spécialité, sport..." value={query} onChange={(e) => setQuery(e.target.value)} />
         <div className="si-searchbar-sep" />
-        <MapPin size={16} style={{ color: '#888', flexShrink: 0 }} />
+        <MapPin size={16} style={{ color: 'var(--color-gray-400)', flexShrink: 0 }} />
         <input type="text" placeholder="Ville" value={city} onChange={(e) => setCity(e.target.value)} style={{ width: 90 }} />
         <button type="submit" className="si-btn si-btn-primary si-btn-sm" style={{ borderRadius: 4 }}>Rechercher</button>
       </form>
@@ -211,7 +211,7 @@ export default function SearchIntervenants() {
       ) : filtered.length === 0 ? (
         <div className="si-empty">
           <p className="si-empty-text">// Aucun professionnel trouvé</p>
-          <p className="si-empty-text" style={{ color: '#888', marginTop: 10 }}>Essayez de modifier vos critères</p>
+          <p className="si-empty-text" style={{ color: 'var(--color-gray-400)', marginTop: 10 }}>Essayez de modifier vos critères</p>
         </div>
       ) : (
         <>
@@ -340,8 +340,8 @@ export default function SearchIntervenants() {
   return (
     <div style={{
       minHeight: '100vh',
-      background: '#f4f4f2',
-      color: '#0a0a0a',
+      background: 'var(--color-gray-100)',
+      color: 'var(--color-gray-900)',
       fontFamily: '"Inter Tight", ui-sans-serif, system-ui, sans-serif',
     }}>
       <style>{SI_CSS}</style>
@@ -353,7 +353,7 @@ export default function SearchIntervenants() {
             display: 'inline-flex', alignItems: 'center', gap: 8,
             fontFamily: '"JetBrains Mono", monospace', fontSize: 11,
             letterSpacing: '.14em', textTransform: 'uppercase',
-            color: '#555', textDecoration: 'none', marginBottom: 20,
+            color: 'var(--color-gray-500)', textDecoration: 'none', marginBottom: 20,
             marginTop: 20,
           }}>
             ← Retour
@@ -383,14 +383,14 @@ export default function SearchIntervenants() {
         ) : (
           <div style={{ marginBottom: 24 }}>
             <h1 className="si-display" style={{ fontSize: 'clamp(28px,3.5vw,48px)', marginBottom: 8 }}>Nos professionnels</h1>
-            <p style={{ color: '#555', fontSize: 14, marginTop: 6, marginBottom: 20 }}>
+            <p style={{ color: 'var(--color-gray-500)', fontSize: 14, marginTop: 6, marginBottom: 20 }}>
               Coachs sportifs, nutritionnistes, psychologues du sport et praticiens bien-être.
             </p>
             <form onSubmit={(e) => { e.preventDefault(); fetchIntervenants(); }} className="si-searchbar" style={{ marginBottom: 20 }}>
-              <Search size={16} style={{ color: '#888', flexShrink: 0, marginLeft: 8 }} />
+              <Search size={16} style={{ color: 'var(--color-gray-400)', flexShrink: 0, marginLeft: 8 }} />
               <input type="text" placeholder="Nom, spécialité, sport..." value={query} onChange={(e) => setQuery(e.target.value)} />
               <div className="si-searchbar-sep" />
-              <MapPin size={16} style={{ color: '#888', flexShrink: 0 }} />
+              <MapPin size={16} style={{ color: 'var(--color-gray-400)', flexShrink: 0 }} />
               <input type="text" placeholder="Ville" value={city} onChange={(e) => setCity(e.target.value)} style={{ width: 90 }} />
               <button type="submit" className="si-btn si-btn-primary si-btn-sm" style={{ borderRadius: 4 }}>Rechercher</button>
             </form>

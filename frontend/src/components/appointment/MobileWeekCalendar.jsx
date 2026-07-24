@@ -9,7 +9,7 @@ const HOUR_HEIGHT = 56;
 const STATUS_BG = {
   PENDING:   { background: 'rgba(217,119,6,0.10)', borderColor: 'rgba(217,119,6,0.25)', color: '#92400e' },
   CONFIRMED: { background: 'rgba(74,124,89,0.10)', borderColor: 'rgba(74,124,89,0.25)', color: '#4A7C59' },
-  DONE:      { background: 'rgba(0,0,0,0.04)',     borderColor: 'rgba(0,0,0,0.12)',     color: '#555' },
+  DONE:      { background: 'var(--color-gray-100)',     borderColor: 'rgba(0,0,0,0.12)',     color: 'var(--color-gray-500)' },
   CANCELLED: { background: 'rgba(220,38,38,0.08)', borderColor: 'rgba(220,38,38,0.20)', color: '#dc2626' },
 };
 
@@ -175,7 +175,7 @@ export default function MobileWeekCalendar({
       {dayAppts.length > 0 && (
         <div className="grid grid-cols-[40px_1fr] gap-px bg-gray-100 rounded-lg overflow-hidden">
           {/* Hour labels */}
-          <div className="bg-white" style={{ height: hours.length * HOUR_HEIGHT }}>
+          <div className="bg-surface" style={{ height: hours.length * HOUR_HEIGHT }}>
             {hours.map((h) => (
               <div
                 key={h}
@@ -188,7 +188,7 @@ export default function MobileWeekCalendar({
           </div>
 
           {/* Day column */}
-          <div className="bg-white relative" style={{ height: hours.length * HOUR_HEIGHT }}>
+          <div className="bg-surface relative" style={{ height: hours.length * HOUR_HEIGHT }}>
             {hours.map((h) => (
               <div key={h} className="border-t border-gray-100" style={{ height: HOUR_HEIGHT }} />
             ))}

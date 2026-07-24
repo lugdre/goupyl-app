@@ -46,7 +46,7 @@ export default function Navbar() {
                 <AvatarFallback
                   user={user}
                   size="sm"
-                  style={{ border: '1px solid rgba(0,0,0,0.10)' }}
+                  style={{ border: '1px solid var(--color-surface-border)' }}
                 />
                 <span style={{ fontSize: 13, fontWeight: 500, color: 'var(--color-gray-700, #2a2a2a)', letterSpacing: '.01em' }}>
                   {user.role === 'ENTREPRISE' && user.companyName
@@ -69,11 +69,11 @@ export default function Navbar() {
                   style={{
                     display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
                     width: 32, height: 32, borderRadius: 6, border: 'none',
-                    background: 'transparent', cursor: 'pointer', color: '#888',
+                    background: 'transparent', cursor: 'pointer', color: 'var(--color-gray-400)',
                     transition: 'color .15s, background .15s',
                   }}
                   onMouseOver={e => { e.currentTarget.style.color = '#dc2626'; e.currentTarget.style.background = 'rgba(220,38,38,0.06)'; }}
-                  onMouseOut={e => { e.currentTarget.style.color = '#888'; e.currentTarget.style.background = 'transparent'; }}
+                  onMouseOut={e => { e.currentTarget.style.color = 'var(--color-gray-400)'; e.currentTarget.style.background = 'transparent'; }}
                 >
                   <LogOut size={15} />
                 </button>

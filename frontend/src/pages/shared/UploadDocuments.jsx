@@ -183,7 +183,7 @@ export default function UploadDocuments() {
         {DOC_TYPES.map(({ value, label, desc, required }) => {
           const existing = documents.filter((d) => d.type === value);
           return (
-            <div key={value} className="bg-white border border-gray-200 rounded-2xl p-5">
+            <div key={value} className="bg-surface border border-gray-200 rounded-2xl p-5">
               <div className="flex items-start justify-between gap-4 mb-3">
                 <div>
                   <p className="font-semibold text-gray-900 flex items-center gap-1.5">

@@ -64,8 +64,8 @@ const fmt = (n) => n?.toLocaleString('fr-FR') ?? '—';
 const CustomTooltip = ({ active, payload, label }) => {
   if (!active || !payload?.length) return null;
   return (
-    <div style={{ background: '#fff', border: '1px solid rgba(0,0,0,.10)', padding: '10px 14px', fontFamily: '"Inter Tight",sans-serif', fontSize: 12 }}>
-      <p style={{ fontFamily: '"JetBrains Mono",monospace', fontSize: 9, letterSpacing: '.14em', textTransform: 'uppercase', color: '#888', marginBottom: 6 }}>{label}</p>
+    <div style={{ background: 'var(--color-surface)', border: '1px solid var(--color-surface-border)', padding: '10px 14px', fontFamily: '"Inter Tight",sans-serif', fontSize: 12 }}>
+      <p style={{ fontFamily: '"JetBrains Mono",monospace', fontSize: 9, letterSpacing: '.14em', textTransform: 'uppercase', color: 'var(--color-gray-400)', marginBottom: 6 }}>{label}</p>
       {payload.map((p) => (
         <p key={p.dataKey} style={{ color: p.color, margin: '2px 0' }}>
           <span style={{ fontWeight: 600 }}>{fmt(p.value)}</span>{' '}{p.name}
@@ -131,7 +131,7 @@ export default function AdminDashboard() {
             </div>
             <div className="adash-kpi-val">{value}</div>
             <div className="adash-kpi-label">{label}</div>
-            <div style={{ fontSize: 11, color: '#888', fontFamily: '"Inter Tight",sans-serif' }}>{sub}</div>
+            <div style={{ fontSize: 11, color: 'var(--color-gray-400)', fontFamily: '"Inter Tight",sans-serif' }}>{sub}</div>
           </div>
         ))}
       </div>
@@ -229,13 +229,13 @@ export default function AdminDashboard() {
               </Pie>
               <Tooltip
                 formatter={(v, name) => [v, STATUS_FR[name] || name]}
-                contentStyle={{ fontFamily: '"Inter Tight",sans-serif', fontSize: 12, border: '1px solid rgba(0,0,0,.10)' }}
+                contentStyle={{ fontFamily: '"Inter Tight",sans-serif', fontSize: 12, border: '1px solid var(--color-surface-border)' }}
               />
               <Legend
                 layout="vertical"
                 align="right"
                 verticalAlign="middle"
-                formatter={(v) => <span style={{ fontFamily: '"JetBrains Mono",monospace', fontSize: 9, letterSpacing: '.1em', textTransform: 'uppercase', color: '#555' }}>{STATUS_FR[v] || v}</span>}
+                formatter={(v) => <span style={{ fontFamily: '"JetBrains Mono",monospace', fontSize: 9, letterSpacing: '.1em', textTransform: 'uppercase', color: 'var(--color-gray-500)' }}>{STATUS_FR[v] || v}</span>}
               />
             </PieChart>
           </ResponsiveContainer>
@@ -260,16 +260,16 @@ export default function AdminDashboard() {
             </thead>
             <tbody>
               {recentAppointments.length === 0 ? (
-                <tr><td colSpan={5} style={{ textAlign: 'center', color: '#888', padding: '24px 0', fontFamily: '"JetBrains Mono",monospace', fontSize: 11 }}>Aucun rendez-vous</td></tr>
+                <tr><td colSpan={5} style={{ textAlign: 'center', color: 'var(--color-gray-400)', padding: '24px 0', fontFamily: '"JetBrains Mono",monospace', fontSize: 11 }}>Aucun rendez-vous</td></tr>
               ) : (
                 recentAppointments.map((rdv) => (
                   <tr key={rdv.id}>
                     <td style={{ fontWeight: 500, maxWidth: 140, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                       {rdv.coachService?.name || rdv.service?.name || '—'}
                     </td>
-                    <td style={{ color: '#555' }}>{rdv.client?.firstName} {rdv.client?.lastName}</td>
-                    <td style={{ color: '#555' }}>{rdv.intervenant?.firstName} {rdv.intervenant?.lastName}</td>
-                    <td style={{ fontFamily: '"JetBrains Mono",monospace', fontSize: 11, color: '#888', whiteSpace: 'nowrap' }}>
+                    <td style={{ color: 'var(--color-gray-500)' }}>{rdv.client?.firstName} {rdv.client?.lastName}</td>
+                    <td style={{ color: 'var(--color-gray-500)' }}>{rdv.intervenant?.firstName} {rdv.intervenant?.lastName}</td>
+                    <td style={{ fontFamily: '"JetBrains Mono",monospace', fontSize: 11, color: 'var(--color-gray-400)', whiteSpace: 'nowrap' }}>
                       {new Date(rdv.scheduledAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
                     </td>
                     <td><span className={`adash-badge ${rdv.status}`}>{STATUS_FR[rdv.status] || rdv.status}</span></td>
@@ -285,15 +285,15 @@ export default function AdminDashboard() {
             <Star size={11} /> Top coachs · RDV
           </p>
           {topIntervenants.length === 0 ? (
-            <p style={{ color: '#888', fontFamily: '"JetBrains Mono",monospace', fontSize: 11 }}>Aucune donnée</p>
+            <p style={{ color: 'var(--color-gray-400)', fontFamily: '"JetBrains Mono",monospace', fontSize: 11 }}>Aucune donnée</p>
           ) : (
             topIntervenants.map((item) => (
               <div key={item.name} className="adash-bar-item">
-                <div style={{ minWidth: 100, fontSize: 12, color: '#0a0a0a', fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{item.name}</div>
+                <div style={{ minWidth: 100, fontSize: 12, color: 'var(--color-gray-900)', fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{item.name}</div>
                 <div className="adash-bar-track">
                   <div className="adash-bar-fill" style={{ width: `${Math.round((item.count / maxTopCount) * 100)}%` }} />
                 </div>
-                <div style={{ fontFamily: '"JetBrains Mono",monospace', fontSize: 11, color: '#555', minWidth: 24, textAlign: 'right' }}>{item.count}</div>
+                <div style={{ fontFamily: '"JetBrains Mono",monospace', fontSize: 11, color: 'var(--color-gray-500)', minWidth: 24, textAlign: 'right' }}>{item.count}</div>
               </div>
             ))
           )}

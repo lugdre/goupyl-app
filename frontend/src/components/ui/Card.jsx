@@ -5,11 +5,11 @@ export default function Card({ children, className = '', style: propStyle = {}, 
     <div
       className={cn(className)}
       style={{
-        background: '#ffffff',
-        border: '1px solid rgba(0,0,0,0.09)',
+        background: 'var(--color-surface)',
+        border: '1px solid var(--color-surface-border)',
         borderRadius: 4,
         padding: '20px',
-        boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
+        boxShadow: 'var(--shadow-card)',
         ...propStyle,
       }}
       {...props}

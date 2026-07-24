@@ -216,7 +216,7 @@ export default function MyServices() {
                     className={`px-4 py-2 rounded-full text-sm font-medium border transition-all ${
                       serviceForm.sessionType === opt.value
                         ? 'bg-primary-600 text-white border-primary-600'
-                        : 'bg-white text-gray-600 border-gray-200 hover:border-primary-300 hover:text-primary-600'
+                        : 'bg-surface text-gray-600 border-gray-200 hover:border-primary-300 hover:text-primary-600'
                     }`}
                   >
                     {opt.label}
@@ -263,7 +263,7 @@ export default function MyServices() {
               return (
                 <div
                   key={svc.id}
-                  className={`relative p-4 rounded-xl border transition-colors ${svc.active ? 'border-gray-200 bg-white' : 'border-gray-100 bg-gray-50 opacity-60'}`}
+                  className={`relative p-4 rounded-xl border transition-colors ${svc.active ? 'border-gray-200 bg-surface' : 'border-gray-100 bg-gray-50 opacity-60'}`}
                 >
                   <div className="flex items-start justify-between mb-2">
                     <span className={`inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full ${colorClass}`}>

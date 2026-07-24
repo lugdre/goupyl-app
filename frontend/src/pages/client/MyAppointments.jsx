@@ -29,7 +29,7 @@ const STATUS_COLORS = {
 const STATUS_BG = {
   PENDING:   { background: 'rgba(217,119,6,0.10)', borderColor: 'rgba(217,119,6,0.25)' },
   CONFIRMED: { background: 'rgba(74,124,89,0.10)', borderColor: 'rgba(74,124,89,0.25)' },
-  DONE:      { background: 'rgba(0,0,0,0.04)',     borderColor: 'rgba(0,0,0,0.12)' },
+  DONE:      { background: 'var(--color-gray-100)',     borderColor: 'rgba(0,0,0,0.12)' },
   CANCELLED: { background: 'rgba(220,38,38,0.08)', borderColor: 'rgba(220,38,38,0.20)' },
 };
 
@@ -111,7 +111,7 @@ export default function MyAppointments() {
           <h1 className="text-2xl font-semibold text-gray-900">Mes rendez-vous</h1>
           <p className="text-gray-500 mt-1">Historique complet de vos séances</p>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 4, border: '1px solid rgba(0,0,0,0.10)', borderRadius: 6, padding: 4, background: '#f4f4f2' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 4, border: '1px solid var(--color-surface-border)', borderRadius: 6, padding: 4, background: 'var(--color-gray-100)' }}>
           {[['week', LayoutGrid, 'Semaine'], ['list', List, 'Liste']].map(([v, Icon, label]) => (
             <button
               key={v}
@@ -198,12 +198,12 @@ export default function MyAppointments() {
             <div className="min-w-[700px]">
               {/* Header */}
               <div className="grid grid-cols-[48px_repeat(7,1fr)] gap-px bg-gray-100 rounded-t-lg overflow-hidden">
-                <div className="bg-white" />
+                <div className="bg-surface" />
                 {weekDays.map((day, idx) => {
                   const isToday = day.toDateString() === new Date().toDateString();
                   return (
                     <div key={idx} style={{ padding: '8px 4px', textAlign: 'center', background: isToday ? 'rgba(37,45,98,0.10)' : '#ebebe7' }}>
-                      <p style={{ fontSize: 10, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '.10em', color: '#888', margin: 0, fontFamily: '"JetBrains Mono", monospace' }}>
+                      <p style={{ fontSize: 10, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '.10em', color: 'var(--color-gray-400)', margin: 0, fontFamily: '"JetBrains Mono", monospace' }}>
                         {DAY_LABELS_SHORT[idx]}
                       </p>
                       <p style={{ fontSize: 14, fontWeight: 700, color: isToday ? '#252d62' : '#0a0a0a', margin: '2px 0 0' }}>
@@ -216,7 +216,7 @@ export default function MyAppointments() {
 
               {/* Time grid */}
               <div className="grid grid-cols-[48px_repeat(7,1fr)] gap-px bg-gray-100">
-                <div className="bg-white" style={{ height: hours.length * HOUR_HEIGHT }}>
+                <div className="bg-surface" style={{ height: hours.length * HOUR_HEIGHT }}>
                   {hours.map((h) => (
                     <div key={h} className="text-[10px] text-gray-400 text-right pr-1 border-t border-gray-100" style={{ height: HOUR_HEIGHT }}>
                       {h}h
@@ -229,7 +229,7 @@ export default function MyAppointments() {
                     (a) => new Date(a.scheduledAt).toDateString() === day.toDateString()
                   );
                   return (
-                    <div key={dayIdx} className="bg-white relative" style={{ height: hours.length * HOUR_HEIGHT }}>
+                    <div key={dayIdx} className="bg-surface relative" style={{ height: hours.length * HOUR_HEIGHT }}>
                       {hours.map((h) => (
                         <div key={h} className="border-t border-gray-100" style={{ height: HOUR_HEIGHT }} />
                       ))}
@@ -348,7 +348,7 @@ export default function MyAppointments() {
       {selected && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50" onClick={() => setSelected(null)}>
           <div
-            style={{ background: '#fff', border: '1px solid rgba(0,0,0,0.10)', borderRadius: 8, boxShadow: '0 8px 40px rgba(0,0,0,0.15)', maxWidth: 448, width: '100%', padding: 24 }}
+            style={{ background: 'var(--color-surface)', border: '1px solid var(--color-surface-border)', borderRadius: 8, boxShadow: 'var(--shadow-modal)', maxWidth: 448, width: '100%', padding: 24 }}
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-start justify-between mb-4">
@@ -373,12 +373,12 @@ export default function MyAppointments() {
             </p>
 
             {selected.notes && (
-              <p className="text-sm text-gray-500 mb-4 p-3 italic rounded" style={{ background: 'rgba(0,0,0,0.04)', border: '1px solid rgba(0,0,0,0.07)' }}>
+              <p className="text-sm text-gray-500 mb-4 p-3 italic rounded" style={{ background: 'var(--color-gray-100)', border: '1px solid var(--color-gray-200)' }}>
                 "{selected.notes}"
               </p>
             )}
 
-            <div className="flex flex-wrap gap-2 justify-end pt-4" style={{ borderTop: '1px solid rgba(0,0,0,0.08)' }}>
+            <div className="flex flex-wrap gap-2 justify-end pt-4" style={{ borderTop: '1px solid var(--color-gray-200)' }}>
               {selected.status === 'CONFIRMED' && selected.paymentStatus !== 'paid' && !selected.coveredByCompany && (
                 <Button
                   size="sm"

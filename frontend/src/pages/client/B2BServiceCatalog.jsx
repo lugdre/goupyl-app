@@ -57,7 +57,7 @@ export default function B2BServiceCatalog() {
       </div>
 
       {/* Search */}
-      <div className="bg-white rounded-2xl border border-gray-200 p-4 flex items-center gap-3">
+      <div className="bg-surface rounded-2xl border border-gray-200 p-4 flex items-center gap-3">
         <Search className="w-4 h-4 text-gray-400 shrink-0" />
         <input
           type="text"
@@ -78,7 +78,7 @@ export default function B2BServiceCatalog() {
               'px-4 py-2 rounded-full text-sm font-medium transition-all border',
               activeCategory === cat
                 ? 'bg-primary-500 text-white border-primary-500'
-                : 'bg-white text-gray-600 border-gray-200 hover:border-primary-300 hover:text-primary-600'
+                : 'bg-surface text-gray-600 border-gray-200 hover:border-primary-300 hover:text-primary-600'
             )}
           >
             {CATEGORY_LABELS[cat] || cat}
@@ -88,7 +88,7 @@ export default function B2BServiceCatalog() {
 
       {/* Results */}
       {filtered.length === 0 ? (
-        <div className="bg-white rounded-2xl border border-gray-200 py-16 text-center">
+        <div className="bg-surface rounded-2xl border border-gray-200 py-16 text-center">
           <Search className="w-12 h-12 mx-auto mb-4 text-gray-200" />
           <p className="text-gray-500 font-medium">Aucun service trouvé</p>
         </div>
@@ -99,7 +99,7 @@ export default function B2BServiceCatalog() {
             {filtered.map((s) => {
               const style = CATEGORY_STYLES[s.category] || { badge: 'bg-gray-50 text-gray-700 border-gray-100', dot: 'bg-gray-400' };
               return (
-                <div key={s.id} className="bg-white rounded-2xl border border-gray-200 p-5 hover:shadow-md transition-shadow">
+                <div key={s.id} className="bg-surface rounded-2xl border border-gray-200 p-5 hover:shadow-md transition-shadow">
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
                       <p className="font-semibold text-gray-900 truncate">{s.name}</p>

@@ -16,8 +16,8 @@ export default function OnboardingChecklist({ steps, title, subtitle }) {
 
   return (
     <div style={{
-      background: '#ffffff',
-      border: '1px solid rgba(0,0,0,0.09)',
+      background: 'var(--color-surface)',
+      border: '1px solid var(--color-gray-200)',
       borderRadius: 4,
       overflow: 'hidden',
       marginBottom: 24,
@@ -25,16 +25,16 @@ export default function OnboardingChecklist({ steps, title, subtitle }) {
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px' }}>
         <div>
-          <p style={{ fontFamily: "'Archivo Narrow', sans-serif", fontWeight: 700, fontSize: 16, color: '#0a0a0a', margin: 0 }}>{title}</p>
-          <p style={{ fontSize: 13, color: '#555', marginTop: 2 }}>{subtitle}</p>
+          <p style={{ fontFamily: "'Archivo Narrow', sans-serif", fontWeight: 700, fontSize: 16, color: 'var(--color-gray-900)', margin: 0 }}>{title}</p>
+          <p style={{ fontSize: 13, color: 'var(--color-gray-500)', marginTop: 2 }}>{subtitle}</p>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-          <span style={{ fontSize: 11, fontFamily: '"JetBrains Mono", monospace', color: '#555', letterSpacing: '.08em' }}>
+          <span style={{ fontSize: 11, fontFamily: '"JetBrains Mono", monospace', color: 'var(--color-gray-500)', letterSpacing: '.08em' }}>
             {completedCount}/{steps.length}
           </span>
           <button
             onClick={() => setCollapsed(c => !c)}
-            style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 28, height: 28, borderRadius: 4, border: '1px solid rgba(0,0,0,0.10)', background: 'transparent', cursor: 'pointer', color: '#555' }}
+            style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 28, height: 28, borderRadius: 4, border: '1px solid var(--color-surface-border)', background: 'transparent', cursor: 'pointer', color: 'var(--color-gray-500)' }}
           >
             {collapsed ? <ChevronDown size={14} /> : <ChevronUp size={14} />}
           </button>
@@ -42,10 +42,10 @@ export default function OnboardingChecklist({ steps, title, subtitle }) {
       </div>
 
       {/* Progress bar */}
-      <div style={{ height: 2, background: 'rgba(0,0,0,0.06)', margin: '0 20px 4px' }}>
+      <div style={{ height: 2, background: 'var(--color-gray-100)', margin: '0 20px 4px' }}>
         <div style={{ height: '100%', background: '#252d62', width: `${progress}%`, transition: 'width .5s ease' }} />
       </div>
-      <p style={{ fontSize: 11, color: '#888', fontFamily: '"JetBrains Mono", monospace', letterSpacing: '.08em', padding: '0 20px 12px' }}>
+      <p style={{ fontSize: 11, color: 'var(--color-gray-400)', fontFamily: '"JetBrains Mono", monospace', letterSpacing: '.08em', padding: '0 20px 12px' }}>
         {allDone ? 'TOUT EST CONFIGURÉ' : `${progress}% COMPLÉTÉ`}
       </p>
 
@@ -71,7 +71,7 @@ export default function OnboardingChecklist({ steps, title, subtitle }) {
                     border: '1.5px solid rgba(0,0,0,0.25)',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                   }}>
-                    <span style={{ fontSize: 9, fontWeight: 700, color: '#888', fontFamily: '"JetBrains Mono", monospace' }}>{i + 1}</span>
+                    <span style={{ fontSize: 9, fontWeight: 700, color: 'var(--color-gray-400)', fontFamily: '"JetBrains Mono", monospace' }}>{i + 1}</span>
                   </div>
                 )}
               </div>
@@ -83,7 +83,7 @@ export default function OnboardingChecklist({ steps, title, subtitle }) {
                   {step.label}
                 </p>
                 {!step.done && step.description && (
-                  <p style={{ fontSize: 12, color: '#888', marginTop: 3 }}>{step.description}</p>
+                  <p style={{ fontSize: 12, color: 'var(--color-gray-400)', marginTop: 3 }}>{step.description}</p>
                 )}
               </div>
               {!step.done && step.to && (

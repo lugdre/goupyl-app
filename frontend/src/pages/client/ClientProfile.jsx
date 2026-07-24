@@ -204,7 +204,7 @@ export default function ClientProfile() {
                   className={`px-4 py-2 rounded-lg text-sm font-medium border transition-colors ${
                     form.gender === value
                       ? 'bg-primary-600 text-white border-primary-600'
-                      : 'bg-white text-gray-600 border-gray-200 hover:border-primary-400'
+                      : 'bg-surface text-gray-600 border-gray-200 hover:border-primary-400'
                   }`}
                 >
                   {label}

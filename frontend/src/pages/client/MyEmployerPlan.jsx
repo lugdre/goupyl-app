@@ -36,7 +36,7 @@ export default function MyEmployerPlan() {
       </div>
 
       {/* Company + plan card */}
-      <div className="bg-white rounded-2xl border border-gray-200 p-6">
+      <div className="bg-surface rounded-2xl border border-gray-200 p-6">
         <div className="flex items-center gap-3 mb-5">
           <div className="p-3 bg-primary-50 rounded-xl shrink-0">
             <Building2 className="w-5 h-5 text-primary-600" />
@@ -111,7 +111,7 @@ export default function MyEmployerPlan() {
       </div>
 
       {/* Comment ça marche */}
-      <div className="bg-white rounded-2xl border border-gray-200 p-6">
+      <div className="bg-surface rounded-2xl border border-gray-200 p-6">
         <div className="flex items-center gap-2 mb-3">
           <Layers className="w-5 h-5 text-gray-600" />
           <h2 className="text-lg font-semibold text-gray-900">Comment fonctionne votre forfait</h2>
