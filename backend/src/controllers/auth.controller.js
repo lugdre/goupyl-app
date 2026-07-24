@@ -10,6 +10,11 @@ const login = async (req, res, next) => {
   catch (e) { next(e); }
 };
 
+const google = async (req, res, next) => {
+  try { res.status(200).json(await authService.googleAuth(req.body)); }
+  catch (e) { next(e); }
+};
+
 const refresh = async (req, res, next) => {
   try { res.status(200).json(await authService.refresh(req.body.refreshToken)); }
   catch (e) { next(e); }
@@ -27,4 +32,4 @@ const verifyEmail = async (req, res, next) => {
   catch (e) { next(e); }
 };
 
-module.exports = { register, login, refresh, logout, verifyEmail };
+module.exports = { register, login, google, refresh, logout, verifyEmail };

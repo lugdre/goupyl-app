@@ -34,4 +34,9 @@ const refreshSchema = z.object({
   refreshToken: z.string({ required_error: 'Refresh token requis' }),
 });
 
-module.exports = { registerSchema, loginSchema, refreshSchema };
+const googleSchema = z.object({
+  credential: z.string({ required_error: 'Jeton Google requis' }).min(10),
+  joinCode: z.string().optional(),
+});
+
+module.exports = { registerSchema, loginSchema, refreshSchema, googleSchema };

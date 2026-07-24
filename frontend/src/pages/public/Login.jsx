@@ -4,6 +4,7 @@ import { useAuth } from '../../hooks/useAuth';
 import toast from 'react-hot-toast';
 import { KeyRound } from 'lucide-react';
 import { isPasskeySupported } from '../../services/passkey.api';
+import GoogleAuthButton from '../../components/GoogleAuthButton';
 import logo from '../../assets/logo-goupyl-white.png';
 
 const CSS = `
@@ -42,13 +43,17 @@ const CSS = `
   .auth-footer-text{text-align:center;font-family:"JetBrains Mono",monospace;font-size:11px;letter-spacing:.08em;color:var(--ink-3);margin-top:32px}
   .auth-footer-link{color:var(--accent);font-weight:600;text-decoration:none;transition:opacity .15s}
   .auth-footer-link:hover{opacity:.75}
+  .auth-reveal{overflow:hidden;animation:authReveal .28s ease}
+  @keyframes authReveal{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:translateY(0)}}
 `;
 
 export default function Login() {
-  const { login, loginWithPasskey } = useAuth();
+  const { login, loginWithPasskey, googleAuth } = useAuth();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [passkeyLoading, setPasskeyLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
+  const [expanded, setExpanded] = useState(false);
   const [form, setForm] = useState({ email: '', password: '' });
   const [errors, setErrors] = useState({});
   const passkeySupported = isPasskeySupported();
@@ -81,8 +86,26 @@ export default function Login() {
     }
   };
 
+  const handleGoogle = async (credential) => {
+    setGoogleLoading(true);
+    try {
+      await googleAuth(credential);
+      toast.success('Connexion réussie !');
+      navigate('/dashboard');
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Échec de la connexion Google.');
+    } finally {
+      setGoogleLoading(false);
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    // Champ email seul : le premier envoi déploie le mot de passe
+    if (!expanded) {
+      setExpanded(true);
+      return;
+    }
     setLoading(true);
     setErrors({});
     try {
@@ -132,6 +155,18 @@ export default function Login() {
           <div className="auth-form-eyebrow">Accès membre</div>
           <h1 className="auth-form-h1">Connexion</h1>
 
+          {/* Google — accès rapide */}
+          <GoogleAuthButton onCredential={handleGoogle} text="continue_with" />
+          {googleLoading && (
+            <p className="auth-divider-label" style={{ textAlign: 'center', marginTop: 8 }}>Connexion Google…</p>
+          )}
+
+          <div className="auth-divider">
+            <div className="auth-divider-line" />
+            <span className="auth-divider-label">ou par email</span>
+            <div className="auth-divider-line" />
+          </div>
+
           <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
             <div>
               <label className="auth-field-label" htmlFor="email">Email</label>
@@ -139,36 +174,36 @@ export default function Login() {
                 id="email" name="email" type="email"
                 placeholder="votre@email.com"
                 value={form.email} onChange={handleChange} required
+                onFocus={() => setExpanded(true)}
                 className={`auth-field-input${errors.email ? ' has-error' : ''}`}
               />
               {errors.email && <p className="auth-field-error">{errors.email}</p>}
             </div>
-            <div>
-              <label className="auth-field-label" htmlFor="password">Mot de passe</label>
-              <input
-                id="password" name="password" type="password"
-                placeholder="••••••••"
-                value={form.password} onChange={handleChange} required
-                className="auth-field-input"
-              />
-            </div>
-            <button type="submit" disabled={loading} className="auth-submit">
-              {loading ? 'Connexion…' : <>Se connecter <span>→</span></>}
-            </button>
+
+            {expanded && (
+              <div className="auth-reveal" style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                <div>
+                  <label className="auth-field-label" htmlFor="password">Mot de passe</label>
+                  <input
+                    id="password" name="password" type="password"
+                    placeholder="••••••••"
+                    value={form.password} onChange={handleChange} required
+                    autoFocus
+                    className="auth-field-input"
+                  />
+                </div>
+                <button type="submit" disabled={loading} className="auth-submit">
+                  {loading ? 'Connexion…' : <>Se connecter <span>→</span></>}
+                </button>
+              </div>
+            )}
           </form>
 
           {passkeySupported && (
-            <>
-              <div className="auth-divider">
-                <div className="auth-divider-line" />
-                <span className="auth-divider-label">ou</span>
-                <div className="auth-divider-line" />
-              </div>
-              <button type="button" onClick={handlePasskeyLogin} disabled={passkeyLoading} className="auth-ghost">
-                <KeyRound size={14} />
-                {passkeyLoading ? 'Vérification…' : 'Se connecter avec une passkey'}
-              </button>
-            </>
+            <button type="button" onClick={handlePasskeyLogin} disabled={passkeyLoading} className="auth-ghost" style={{ marginTop: 12 }}>
+              <KeyRound size={14} />
+              {passkeyLoading ? 'Vérification…' : 'Se connecter avec une passkey'}
+            </button>
           )}
 
           <p className="auth-footer-text">

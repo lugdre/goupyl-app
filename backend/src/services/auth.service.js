@@ -1,5 +1,6 @@
 const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
+const { OAuth2Client } = require('google-auth-library');
 const prisma = require('../config/database');
 const redis = require('../config/redis');
 const resend = require('../config/email');
@@ -10,6 +11,33 @@ const { verificationEmail, specificNeedEmail } = require('../utils/emailTemplate
 const REFRESH_TTL = 7 * 24 * 60 * 60;
 
 const generateJoinCode = () => crypto.randomBytes(4).toString('hex').toUpperCase();
+
+const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+
+// Réponse utilisateur + émission des tokens, partagée par login/googleAuth
+const issueSession = async (user) => {
+  const userResponse = {
+    id: user.id,
+    email: user.email,
+    firstName: user.firstName,
+    lastName: user.lastName,
+    role: user.role,
+    isActive: user.isActive,
+    verificationStatus: user.verificationStatus,
+    verificationNote: user.verificationNote,
+    employerCompanyId: user.employerCompanyId,
+    joinCode: user.joinCode,
+    createdAt: user.createdAt,
+  };
+  const accessToken = generateAccessToken(userResponse);
+  const refreshToken = generateRefreshToken(userResponse);
+  try {
+    await redis.set(`refresh_token:${user.id}`, refreshToken, 'EX', REFRESH_TTL);
+  } catch (err) {
+    console.error('Erreur stockage refresh token:', err.message);
+  }
+  return { user: userResponse, accessToken, refreshToken };
+};
 
 const register = async ({ email, password, firstName, lastName, role, companyName, siret, joinCode, acceptedTerms, level, sportType, objectives, specificNeed }) => {
   const existing = await prisma.user.findUnique({ where: { email } });
@@ -155,6 +183,10 @@ const login = async ({ email, password }) => {
   const user = await prisma.user.findUnique({ where: { email } });
   if (!user) throw ApiError.unauthorized('Email ou mot de passe incorrect.');
   if (!user.isActive) throw ApiError.forbidden('Ce compte a ete desactive.');
+  // Compte créé via Google : pas de mot de passe défini
+  if (!user.passwordHash) {
+    throw ApiError.badRequest('Ce compte utilise la connexion Google. Cliquez sur « Continuer avec Google ».', 'GOOGLE_ACCOUNT');
+  }
 
   const valid = await bcrypt.compare(password, user.passwordHash);
   if (!valid) throw ApiError.unauthorized('Email ou mot de passe incorrect.');
@@ -182,6 +214,84 @@ const login = async ({ email, password }) => {
   }
 
   return { user: userResponse, accessToken, refreshToken };
+};
+
+// Connexion / inscription via Google (Google Identity Services — ID token vérifié côté serveur)
+const googleAuth = async ({ credential, joinCode }) => {
+  if (!process.env.GOOGLE_CLIENT_ID) {
+    throw ApiError.badRequest('Connexion Google non configurée sur le serveur.', 'GOOGLE_NOT_CONFIGURED');
+  }
+
+  let payload;
+  try {
+    const ticket = await googleClient.verifyIdToken({
+      idToken: credential,
+      audience: process.env.GOOGLE_CLIENT_ID,
+    });
+    payload = ticket.getPayload();
+  } catch {
+    throw ApiError.unauthorized('Jeton Google invalide ou expiré.');
+  }
+
+  const email = payload?.email?.toLowerCase();
+  if (!email || !payload.email_verified) {
+    throw ApiError.badRequest('Adresse Google non vérifiée.', 'GOOGLE_EMAIL_UNVERIFIED');
+  }
+
+  let user = await prisma.user.findUnique({ where: { email } });
+
+  if (user) {
+    if (!user.isActive) throw ApiError.forbidden('Ce compte a ete desactive.');
+    // Rattacher l'identité Google si le compte existait (créé par mot de passe)
+    if (!user.googleId) {
+      user = await prisma.user.update({
+        where: { id: user.id },
+        data: { googleId: payload.sub, emailVerifiedAt: user.emailVerifiedAt || new Date() },
+      });
+    }
+  } else {
+    // Nouvelle inscription via Google → toujours un CLIENT (particulier ou salarié).
+    // Les rôles INTERVENANT/ENTREPRISE passent par le formulaire (documents / SIRET requis).
+    const name = payload.name || '';
+    const firstName = payload.given_name || name.split(' ')[0] || 'Utilisateur';
+    const lastName = payload.family_name || name.split(' ').slice(1).join(' ') || 'Google';
+
+    // Résolution éventuelle du joinCode (salarié)
+    let employerCompanyId = null;
+    if (joinCode) {
+      const invite = await prisma.companyInvite.findUnique({ where: { token: joinCode } });
+      if (invite && !invite.usedAt && invite.expiresAt > new Date()) {
+        employerCompanyId = invite.companyId;
+      } else {
+        const company = await prisma.user.findUnique({ where: { joinCode } });
+        if (company && company.role === 'ENTREPRISE') employerCompanyId = company.id;
+      }
+    }
+
+    user = await prisma.user.create({
+      data: {
+        email,
+        passwordHash: null,
+        googleId: payload.sub,
+        firstName,
+        lastName,
+        role: 'CLIENT',
+        verificationStatus: 'VERIFIED',
+        emailVerifiedAt: new Date(),
+        acceptedTermsAt: new Date(),
+        ...(employerCompanyId && { employerCompanyId }),
+      },
+    });
+
+    if (joinCode && employerCompanyId) {
+      const invite = await prisma.companyInvite.findUnique({ where: { token: joinCode } });
+      if (invite && !invite.usedAt) {
+        await prisma.companyInvite.update({ where: { token: joinCode }, data: { usedAt: new Date() } });
+      }
+    }
+  }
+
+  return issueSession(user);
 };
 
 const refresh = async (refreshToken) => {
@@ -216,4 +326,4 @@ const verifyEmail = async (token) => {
   return { success: true };
 };
 
-module.exports = { register, login, refresh, logout, verifyEmail };
+module.exports = { register, login, googleAuth, refresh, logout, verifyEmail };

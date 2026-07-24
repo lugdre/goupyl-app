@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
+import { Link, useSearchParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import toast from 'react-hot-toast';
 import { Building2, Briefcase, Users, User, Mail } from 'lucide-react';
+import GoogleAuthButton from '../../components/GoogleAuthButton';
 import logo from '../../assets/logo-goupyl-white.png';
 
 const CSS = `
@@ -92,8 +93,10 @@ const ROLES = [
 ];
 
 export default function Register() {
-  const { register } = useAuth();
+  const { register, googleAuth } = useAuth();
+  const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const [googleLoading, setGoogleLoading] = useState(false);
   const [loading, setLoading] = useState(false);
   const [selected, setSelected] = useState('ENTREPRISE');
   const [form, setForm] = useState({
@@ -147,6 +150,20 @@ export default function Register() {
         ? p.objectives.filter((o) => o !== obj)
         : [...p.objectives, obj],
     }));
+  };
+
+  const handleGoogle = async (credential) => {
+    setGoogleLoading(true);
+    try {
+      // Un compte Google est créé en tant que CLIENT ; on transmet le code entreprise si salarié
+      await googleAuth(credential, form.joinCode ? { joinCode: form.joinCode } : {});
+      toast.success('Compte créé avec succès !');
+      navigate('/dashboard');
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Échec de l\'inscription Google.');
+    } finally {
+      setGoogleLoading(false);
+    }
   };
 
   const doRegister = async (includeProfile) => {
@@ -362,6 +379,19 @@ export default function Register() {
               </>
             ) : (
             <>
+            {/* Google — inscription rapide (crée un compte particulier / collaborateur) */}
+            <div>
+              <GoogleAuthButton onCredential={handleGoogle} text="signup_with" />
+              {googleLoading && (
+                <p className="auth-field-hint" style={{ textAlign: 'center', marginTop: 8 }}>Inscription Google…</p>
+              )}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12, margin: '16px 0 4px' }}>
+                <div style={{ flex: 1, height: 1, background: 'var(--line)' }} />
+                <span style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 10, letterSpacing: '.16em', color: 'var(--ink-4)', textTransform: 'uppercase' }}>ou par email</span>
+                <div style={{ flex: 1, height: 1, background: 'var(--line)' }} />
+              </div>
+            </div>
+
             {/* Role */}
             <div>
               <div className="auth-section-label">Je suis</div>

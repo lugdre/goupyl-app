@@ -40,6 +40,15 @@ export function AuthProvider({ children }) {
     return data;
   }, []);
 
+  const googleAuth = useCallback(async (credential, extra = {}) => {
+    const { data } = await authApi.google({ credential, ...extra });
+    localStorage.setItem('accessToken', data.accessToken);
+    localStorage.setItem('refreshToken', data.refreshToken);
+    localStorage.setItem('user', JSON.stringify(data.user));
+    setUser(data.user);
+    return data;
+  }, []);
+
   const loginWithPasskey = useCallback(async (email) => {
     const data = await passkeyApi.authenticate(email);
     localStorage.setItem('accessToken', data.accessToken);
@@ -76,6 +85,7 @@ export function AuthProvider({ children }) {
     isAdmin: user?.role === 'ADMIN',
     register,
     login,
+    googleAuth,
     loginWithPasskey,
     logout,
     refreshUser,
