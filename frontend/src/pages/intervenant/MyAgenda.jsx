@@ -313,16 +313,16 @@ export default function MyAgenda() {
                           <button
                             key={appt.id}
                             onClick={() => openModal(appt)}
-                            className={`absolute left-1 right-1 px-1.5 py-1 text-left text-[10px] overflow-hidden transition-shadow hover:opacity-90 ${color}`}
+                            className={`absolute left-1 right-1 px-1.5 py-1 text-left text-[10px] leading-tight overflow-hidden transition-shadow hover:opacity-90 ${color}`}
                             style={{ top, height: Math.max(height - 2, 20), borderRadius: 3, ...STATUS_BG[appt.status] }}
                           >
-                            <p className="font-semibold truncate">
+                            <p className="font-semibold truncate leading-tight">
                               {new Date(appt.scheduledAt).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
                             </p>
-                            <p className="truncate">
+                            <p className="truncate leading-tight">
                               {appt.client.firstName} {appt.client.lastName}
                             </p>
-                            <p className="truncate opacity-75">
+                            <p className="truncate opacity-75 leading-tight">
                               {appt.coachService?.name || appt.service?.name}
                             </p>
                           </button>
