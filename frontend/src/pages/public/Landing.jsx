@@ -160,7 +160,7 @@ export default function Landing() {
                 <a href="#coaches">Coachs</a>
                 <a href="#pricing">Tarifs</a>
               </nav>
-              <div className="hero-logo"><img src="/public/logo-goupyl-sport-white.png" alt="Logo Goupyl Sport" /></div>
+              <div className="hero-logo"><img src="/logo-goupyl-sport-white.png" alt="Logo Goupyl Sport" /></div>
               <Link to="/login" className="btn-pill btn-pill--white">
                 Commencer
                 <span className="btn-circle btn-circle--orange"><ArrowUpRight size={15} color="#fff" /></span>
