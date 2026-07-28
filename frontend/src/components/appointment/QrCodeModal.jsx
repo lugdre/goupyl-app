@@ -1,6 +1,6 @@
 import QRCode from 'react-qr-code';
 import { X, QrCode as QrCodeIcon } from 'lucide-react';
-import Button from '../ui/Button';
+import { MODAL_CSS } from '../ui/modalStyles';
 
 // Le client présente ce QR (ou le code court) au professionnel pour valider
 // sa présence à la séance.
@@ -9,27 +9,27 @@ export default function QrCodeModal({ appointment, onClose }) {
   const shortCode = appointment.qrToken?.slice(0, 8).toUpperCase();
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
+    <div className="gm-back" onClick={onClose}>
+      <style>{MODAL_CSS}</style>
 
-      <div className="relative w-full max-w-md bg-surface rounded-2xl border border-surface-border overflow-hidden" style={{ boxShadow: 'var(--shadow-modal)' }}>
-        <div className="flex items-center justify-between p-5 border-b border-surface-border">
-          <div className="flex items-center gap-2.5">
-            <QrCodeIcon className="w-5 h-5 text-primary-500" />
-            <h2 className="text-lg font-semibold text-gray-900">QR de la séance</h2>
+      <div className="gm" onClick={(e) => e.stopPropagation()}>
+        <div className="gm-head">
+          <div className="gm-head-left">
+            <div className="gm-head-icon"><QrCodeIcon size={17} /></div>
+            <h2 className="gm-title">QR de la séance</h2>
           </div>
-          <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-white/[0.05] transition-colors">
-            <X className="w-5 h-5 text-gray-500" />
+          <button type="button" onClick={onClose} className="gm-close" aria-label="Fermer">
+            <X size={16} />
           </button>
         </div>
 
-        <div className="p-5 space-y-4">
-          <div className="p-4 bg-white/[0.03] rounded-xl space-y-1 border border-white/[0.06]">
-            <p className="font-medium text-gray-900">{serviceName}</p>
-            <p className="text-sm text-gray-500">
+        <div className="gm-body">
+          <div className="gm-summary">
+            <p className="gm-summary-name">{serviceName}</p>
+            <p className="gm-summary-line">
               Avec {appointment.intervenant?.firstName} {appointment.intervenant?.lastName}
             </p>
-            <p className="text-sm text-gray-500">
+            <p className="gm-summary-line">
               {new Date(appointment.scheduledAt).toLocaleDateString('fr-FR', {
                 weekday: 'long', day: 'numeric', month: 'long',
                 hour: '2-digit', minute: '2-digit',
@@ -37,25 +37,29 @@ export default function QrCodeModal({ appointment, onClose }) {
             </p>
           </div>
 
-          <div className="flex flex-col items-center gap-4 py-2">
-            <div className="bg-white p-4 rounded-xl">
-              <QRCode value={appointment.qrToken} size={200} />
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 18 }}>
+            <div style={{ background: '#fff', border: '1px solid #E4E2DC', borderRadius: 16, padding: 18 }}>
+              <QRCode value={appointment.qrToken} size={190} fgColor="#171614" />
             </div>
-            <div className="text-center">
-              <p className="text-xs text-gray-500 mb-1">Ou communiquez ce code au professionnel :</p>
-              <p className="font-mono text-2xl font-bold tracking-[0.3em] text-gray-900">{shortCode}</p>
+            <div style={{ textAlign: 'center' }}>
+              <p className="gm-hint" style={{ marginBottom: 6 }}>
+                Ou communiquez ce code au professionnel :
+              </p>
+              <p style={{ fontSize: 26, fontWeight: 700, letterSpacing: '.24em', color: '#F4530F', margin: 0 }}>
+                {shortCode}
+              </p>
             </div>
           </div>
 
-          <p className="text-xs text-gray-500 text-center">
+          <p className="gm-hint" style={{ textAlign: 'center' }}>
             Présentez ce code au professionnel au début de la séance pour valider votre présence.
           </p>
         </div>
 
-        <div className="px-5 pb-5">
-          <Button variant="secondary" className="w-full" onClick={onClose}>
+        <div className="gm-foot">
+          <button type="button" className="gm-btn gm-btn--ghost" onClick={onClose}>
             Fermer
-          </Button>
+          </button>
         </div>
       </div>
     </div>

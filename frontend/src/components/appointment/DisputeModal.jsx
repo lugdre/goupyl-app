@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { X, Scale } from 'lucide-react';
 import { appointmentApi } from '../../services/appointment.api';
-import Button from '../ui/Button';
+import { MODAL_CSS } from '../ui/modalStyles';
 import toast from 'react-hot-toast';
 
 // Le client conteste une absence signalée par le coach : ouvre un litige
@@ -32,24 +32,26 @@ export default function DisputeModal({ appointment, onClose, onSuccess }) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
+    <div className="gm-back" onClick={onClose}>
+      <style>{MODAL_CSS}</style>
 
-      <div className="relative w-full max-w-md bg-surface rounded-2xl border border-surface-border overflow-hidden" style={{ boxShadow: 'var(--shadow-modal)' }}>
-        <div className="flex items-center justify-between p-5 border-b border-surface-border">
-          <div className="flex items-center gap-2.5">
-            <Scale className="w-5 h-5 text-amber-400" />
-            <h2 className="text-lg font-semibold text-gray-900">Contester l'absence</h2>
+      <div className="gm" onClick={(e) => e.stopPropagation()}>
+        <div className="gm-head">
+          <div className="gm-head-left">
+            <div className="gm-head-icon" style={{ background: '#FBF3E2', color: '#A87616' }}>
+              <Scale size={17} />
+            </div>
+            <h2 className="gm-title">Contester l'absence</h2>
           </div>
-          <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-white/[0.05] transition-colors">
-            <X className="w-5 h-5 text-gray-500" />
+          <button type="button" onClick={onClose} className="gm-close" aria-label="Fermer">
+            <X size={16} />
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-5 space-y-4">
-          <div className="p-4 bg-white/[0.03] rounded-xl space-y-1 border border-white/[0.06]">
-            <p className="font-medium text-gray-900">{serviceName}</p>
-            <p className="text-sm text-gray-500">
+        <form onSubmit={handleSubmit} className="gm-body">
+          <div className="gm-summary">
+            <p className="gm-summary-name">{serviceName}</p>
+            <p className="gm-summary-line">
               {new Date(appointment.scheduledAt).toLocaleDateString('fr-FR', {
                 weekday: 'long', day: 'numeric', month: 'long',
                 hour: '2-digit', minute: '2-digit',
@@ -57,33 +59,35 @@ export default function DisputeModal({ appointment, onClose, onSuccess }) {
             </p>
           </div>
 
-          <p className="text-sm text-gray-600">
+          <p className="gm-note">
             Le professionnel a signalé votre absence à cette séance. Si vous étiez présent(e),
             expliquez la situation : notre équipe arbitrera et, le cas échéant, vous serez
             intégralement remboursé(e).
           </p>
 
           <div>
-            <label className="block text-xs font-medium text-gray-500 mb-1.5">
-              Votre explication <span className="text-red-400">*</span>
+            <label className="gm-label" htmlFor="disputeReason">
+              Votre explication <span style={{ color: '#C0392B' }}>*</span>
             </label>
             <textarea
+              id="disputeReason"
+              className="gm-textarea"
               value={reason}
               onChange={(e) => setReason(e.target.value)}
               placeholder="Décrivez ce qui s'est passé (10 caractères minimum)..."
               rows={4}
               maxLength={500}
-              className="w-full bg-white/[0.04] border border-white/[0.08] rounded-xl px-3 py-2 text-sm text-gray-900 placeholder-gray-400 resize-none focus:outline-none focus:border-primary-500/50 focus:ring-1 focus:ring-primary-500/20 transition-colors"
             />
+            <p className="gm-count">{reason.length}/500</p>
           </div>
 
-          <div className="flex gap-3">
-            <Button type="button" variant="secondary" className="flex-1" onClick={onClose} disabled={loading}>
+          <div style={{ display: 'flex', gap: 10 }}>
+            <button type="button" className="gm-btn gm-btn--ghost" style={{ flex: 1 }} onClick={onClose} disabled={loading}>
               Retour
-            </Button>
-            <Button type="submit" className="flex-1" loading={loading}>
-              Ouvrir le litige
-            </Button>
+            </button>
+            <button type="submit" className="gm-btn gm-btn--orange" style={{ flex: 1 }} disabled={loading}>
+              {loading ? 'Envoi…' : 'Ouvrir le litige'}
+            </button>
           </div>
         </form>
       </div>

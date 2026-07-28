@@ -70,12 +70,13 @@ export default function NotificationBell() {
     <div className="relative" ref={ref}>
       <button
         onClick={handleOpen}
-        className="relative p-2 text-gray-500 hover:text-gray-900 transition-colors rounded-xl hover:bg-white/[0.05]"
+        className="dbl-head-icon"
+        style={{ position: 'relative' }}
         title="Notifications"
       >
-        <Bell className="w-5 h-5" />
+        <Bell size={17} />
         {unread > 0 && (
-          <span className="absolute -top-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white">
+          <span className="absolute -top-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full text-[10px] font-bold text-white" style={{ background: '#F4530F' }}>
             {unread > 9 ? '9+' : unread}
           </span>
         )}

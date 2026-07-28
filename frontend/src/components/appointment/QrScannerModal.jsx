@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Html5Qrcode } from 'html5-qrcode';
 import { X, ScanLine, Camera } from 'lucide-react';
 import { appointmentApi } from '../../services/appointment.api';
-import Button from '../ui/Button';
+import { MODAL_CSS } from '../ui/modalStyles';
 import toast from 'react-hot-toast';
 
 // Le coach scanne le QR du client (ou saisit le code court à 8 caractères)
@@ -66,55 +66,62 @@ export default function QrScannerModal({ onClose, onValidated }) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
+    <div className="gm-back" onClick={onClose}>
+      <style>{MODAL_CSS}</style>
 
-      <div className="relative w-full max-w-md bg-surface rounded-2xl border border-surface-border overflow-hidden" style={{ boxShadow: 'var(--shadow-modal)' }}>
-        <div className="flex items-center justify-between p-5 border-b border-surface-border">
-          <div className="flex items-center gap-2.5">
-            <ScanLine className="w-5 h-5 text-primary-500" />
-            <h2 className="text-lg font-semibold text-gray-900">Valider une séance</h2>
+      <div className="gm" onClick={(e) => e.stopPropagation()}>
+        <div className="gm-head">
+          <div className="gm-head-left">
+            <div className="gm-head-icon"><ScanLine size={17} /></div>
+            <h2 className="gm-title">Valider une séance</h2>
           </div>
-          <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-white/[0.05] transition-colors">
-            <X className="w-5 h-5 text-gray-500" />
+          <button type="button" onClick={onClose} className="gm-close" aria-label="Fermer">
+            <X size={16} />
           </button>
         </div>
 
-        <div className="p-5 space-y-4">
+        <div className="gm-body">
           {/* Zone caméra */}
-          <div className="rounded-xl overflow-hidden bg-black/80">
-            <div id="qr-reader" className="w-full" />
+          <div style={{ borderRadius: 14, overflow: 'hidden', background: '#191917' }}>
+            <div id="qr-reader" style={{ width: '100%' }} />
             {cameraError && (
-              <div className="flex flex-col items-center gap-2 py-8 text-center">
-                <Camera className="w-6 h-6 text-gray-400" />
-                <p className="text-sm text-gray-300 px-6">
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10, padding: '34px 24px', textAlign: 'center' }}>
+                <Camera size={24} style={{ color: 'rgba(255,255,255,.6)' }} />
+                <p style={{ fontSize: 13, color: 'rgba(255,255,255,.75)', margin: 0, lineHeight: 1.5 }}>
                   Caméra indisponible — utilisez la saisie manuelle ci-dessous.
                 </p>
               </div>
             )}
           </div>
 
-          {/* Saisie manuelle (fallback) */}
-          <form onSubmit={handleManualSubmit} className="space-y-2">
-            <label className="block text-xs font-medium text-gray-500">
+          {/* Saisie manuelle (repli) */}
+          <form onSubmit={handleManualSubmit}>
+            <label className="gm-label" htmlFor="manualCode">
               …ou saisissez le code communiqué par le client (8 caractères)
             </label>
-            <div className="flex gap-2">
+            <div style={{ display: 'flex', gap: 8 }}>
               <input
+                id="manualCode"
                 type="text"
                 value={manualCode}
                 onChange={(e) => setManualCode(e.target.value.toUpperCase())}
-                placeholder="EX: A1B2C3D4"
+                placeholder="EX : A1B2C3D4"
                 maxLength={64}
-                className="flex-1 font-mono tracking-widest uppercase bg-white/[0.04] border border-white/[0.08] rounded-xl px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:border-primary-500/50 focus:ring-1 focus:ring-primary-500/20"
+                style={{
+                  flex: 1, minWidth: 0, height: 46, padding: '0 15px',
+                  border: '1px solid #E4E2DC', borderRadius: 12, background: '#fff',
+                  fontFamily: 'inherit', fontSize: 15, fontWeight: 600,
+                  letterSpacing: '.16em', textTransform: 'uppercase',
+                  color: '#171614', outline: 'none',
+                }}
               />
-              <Button type="submit" loading={validating}>
-                Valider
-              </Button>
+              <button type="submit" className="gm-btn gm-btn--orange" disabled={validating}>
+                {validating ? 'Validation…' : 'Valider'}
+              </button>
             </div>
           </form>
 
-          <p className="text-xs text-gray-500">
+          <p className="gm-hint">
             La validation confirme la présence du client et clôture la séance.
           </p>
         </div>

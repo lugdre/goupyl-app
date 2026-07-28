@@ -1,19 +1,47 @@
 import { useState, useEffect } from 'react';
 import { reviewApi } from '../../services/review.api';
 import { useAuth } from '../../hooks/useAuth';
-import Card from '../../components/ui/Card';
 import Spinner from '../../components/ui/Spinner';
 import { Star, MessageSquareReply, Pencil, X } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 const MAX_COACH_REPLY_EDITS = 3;
 
-const StarRow = ({ rating }) => (
-  <div className="flex items-center gap-0.5">
+const RV_CSS = `
+  .rv-summary{display:flex;align-items:center;gap:20px;flex-wrap:wrap;border:1px solid var(--line);border-radius:18px;padding:22px 24px;background:#fff}
+  .rv-avg{display:flex;align-items:baseline;gap:4px}
+  .rv-avg-num{font-size:44px;font-weight:700;letter-spacing:-.03em;color:var(--ink);line-height:1}
+  .rv-avg-deno{font-size:15px;font-weight:500;color:var(--ink-3)}
+  .rv-summary-meta p{margin:0}
+  .rv-count{font-size:13px;color:var(--ink-3);margin-top:6px!important}
+
+  .rv-list{display:flex;flex-direction:column;gap:14px}
+  .rv-card{border:1px solid var(--line);border-radius:18px;padding:22px 24px;background:#fff}
+  .rv-head{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;margin-bottom:12px}
+  .rv-client{font-size:14.5px;font-weight:600;color:var(--ink);margin:0}
+  .rv-date{font-size:12px;color:var(--ink-3);margin:3px 0 0}
+  .rv-comment{font-size:14px;color:var(--ink-2);line-height:1.65;font-style:italic;margin:0}
+  .rv-reply{margin-top:16px;padding-left:14px;border-left:2px solid var(--orange)}
+  .rv-reply-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:6px}
+  .rv-reply-label{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:var(--orange);margin:0}
+  .rv-reply-text{font-size:13.5px;color:var(--ink-2);line-height:1.6;margin:0}
+  .rv-reply-meta{font-size:11.5px;color:var(--ink-3);margin:8px 0 0}
+  .rv-edit-btn{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:500;color:var(--ink-3);background:none;border:none;cursor:pointer;padding:0;transition:color .15s}
+  .rv-edit-btn:hover:not(:disabled){color:var(--orange)}
+  .rv-edit-btn:disabled{opacity:.4;cursor:not-allowed}
+  .rv-form{margin-top:16px;padding-top:16px;border-top:1px solid var(--line)}
+  .rv-form-label{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;font-weight:500;color:var(--ink-2);margin:0 0 8px}
+  .rv-form-actions{display:flex;align-items:center;gap:10px;margin-top:12px;flex-wrap:wrap}
+`;
+
+const StarRow = ({ rating, size = 15 }) => (
+  <div style={{ display: 'flex', alignItems: 'center', gap: 3, flexShrink: 0 }}>
     {Array.from({ length: 5 }, (_, i) => (
       <Star
         key={i}
-        className={`w-4 h-4 ${i < rating ? 'fill-amber-400 text-amber-400' : 'text-gray-200'}`}
+        size={size}
+        fill={i < rating ? '#F4530F' : 'none'}
+        color={i < rating ? '#F4530F' : '#c9c7c1'}
       />
     ))}
   </div>
@@ -23,9 +51,9 @@ export default function MyReviews() {
   const { user } = useAuth();
   const [data, setData] = useState({ reviews: [], averageRating: null, reviewCount: 0 });
   const [loading, setLoading] = useState(true);
-  const [replyDraft, setReplyDraft] = useState({}); // reviewId → text
-  const [replying, setReplying] = useState(null); // reviewId being submitted
-  const [editingId, setEditingId] = useState(null); // reviewId currently being edited
+  const [replyDraft, setReplyDraft] = useState({}); // reviewId → texte
+  const [replying, setReplying] = useState(null); // reviewId en cours d'envoi
+  const [editingId, setEditingId] = useState(null); // reviewId en cours d'édition
 
   useEffect(() => {
     reviewApi
@@ -68,28 +96,39 @@ export default function MyReviews() {
   if (loading) return <Spinner />;
 
   return (
-    <div className="space-y-6 max-w-3xl">
-      <div>
-        <h1 className="text-2xl font-semibold text-gray-900">Mes avis</h1>
-        <p className="text-gray-500 mt-1">
-          {data.reviewCount} avis · Note moyenne{' '}
-          {data.averageRating !== null ? (
-            <span className="font-semibold text-amber-500">{data.averageRating}/5</span>
-          ) : (
-            '–'
-          )}
-        </p>
+    <div className="dsh-page" style={{ maxWidth: 860 }}>
+      <style>{RV_CSS}</style>
+
+      <div className="dsh-page-head">
+        <div>
+          <h1 className="dsh-h1">Mes avis</h1>
+          <p className="dsh-sub">Les retours de vos clients et vos réponses publiques</p>
+        </div>
+      </div>
+
+      {/* Résumé */}
+      <div className="rv-summary">
+        <div className="rv-avg">
+          <span className="rv-avg-num">
+            {data.averageRating !== null ? data.averageRating : '–'}
+          </span>
+          {data.averageRating !== null && <span className="rv-avg-deno">/5</span>}
+        </div>
+        <div className="rv-summary-meta">
+          <StarRow rating={Math.round(data.averageRating || 0)} size={17} />
+          <p className="rv-count">
+            {data.reviewCount} avis client{data.reviewCount > 1 ? 's' : ''}
+          </p>
+        </div>
       </div>
 
       {data.reviews.length === 0 ? (
-        <Card>
-          <div className="py-10 text-center">
-            <Star className="w-10 h-10 text-gray-200 mx-auto mb-3" />
-            <p className="text-gray-400">Aucun avis pour le moment.</p>
-          </div>
-        </Card>
+        <div className="dsh-empty">
+          <Star size={26} />
+          Aucun avis pour le moment.
+        </div>
       ) : (
-        <div className="space-y-4">
+        <div className="rv-list">
           {data.reviews.map((review) => {
             const editsUsed = review.coachReplyEdits || 0;
             const editsRemaining = Math.max(0, MAX_COACH_REPLY_EDITS - editsUsed);
@@ -97,14 +136,14 @@ export default function MyReviews() {
             const isEditing = editingId === review.id;
 
             return (
-              <Card key={review.id}>
-                {/* Header */}
-                <div className="flex items-start justify-between gap-3 mb-3">
+              <div key={review.id} className="rv-card">
+                {/* En-tête */}
+                <div className="rv-head">
                   <div>
-                    <p className="font-medium text-gray-900">
+                    <p className="rv-client">
                       {review.client.firstName} {review.client.lastName}
                     </p>
-                    <p className="text-xs text-gray-400 mt-0.5">
+                    <p className="rv-date">
                       {new Date(review.createdAt).toLocaleDateString('fr-FR', {
                         day: 'numeric', month: 'long', year: 'numeric',
                       })}
@@ -113,68 +152,63 @@ export default function MyReviews() {
                   <StarRow rating={review.rating} />
                 </div>
 
-                {/* Comment */}
-                {review.comment && (
-                  <p className="text-sm text-gray-700 italic mb-3">"{review.comment}"</p>
-                )}
+                {/* Commentaire */}
+                {review.comment && <p className="rv-comment">"{review.comment}"</p>}
 
-                {/* Existing reply (display mode) */}
+                {/* Réponse existante (affichage) */}
                 {review.coachReply && !isEditing && (
-                  <div className="pl-4 border-l-2 border-primary-300 mt-3">
-                    <div className="flex items-center justify-between gap-2 mb-0.5">
-                      <p className="text-xs font-semibold text-primary-600 flex items-center gap-1">
-                        <MessageSquareReply className="w-3.5 h-3.5" />
+                  <div className="rv-reply">
+                    <div className="rv-reply-head">
+                      <p className="rv-reply-label">
+                        <MessageSquareReply size={13} />
                         Votre réponse
                       </p>
                       <button
                         type="button"
                         onClick={() => startEdit(review)}
                         disabled={!canEdit}
-                        className="inline-flex items-center gap-1 text-xs font-medium text-gray-500 hover:text-primary-600 disabled:opacity-40 disabled:hover:text-gray-500 transition-colors"
+                        className="rv-edit-btn"
                         title={canEdit ? 'Modifier votre réponse' : 'Limite de modifications atteinte'}
                       >
-                        <Pencil className="w-3 h-3" />
+                        <Pencil size={12} />
                         Modifier
                       </button>
                     </div>
-                    <p className="text-sm text-gray-700">{review.coachReply}</p>
-                    <p className="text-[11px] text-gray-400 mt-1">
+                    <p className="rv-reply-text">{review.coachReply}</p>
+                    <p className="rv-reply-meta">
                       {new Date(review.coachRepliedAt).toLocaleDateString('fr-FR', {
                         day: 'numeric', month: 'long', year: 'numeric',
                       })}
                       {editsUsed > 0 && (
-                        <span className="ml-2">
-                          · {editsUsed} modification{editsUsed > 1 ? 's' : ''} ({editsRemaining} restante{editsRemaining > 1 ? 's' : ''})
-                        </span>
+                        <> · {editsUsed} modification{editsUsed > 1 ? 's' : ''} ({editsRemaining} restante{editsRemaining > 1 ? 's' : ''})</>
                       )}
                     </p>
                   </div>
                 )}
 
-                {/* Edit mode (existing reply) */}
+                {/* Édition d'une réponse existante */}
                 {review.coachReply && isEditing && (
-                  <div className="mt-3 pt-3 border-t border-gray-100">
-                    <p className="text-xs text-gray-500 mb-1.5 flex items-center gap-1">
-                      <Pencil className="w-3.5 h-3.5" />
+                  <div className="rv-form">
+                    <p className="rv-form-label">
+                      <Pencil size={13} />
                       Modifier votre réponse
                     </p>
                     <textarea
+                      className="dsh-textarea"
                       rows={3}
                       value={replyDraft[review.id] || ''}
-                      onChange={(e) =>
-                        setReplyDraft((d) => ({ ...d, [review.id]: e.target.value }))
-                      }
+                      onChange={(e) => setReplyDraft((d) => ({ ...d, [review.id]: e.target.value }))}
                       placeholder="Votre réponse publique…"
-                      className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 resize-none focus:outline-none focus:ring-2 focus:ring-primary-400"
                     />
-                    <p className="text-[11px] text-gray-400 mt-1">
+                    <p className="rv-reply-meta">
                       {editsRemaining} modification{editsRemaining > 1 ? 's' : ''} restante{editsRemaining > 1 ? 's' : ''}
                     </p>
-                    <div className="flex items-center gap-2 mt-2">
+                    <div className="rv-form-actions">
                       <button
+                        type="button"
                         onClick={() => handleReply(review.id)}
                         disabled={replying === review.id || !replyDraft[review.id]?.trim()}
-                        className="text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 disabled:opacity-40 px-4 py-1.5 rounded-lg transition-colors"
+                        className="dsh-btn dsh-btn--orange dsh-btn--sm"
                       >
                         {replying === review.id ? 'Envoi…' : 'Enregistrer'}
                       </button>
@@ -182,41 +216,42 @@ export default function MyReviews() {
                         type="button"
                         onClick={() => cancelEdit(review.id)}
                         disabled={replying === review.id}
-                        className="inline-flex items-center gap-1 text-sm font-medium text-gray-500 hover:text-gray-700 disabled:opacity-40 px-3 py-1.5 rounded-lg transition-colors"
+                        className="dsh-btn dsh-btn--ghost dsh-btn--sm"
                       >
-                        <X className="w-3.5 h-3.5" />
+                        <X size={13} />
                         Annuler
                       </button>
                     </div>
                   </div>
                 )}
 
-                {/* Initial reply (no existing reply) */}
+                {/* Première réponse */}
                 {!review.coachReply && (
-                  <div className="mt-3 pt-3 border-t border-gray-100">
-                    <p className="text-xs text-gray-500 mb-1.5 flex items-center gap-1">
-                      <MessageSquareReply className="w-3.5 h-3.5" />
+                  <div className="rv-form">
+                    <p className="rv-form-label">
+                      <MessageSquareReply size={13} />
                       Répondre
                     </p>
                     <textarea
+                      className="dsh-textarea"
                       rows={2}
                       value={replyDraft[review.id] || ''}
-                      onChange={(e) =>
-                        setReplyDraft((d) => ({ ...d, [review.id]: e.target.value }))
-                      }
+                      onChange={(e) => setReplyDraft((d) => ({ ...d, [review.id]: e.target.value }))}
                       placeholder="Votre réponse publique…"
-                      className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 resize-none focus:outline-none focus:ring-2 focus:ring-primary-400"
                     />
-                    <button
-                      onClick={() => handleReply(review.id)}
-                      disabled={replying === review.id || !replyDraft[review.id]?.trim()}
-                      className="mt-1.5 text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 disabled:opacity-40 px-4 py-1.5 rounded-lg transition-colors"
-                    >
-                      {replying === review.id ? 'Envoi…' : 'Publier'}
-                    </button>
+                    <div className="rv-form-actions">
+                      <button
+                        type="button"
+                        onClick={() => handleReply(review.id)}
+                        disabled={replying === review.id || !replyDraft[review.id]?.trim()}
+                        className="dsh-btn dsh-btn--orange dsh-btn--sm"
+                      >
+                        {replying === review.id ? 'Envoi…' : 'Publier'}
+                      </button>
+                    </div>
                   </div>
                 )}
-              </Card>
+              </div>
             );
           })}
         </div>

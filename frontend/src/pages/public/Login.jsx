@@ -6,42 +6,59 @@ import { KeyRound } from 'lucide-react';
 import { isPasskeySupported } from '../../services/passkey.api';
 import GoogleAuthButton from '../../components/GoogleAuthButton';
 import logo from '../../assets/logo-goupyl-white.png';
+import loginPhoto from '../../assets/loginPhoto.jpg';
+
+const ArrowUpRight = ({ size = 15, color = 'currentColor' }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M7 17L17 7" /><path d="M8 7h9v9" />
+  </svg>
+);
+
+// IMAGE — visuel du panneau gauche. Remplacez PLACEHOLDER_DARK dans le
+// <img className="auth-panel-img"> par le chemin de votre photo,
+// par exemple  src="/images/login.jpg"  (fichier dans frontend/public/images/).
+const PLACEHOLDER_DARK = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='800' height='1000'%3E%3Crect width='800' height='1000' fill='%236d6b66'/%3E%3Cg stroke='%23d8d6d1' stroke-width='3' fill='none' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='352' y='462' width='96' height='76' rx='10'/%3E%3Ccircle cx='380' cy='490' r='9'/%3E%3Cpath d='M448 522l-34-30-62 46'/%3E%3C/g%3E%3C/svg%3E";
 
 const CSS = `
-  :root{--bg:#f4f4f2;--ink:#0a0a0a;--ink-2:#2a2a2a;--ink-3:#555;--ink-4:#888;--line:rgba(0,0,0,.10);--accent:oklch(0.62 0.16 240);--accent-soft:oklch(0.62 0.16 240 / 0.12)}
-  *{box-sizing:border-box}
-  .auth-wrap{min-height:100vh;display:flex;background:var(--bg);font-family:"Inter Tight",ui-sans-serif,system-ui,sans-serif}
-  .auth-panel{width:45%;flex-shrink:0;background:#0a0a0a;position:relative;display:flex;flex-direction:column;padding:48px 56px;border-right:1px solid rgba(255,255,255,.06)}
-  @media(max-width:768px){.auth-panel{display:none!important}}
-  .auth-grid-bg{position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,.025) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.025) 1px,transparent 1px);background-size:48px 48px;pointer-events:none}
-  .auth-wordmark{font-family:"Archivo Narrow",sans-serif;font-weight:800;font-size:18px;letter-spacing:.06em;text-transform:uppercase;color:#f4f4f2;text-decoration:none;position:relative;z-index:1}
-  .auth-panel-body{margin:auto 0;position:relative;z-index:1}
-  .auth-eyebrow{font-family:"JetBrains Mono",monospace;font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:#444;margin-bottom:24px}
-  .auth-display{font-family:"Archivo Narrow",sans-serif;font-weight:800;text-transform:uppercase;letter-spacing:-.015em;line-height:.92;color:#f4f4f2;margin:0}
-  .auth-panel-sub{margin-top:28px;color:#555;font-size:14.5px;line-height:1.65;max-width:280px}
-  .auth-panel-stats{display:flex;gap:24px;font-family:"JetBrains Mono",monospace;font-size:11px;letter-spacing:.12em;color:#333;border-top:1px solid rgba(255,255,255,.08);padding-top:24px;position:relative;z-index:1}
-  .auth-right{flex:1;background:var(--bg);display:flex;align-items:center;justify-content:center;padding:48px 32px;position:relative;overflow-y:auto}
-  .auth-back{position:absolute;top:24px;left:28px;font-family:"JetBrains Mono",monospace;font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-3);text-decoration:none;transition:color .15s}
+  .auth-wrap{--bg:#EBEAE6;--card:#FFFFFF;--ink:#171614;--ink-2:#4c4a46;--ink-3:#8a8781;--line:#E4E2DC;--orange:#F4530F;min-height:100vh;display:flex;gap:14px;background:var(--bg);padding:20px;font-family:"Inter",system-ui,-apple-system,sans-serif;color:var(--ink);-webkit-font-smoothing:antialiased}
+  .auth-wrap *{box-sizing:border-box}
+  .auth-panel{width:45%;flex-shrink:0;border-radius:22px;overflow:hidden;position:relative;display:flex;flex-direction:column;padding:30px 40px 40px;color:#fff;background:linear-gradient(150deg,#9a9892 0%,#6d6b66 55%,#55534f 100%)}
+  @media(max-width:900px){.auth-panel{display:none!important}}
+  .auth-panel-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}
+  .auth-panel::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(15,15,15,.25) 0%,rgba(15,15,15,.55) 100%);pointer-events:none}
+  .auth-wordmark{position:relative;z-index:1;display:inline-block;text-decoration:none}
+  .auth-panel-body{margin:auto 0 0;position:relative;z-index:1}
+  .auth-chip-dark{display:inline-flex;align-items:center;gap:7px;border:1px solid rgba(255,255,255,.35);background:rgba(255,255,255,.14);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border-radius:999px;padding:7px 14px;font-size:12.5px;font-weight:500;color:#fff}
+  .auth-chip-dark i{width:5px;height:5px;border-radius:50%;background:var(--orange);font-style:normal}
+  .auth-display{font-size:clamp(44px,4.4vw,72px);font-weight:700;letter-spacing:-.025em;line-height:.98;color:#fff;margin:18px 0 0}
+  .auth-display em{font-style:italic;color:#FF9C6B;font-weight:500}
+  .auth-panel-sub{margin-top:22px;color:rgba(255,255,255,.88);font-size:15px;line-height:1.55;max-width:320px}
+  .auth-panel-stats{display:flex;gap:24px;flex-wrap:wrap;font-size:12.5px;font-weight:500;color:rgba(255,255,255,.75);border-top:1px solid rgba(255,255,255,.25);padding-top:22px;margin-top:34px;position:relative;z-index:1}
+  .auth-right{flex:1;background:var(--card);border-radius:22px;display:flex;align-items:center;justify-content:center;padding:48px 32px;position:relative;overflow-y:auto}
+  .auth-back{position:absolute;top:22px;left:26px;font-size:13.5px;font-weight:500;color:var(--ink-3);text-decoration:none;transition:color .15s}
   .auth-back:hover{color:var(--ink)}
   .auth-form-wrap{width:100%;max-width:400px}
-  .auth-form-eyebrow{font-family:"JetBrains Mono",monospace;font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--ink-3);margin-bottom:16px}
-  .auth-form-h1{font-family:"Archivo Narrow",sans-serif;font-weight:800;font-size:clamp(44px,4.5vw,60px);text-transform:uppercase;letter-spacing:-.015em;line-height:.92;color:var(--ink);margin:0 0 40px}
-  .auth-field-label{display:block;font-family:"JetBrains Mono",monospace;font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-3);margin-bottom:6px}
-  .auth-field-input{width:100%;height:48px;background:#fff;border:1px solid var(--line);border-radius:3px;padding:0 14px;font-family:"Inter Tight",sans-serif;font-size:14.5px;color:var(--ink);outline:none;transition:border-color .15s}
-  .auth-field-input::placeholder{color:var(--ink-4)}
-  .auth-field-input:focus{border-color:var(--ink)}
+  .auth-chip-lite{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line);background:#fff;border-radius:999px;padding:7px 14px;font-size:12.5px;font-weight:500;color:var(--ink)}
+  .auth-chip-lite i{width:5px;height:5px;border-radius:50%;background:var(--orange);font-style:normal}
+  .auth-form-h1{font-size:clamp(36px,3.8vw,46px);font-weight:600;letter-spacing:-.03em;line-height:1.05;color:var(--ink);margin:16px 0 32px}
+  .auth-form-h1 em{font-style:italic;color:var(--orange);font-weight:500}
+  .auth-field-label{display:block;font-size:12.5px;font-weight:500;color:var(--ink-2);margin-bottom:7px}
+  .auth-field-input{width:100%;height:50px;background:#fff;border:1px solid var(--line);border-radius:12px;padding:0 16px;font-family:inherit;font-size:14.5px;color:var(--ink);outline:none;transition:border-color .15s,box-shadow .15s}
+  .auth-field-input::placeholder{color:var(--ink-3)}
+  .auth-field-input:focus{border-color:var(--orange);box-shadow:0 0 0 3px rgba(244,83,15,.12)}
   .auth-field-input.has-error{border-color:#c53030}
-  .auth-field-error{margin-top:5px;font-family:"JetBrains Mono",monospace;font-size:10.5px;color:#c53030;letter-spacing:.04em}
-  .auth-submit{width:100%;height:50px;background:var(--ink);color:var(--bg);border:none;border-radius:999px;font-family:"Inter Tight",sans-serif;font-size:14px;font-weight:600;letter-spacing:.02em;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:background .2s;margin-top:6px}
-  .auth-submit:hover{background:#2a2a2a}
-  .auth-submit:disabled{opacity:.55;cursor:not-allowed}
-  .auth-ghost{width:100%;height:44px;background:transparent;color:var(--ink-2);border:1px solid var(--line);border-radius:999px;font-family:"Inter Tight",sans-serif;font-size:13.5px;font-weight:500;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:border-color .2s,color .2s}
+  .auth-field-error{margin-top:6px;font-size:12px;color:#c53030}
+  .auth-submit{width:100%;height:52px;background:var(--orange);color:#fff;border:none;border-radius:999px;font-family:inherit;font-size:15px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:12px;transition:transform .15s ease,opacity .2s;margin-top:6px}
+  .auth-submit:hover{transform:translateY(-1px)}
+  .auth-submit:disabled{opacity:.55;cursor:not-allowed;transform:none}
+  .auth-submit-circle{width:32px;height:32px;border-radius:50%;background:#fff;color:var(--orange);display:inline-flex;align-items:center;justify-content:center;flex-shrink:0}
+  .auth-ghost{width:100%;height:48px;background:#fff;color:var(--ink-2);border:1px solid var(--line);border-radius:999px;font-family:inherit;font-size:14px;font-weight:500;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:border-color .2s,color .2s}
   .auth-ghost:hover{border-color:var(--ink);color:var(--ink)}
   .auth-divider{display:flex;align-items:center;gap:12px;margin:20px 0}
   .auth-divider-line{flex:1;height:1px;background:var(--line)}
-  .auth-divider-label{font-family:"JetBrains Mono",monospace;font-size:10px;letter-spacing:.16em;color:var(--ink-4);text-transform:uppercase}
-  .auth-footer-text{text-align:center;font-family:"JetBrains Mono",monospace;font-size:11px;letter-spacing:.08em;color:var(--ink-3);margin-top:32px}
-  .auth-footer-link{color:var(--accent);font-weight:600;text-decoration:none;transition:opacity .15s}
+  .auth-divider-label{font-size:11.5px;letter-spacing:.08em;color:var(--ink-3);text-transform:uppercase}
+  .auth-footer-text{text-align:center;font-size:13.5px;color:var(--ink-2);margin-top:32px}
+  .auth-footer-link{color:var(--orange);font-weight:600;text-decoration:none;transition:opacity .15s}
   .auth-footer-link:hover{opacity:.75}
 `;
 
@@ -58,7 +75,7 @@ export default function Login() {
   useEffect(() => {
     const link = document.createElement('link');
     link.rel = 'stylesheet';
-    link.href = 'https://fonts.googleapis.com/css2?family=Archivo+Narrow:wght@700;800&family=Inter+Tight:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap';
+    link.href = 'https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,400..900;1,14..32,400..900&display=swap';
     document.head.appendChild(link);
     return () => { if (document.head.contains(link)) document.head.removeChild(link); };
   }, []);
@@ -117,16 +134,18 @@ export default function Login() {
     <div className="auth-wrap">
       <style>{CSS}</style>
 
-      {/* Left — dark editorial */}
+      {/* Left — panneau visuel (style hero de la landing) */}
       <div className="auth-panel">
-        <div className="auth-grid-bg" />
-        <Link to="/">
-          <img src={logo} alt="Goupyl" style={{ height: 100, width: 'auto' }} /></Link>
+        {/* IMAGE — visuel du panneau gauche */}
+        <img className="auth-panel-img" src={loginPhoto} alt="" />
+        <Link to="/" className="auth-wordmark">
+          <img src={logo} alt="Goupyl Sport" style={{ height: 72, width: 'auto' }} />
+        </Link>
 
         <div className="auth-panel-body">
-          <div className="auth-eyebrow">{'// Session'}</div>
-          <h2 className="auth-display" style={{ fontSize: 'clamp(52px, 5.5vw, 82px)' }}>
-            Bon<br />retour<br />parmi nous !
+          <span className="auth-chip-dark"><i />Espace membre</span>
+          <h2 className="auth-display">
+            Bon Retour<br />Parmi <em>Nous.</em>
           </h2>
           <p className="auth-panel-sub">
             Retrouvez vos professionnels et gérez vos séances en toute simplicité.
@@ -134,8 +153,8 @@ export default function Login() {
         </div>
 
         <div className="auth-panel-stats">
-          <span><strong style={{ color: '#f4f4f2' }}>Sport</strong>&nbsp;·&nbsp;Nutrition&nbsp;·&nbsp;Mental</span>
-          <span><strong style={{ color: 'oklch(0.62 0.16 240)' }}>✓</strong>&nbsp;PROS CERTIFIÉS</span>
+          <span><strong style={{ color: '#fff' }}>Sport</strong> · Nutrition · Mental</span>
+          <span><strong style={{ color: '#FF9C6B' }}>✓</strong> Pros certifiés</span>
         </div>
       </div>
 
@@ -144,7 +163,7 @@ export default function Login() {
         <Link to="/" className="auth-back">← Accueil</Link>
 
         <div className="auth-form-wrap">
-          <div className="auth-form-eyebrow">Accès membre</div>
+          <span className="auth-chip-lite"><i />Accès membre</span>
           <h1 className="auth-form-h1">Connexion</h1>
 
           {/* Google — accès rapide */}
@@ -180,7 +199,12 @@ export default function Login() {
               />
             </div>
             <button type="submit" disabled={loading} className="auth-submit">
-              {loading ? 'Connexion…' : <>Se connecter <span>→</span></>}
+              {loading ? 'Connexion…' : (
+                <>
+                  Se connecter
+                  <span className="auth-submit-circle"><ArrowUpRight /></span>
+                </>
+              )}
             </button>
           </form>
 

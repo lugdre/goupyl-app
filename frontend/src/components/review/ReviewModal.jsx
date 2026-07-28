@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { reviewApi } from '../../services/review.api';
-import Button from '../ui/Button';
-import Card from '../ui/Card';
+import { MODAL_CSS } from '../ui/modalStyles';
 import { X, Star, CheckCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -39,30 +38,30 @@ export default function ReviewModal({ appointment, onClose, onSuccess }) {
   };
 
   const displayRating = hoveredRating || rating;
+  const serviceName = appointment.coachService?.name || appointment.service?.name || 'Séance';
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
+    <div className="gm-back" onClick={onClose}>
+      <style>{MODAL_CSS}</style>
 
-      <div className="relative w-full max-w-md bg-surface rounded-2xl border border-surface-border overflow-hidden" style={{ boxShadow: 'var(--shadow-modal)' }}>
-        <div className="flex items-center justify-between p-5 border-b border-surface-border">
-          <h2 className="text-lg font-semibold text-gray-900">Laisser un avis</h2>
-          <button
-            onClick={onClose}
-            className="p-1.5 rounded-lg hover:bg-white/[0.05] transition-colors"
-          >
-            <X className="w-5 h-5 text-gray-500" />
+      <div className="gm" onClick={(e) => e.stopPropagation()}>
+        <div className="gm-head">
+          <div className="gm-head-left">
+            <div className="gm-head-icon"><Star size={17} /></div>
+            <h2 className="gm-title">Laisser un avis</h2>
+          </div>
+          <button type="button" onClick={onClose} className="gm-close" aria-label="Fermer">
+            <X size={16} />
           </button>
         </div>
 
-        <div className="p-5 space-y-5">
-          {/* Appointment summary */}
-          <div className="space-y-1">
-            <p className="font-medium text-gray-900">{appointment.service?.name}</p>
-            <p className="text-sm text-gray-500">
+        <div className="gm-body">
+          <div className="gm-summary">
+            <p className="gm-summary-name">{serviceName}</p>
+            <p className="gm-summary-line">
               Avec {appointment.intervenant?.firstName} {appointment.intervenant?.lastName}
             </p>
-            <p className="text-sm text-gray-500">
+            <p className="gm-summary-line">
               {new Date(appointment.scheduledAt).toLocaleDateString('fr-FR', {
                 weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
               })}
@@ -70,16 +69,16 @@ export default function ReviewModal({ appointment, onClose, onSuccess }) {
           </div>
 
           {submitted ? (
-            <div className="flex flex-col items-center gap-3 py-6">
-              <CheckCircle className="w-12 h-12 text-green-400" />
-              <p className="font-medium text-gray-900">Merci pour votre avis !</p>
+            <div className="gm-success">
+              <div className="gm-success-icon"><CheckCircle size={28} /></div>
+              <p>Merci pour votre avis !</p>
             </div>
           ) : (
-            <form onSubmit={handleSubmit} className="space-y-4">
-              {/* Star rating */}
+            <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
+              {/* Note */}
               <div>
-                <label className="block text-sm font-medium text-gray-500 mb-2">Note</label>
-                <div className="flex gap-1">
+                <span className="gm-label">Note</span>
+                <div style={{ display: 'flex', gap: 6 }}>
                   {[1, 2, 3, 4, 5].map((star) => (
                     <button
                       key={star}
@@ -87,44 +86,47 @@ export default function ReviewModal({ appointment, onClose, onSuccess }) {
                       onClick={() => setRating(star)}
                       onMouseEnter={() => setHoveredRating(star)}
                       onMouseLeave={() => setHoveredRating(0)}
-                      className="p-0.5 transition-transform hover:scale-110"
+                      style={{
+                        background: 'none', border: 'none', padding: 2, cursor: 'pointer',
+                        display: 'flex', transition: 'transform .15s ease',
+                        transform: star <= displayRating ? 'scale(1.05)' : 'none',
+                      }}
+                      aria-label={`${star} étoile${star > 1 ? 's' : ''}`}
                     >
                       <Star
-                        className={`w-8 h-8 transition-colors ${
-                          star <= displayRating
-                            ? 'fill-amber-400 text-amber-400'
-                            : 'text-gray-500'
-                        }`}
+                        size={32}
+                        fill={star <= displayRating ? '#F4530F' : 'none'}
+                        color={star <= displayRating ? '#F4530F' : '#c9c7c1'}
                       />
                     </button>
                   ))}
                 </div>
               </div>
 
-              {/* Comment */}
+              {/* Commentaire */}
               <div>
-                <label className="block text-sm font-medium text-gray-500 mb-2">
-                  Commentaire <span className="text-gray-500 font-normal">(optionnel)</span>
+                <label className="gm-label" htmlFor="reviewComment">
+                  Commentaire <em>(optionnel)</em>
                 </label>
                 <textarea
+                  id="reviewComment"
+                  className="gm-textarea"
                   value={comment}
                   onChange={(e) => setComment(e.target.value)}
                   maxLength={500}
                   rows={3}
-                  placeholder="Partagez votre experience..."
-                  className="w-full px-4 py-3 bg-white/[0.05] border border-white/[0.08] rounded-xl text-sm text-gray-900 placeholder-gray-400 outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-500/15 transition-all resize-none"
+                  placeholder="Partagez votre expérience..."
                 />
-                <p className="text-xs text-gray-500 mt-1 text-right">{comment.length}/500</p>
+                <p className="gm-count">{comment.length}/500</p>
               </div>
 
-              <Button
+              <button
                 type="submit"
-                loading={loading}
-                disabled={rating === 0}
-                className="w-full"
+                className="gm-btn gm-btn--orange gm-btn--block"
+                disabled={loading || rating === 0}
               >
-                Envoyer mon avis
-              </Button>
+                {loading ? 'Envoi…' : 'Envoyer mon avis'}
+              </button>
             </form>
           )}
         </div>

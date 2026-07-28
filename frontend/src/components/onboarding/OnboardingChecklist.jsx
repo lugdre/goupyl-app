@@ -16,25 +16,25 @@ export default function OnboardingChecklist({ steps, title, subtitle }) {
 
   return (
     <div style={{
-      background: 'var(--color-surface)',
-      border: '1px solid var(--color-gray-200)',
-      borderRadius: 4,
+      background: '#fff',
+      border: '1px solid #E4E2DC',
+      borderRadius: 16,
       overflow: 'hidden',
-      marginBottom: 24,
+      fontFamily: '"Inter", system-ui, sans-serif',
     }}>
       {/* Header */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '18px 22px 0' }}>
         <div>
-          <p style={{ fontFamily: "'Archivo Narrow', sans-serif", fontWeight: 700, fontSize: 16, color: 'var(--color-gray-900)', margin: 0 }}>{title}</p>
-          <p style={{ fontSize: 13, color: 'var(--color-gray-500)', marginTop: 2 }}>{subtitle}</p>
+          <p style={{ fontWeight: 700, fontSize: 15.5, letterSpacing: '-.01em', color: '#171614', margin: 0 }}>{title}</p>
+          <p style={{ fontSize: 13, color: '#8a8781', marginTop: 3 }}>{subtitle}</p>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-          <span style={{ fontSize: 11, fontFamily: '"JetBrains Mono", monospace', color: 'var(--color-gray-500)', letterSpacing: '.08em' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <span style={{ fontSize: 12, fontWeight: 600, color: '#8a8781' }}>
             {completedCount}/{steps.length}
           </span>
           <button
             onClick={() => setCollapsed(c => !c)}
-            style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 28, height: 28, borderRadius: 4, border: '1px solid var(--color-surface-border)', background: 'transparent', cursor: 'pointer', color: 'var(--color-gray-500)' }}
+            style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 30, height: 30, borderRadius: 999, border: '1px solid #E4E2DC', background: '#fff', cursor: 'pointer', color: '#8a8781' }}
           >
             {collapsed ? <ChevronDown size={14} /> : <ChevronUp size={14} />}
           </button>
@@ -42,59 +42,58 @@ export default function OnboardingChecklist({ steps, title, subtitle }) {
       </div>
 
       {/* Progress bar */}
-      <div style={{ height: 2, background: 'var(--color-gray-100)', margin: '0 20px 4px' }}>
-        <div style={{ height: '100%', background: '#252d62', width: `${progress}%`, transition: 'width .5s ease' }} />
+      <div style={{ height: 4, background: '#F0EFEB', borderRadius: 999, margin: '14px 22px 6px', overflow: 'hidden' }}>
+        <div style={{ height: '100%', background: '#F4530F', borderRadius: 999, width: `${progress}%`, transition: 'width .5s ease' }} />
       </div>
-      <p style={{ fontSize: 11, color: 'var(--color-gray-400)', fontFamily: '"JetBrains Mono", monospace', letterSpacing: '.08em', padding: '0 20px 12px' }}>
-        {allDone ? 'TOUT EST CONFIGURÉ' : `${progress}% COMPLÉTÉ`}
+      <p style={{ fontSize: 11.5, fontWeight: 600, color: '#8a8781', letterSpacing: '.08em', textTransform: 'uppercase', padding: '0 22px 14px', margin: 0 }}>
+        {allDone ? 'Tout est configuré' : `${progress}% complété`}
       </p>
 
       {/* Steps */}
       {!collapsed && (
-        <div style={{ padding: '0 20px 20px', display: 'flex', flexDirection: 'column', gap: 6 }}>
+        <div style={{ padding: '0 22px 20px', display: 'flex', flexDirection: 'column', gap: 8 }}>
           {steps.map((step, i) => (
             <div
               key={step.id}
               style={{
-                display: 'flex', alignItems: 'flex-start', gap: 12, padding: '12px 14px',
-                background: step.done ? 'rgba(74,124,89,0.05)' : '#f8f8f6',
-                border: step.done ? '1px solid rgba(74,124,89,0.15)' : '1px solid rgba(0,0,0,0.07)',
-                borderRadius: 3,
+                display: 'flex', alignItems: 'flex-start', gap: 12, padding: '13px 16px',
+                background: step.done ? '#EAF3EC' : '#FAF9F7',
+                border: step.done ? '1px solid #CDE4D3' : '1px solid #E4E2DC',
+                borderRadius: 12,
               }}
             >
               <div style={{ flexShrink: 0, marginTop: 1 }}>
                 {step.done ? (
-                  <CheckCircle style={{ width: 16, height: 16, color: '#4A7C59' }} />
+                  <CheckCircle style={{ width: 16, height: 16, color: '#2F7A47' }} />
                 ) : (
                   <div style={{
-                    width: 16, height: 16, borderRadius: '50%',
-                    border: '1.5px solid rgba(0,0,0,0.25)',
+                    width: 18, height: 18, borderRadius: '50%',
+                    border: '1.5px solid #c9c7c1',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                   }}>
-                    <span style={{ fontSize: 9, fontWeight: 700, color: 'var(--color-gray-400)', fontFamily: '"JetBrains Mono", monospace' }}>{i + 1}</span>
+                    <span style={{ fontSize: 10, fontWeight: 700, color: '#8a8781' }}>{i + 1}</span>
                   </div>
                 )}
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <p style={{
-                  fontSize: 13, fontWeight: 600, margin: 0, color: step.done ? '#4A7C59' : '#0a0a0a',
+                  fontSize: 13.5, fontWeight: 600, margin: 0, color: step.done ? '#2F7A47' : '#171614',
                   textDecoration: step.done ? 'line-through' : 'none',
                 }}>
                   {step.label}
                 </p>
                 {!step.done && step.description && (
-                  <p style={{ fontSize: 12, color: 'var(--color-gray-400)', marginTop: 3 }}>{step.description}</p>
+                  <p style={{ fontSize: 12.5, color: '#8a8781', marginTop: 3 }}>{step.description}</p>
                 )}
               </div>
               {!step.done && step.to && (
                 <Link
                   to={step.to}
                   style={{
-                    flexShrink: 0, fontSize: 11, fontWeight: 600, fontFamily: '"JetBrains Mono", monospace',
-                    letterSpacing: '.08em', textTransform: 'uppercase', textDecoration: 'none',
-                    color: '#252d62', background: 'rgba(37,45,98,0.08)',
-                    padding: '5px 10px', borderRadius: 999,
-                    border: '1px solid rgba(37,45,98,0.15)',
+                    flexShrink: 0, fontSize: 12.5, fontWeight: 600,
+                    textDecoration: 'none',
+                    color: '#fff', background: '#F4530F',
+                    padding: '7px 15px', borderRadius: 999,
                   }}
                 >
                   Commencer

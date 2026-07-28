@@ -1,8 +1,6 @@
 import { useEffect, useState } from 'react';
 import { KeyRound, Plus, Trash2, ShieldCheck } from 'lucide-react';
 import toast from 'react-hot-toast';
-import Card from './ui/Card';
-import Button from './ui/Button';
 import Spinner from './ui/Spinner';
 import { passkeyApi, isPasskeySupported } from '../services/passkey.api';
 
@@ -59,54 +57,54 @@ export default function PasskeyManager() {
 
   if (!supported) {
     return (
-      <Card>
-        <div className="flex items-center gap-3">
-          <KeyRound className="w-5 h-5 text-gray-400" />
-          <p className="text-sm text-gray-500">
+      <div className="dsh-card">
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <KeyRound size={18} style={{ color: '#8a8781' }} />
+          <p className="dsh-card-sub" style={{ margin: 0 }}>
             Votre navigateur ne prend pas en charge les passkeys.
           </p>
         </div>
-      </Card>
+      </div>
     );
   }
 
   return (
-    <Card>
-      <div className="flex items-start justify-between mb-4">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-brand-50 rounded-full flex items-center justify-center">
-            <ShieldCheck className="w-5 h-5 text-brand-800" />
+    <div className="dsh-card">
+      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap', marginBottom: 18 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 13 }}>
+          <div style={{ width: 42, height: 42, borderRadius: '50%', background: '#FEF1EA', color: '#F4530F', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+            <ShieldCheck size={19} />
           </div>
           <div>
-            <h3 className="font-semibold text-gray-900">Passkeys</h3>
-            <p className="text-sm text-gray-500">
+            <h3 className="dsh-card-title">Passkeys</h3>
+            <p className="dsh-card-sub">
               Connectez-vous avec Face ID, Touch ID ou votre PIN — sans mot de passe.
             </p>
           </div>
         </div>
-        <Button onClick={handleCreate} loading={creating} size="sm">
-          <Plus className="w-4 h-4 mr-1" />
-          Ajouter
-        </Button>
+        <button type="button" onClick={handleCreate} disabled={creating} className="dsh-btn dsh-btn--orange dsh-btn--sm">
+          <Plus size={14} />
+          {creating ? 'Création…' : 'Ajouter'}
+        </button>
       </div>
 
       {loading ? (
         <Spinner />
       ) : passkeys.length === 0 ? (
-        <p className="text-sm text-gray-500 py-4 text-center">
+        <p className="dsh-card-sub" style={{ textAlign: 'center', padding: '18px 0', margin: 0 }}>
           Aucune passkey enregistrée. Ajoutez-en une pour une connexion plus rapide et sécurisée.
         </p>
       ) : (
-        <ul className="divide-y divide-gray-100">
+        <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: 10 }}>
           {passkeys.map((pk) => (
-            <li key={pk.id} className="py-3 flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <KeyRound className="w-4 h-4 text-gray-400" />
-                <div>
-                  <p className="text-sm font-medium text-gray-900">
+            <li key={pk.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, border: '1px solid #E4E2DC', borderRadius: 12, padding: '13px 16px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12, minWidth: 0 }}>
+                <KeyRound size={15} style={{ color: '#8a8781', flexShrink: 0 }} />
+                <div style={{ minWidth: 0 }}>
+                  <p style={{ fontSize: 13.5, fontWeight: 600, color: '#171614', margin: 0 }}>
                     {pk.nickname || 'Passkey sans nom'}
                   </p>
-                  <p className="text-xs text-gray-500">
+                  <p style={{ fontSize: 12, color: '#8a8781', margin: '2px 0 0' }}>
                     {pk.deviceType === 'multiDevice' ? 'Synchronisée' : 'Cet appareil'}
                     {pk.lastUsedAt
                       ? ` · Dernière utilisation ${new Date(pk.lastUsedAt).toLocaleDateString('fr-FR')}`
@@ -115,16 +113,17 @@ export default function PasskeyManager() {
                 </div>
               </div>
               <button
+                type="button"
                 onClick={() => handleDelete(pk.id)}
-                className="p-2 rounded-lg text-gray-400 hover:bg-red-50 hover:text-red-600 transition-colors"
+                style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 34, height: 34, borderRadius: '50%', border: '1px solid #E4E2DC', background: '#fff', color: '#8a8781', cursor: 'pointer', flexShrink: 0 }}
                 aria-label="Supprimer"
               >
-                <Trash2 className="w-4 h-4" />
+                <Trash2 size={14} />
               </button>
             </li>
           ))}
         </ul>
       )}
-    </Card>
+    </div>
   );
 }

@@ -1,16 +1,11 @@
 import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../../hooks/useAuth';
 import { userApi } from '../../services/user.api';
-import Card from '../../components/ui/Card';
-import Input from '../../components/ui/Input';
-import Button from '../../components/ui/Button';
 import Spinner from '../../components/ui/Spinner';
 import toast from 'react-hot-toast';
 import DeleteAccountSection from '../../components/profile/DeleteAccountSection';
 import PasskeyManager from '../../components/PasskeyManager';
-import { useTheme } from '../../context/ThemeContext';
-import ThemeSelector from '../../components/ThemeSelector';
-import { Camera } from 'lucide-react';
+import { Camera, X } from 'lucide-react';
 import avatarMale from '../../assets/avatar-default-male.svg';
 import avatarFemale from '../../assets/avatar-default-female.svg';
 
@@ -25,15 +20,25 @@ const LEVELS = [
 // Niveaux avec accompagnement sur-mesure : besoin spécifique (texte libre) au lieu d'objectifs
 const SPECIFIC_NEED_LEVELS = ['PRO', 'ELITE'];
 
-const THEME_MODE_HINT = {
-  light: 'Toujours en mode clair',
-  dark: 'Toujours en mode sombre',
-  system: 'Suit le thème de votre appareil',
-};
+const CP_CSS = `
+  .cp-identity{display:flex;align-items:center;gap:18px;flex-wrap:wrap}
+  .cp-avatar-wrap{position:relative;flex-shrink:0}
+  .cp-avatar{width:76px;height:76px;border-radius:50%;object-fit:cover;border:1px solid var(--line);background:#F2F1ED}
+  .cp-avatar-btn{position:absolute;bottom:-2px;right:-2px;width:28px;height:28px;border-radius:50%;background:var(--orange);border:2px solid #fff;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#fff;padding:0}
+  .cp-avatar-btn:disabled{opacity:.6;cursor:not-allowed}
+  .cp-identity-name{font-size:17px;font-weight:700;letter-spacing:-.015em;color:var(--ink);margin:0}
+  .cp-identity-mail{font-size:13px;color:var(--ink-3);margin:3px 0 0}
+  .cp-form{display:flex;flex-direction:column;gap:18px}
+  .cp-obj-row{display:flex;gap:8px}
+  .cp-obj-row .dsh-input{flex:1}
+  .cp-tag{display:inline-flex;align-items:center;gap:7px;background:var(--orange-soft);color:var(--orange);border-radius:999px;padding:7px 14px;font-size:12.5px;font-weight:600}
+  .cp-tag button{background:none;border:none;cursor:pointer;color:inherit;display:flex;padding:0;opacity:.7}
+  .cp-tag button:hover{opacity:1}
+  @keyframes cp-spin{to{transform:rotate(360deg)}}
+`;
 
 export default function ClientProfile() {
   const { user: authUser, refreshUser } = useAuth();
-  const { mode } = useTheme();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState(null);
@@ -130,20 +135,24 @@ export default function ClientProfile() {
   if (loading) return <Spinner />;
 
   return (
-    <div className="space-y-6 max-w-2xl">
-      <div>
-        <h1 className="text-2xl font-semibold text-gray-900">Mon profil</h1>
-        <p className="text-gray-500 mt-1">Gérez vos informations personnelles et sportives</p>
+    <div className="dsh-page" style={{ maxWidth: 760 }}>
+      <style>{CP_CSS}</style>
+
+      <div className="dsh-page-head">
+        <div>
+          <h1 className="dsh-h1">Mon profil</h1>
+          <p className="dsh-sub">Gérez vos informations personnelles et sportives</p>
+        </div>
       </div>
 
-      {/* Avatar & identity */}
-      <Card>
-        <div className="flex items-center gap-4">
-          <div className="relative shrink-0">
+      {/* Avatar & identité */}
+      <div className="dsh-card">
+        <div className="cp-identity">
+          <div className="cp-avatar-wrap">
             <img
               src={avatarUrl || (form.gender === 'FEMME' ? avatarFemale : avatarMale)}
               alt="Avatar"
-              className="w-16 h-16 rounded-full object-cover"
+              className="cp-avatar"
               onError={(e) => {
                 // URL d'avatar morte (ancien stockage disque) → avatar par défaut
                 e.currentTarget.onerror = null;
@@ -151,194 +160,188 @@ export default function ClientProfile() {
               }}
             />
             <button
+              type="button"
               onClick={() => fileInputRef.current?.click()}
               disabled={avatarUploading}
-              className="absolute -bottom-1 -right-1 w-6 h-6 bg-primary-600 hover:bg-primary-500 rounded-full flex items-center justify-center shadow transition-colors"
+              className="cp-avatar-btn"
               title="Changer la photo"
             >
               {avatarUploading ? (
-                <span className="w-3 h-3 border border-white border-t-transparent rounded-full animate-spin" />
+                <span style={{ width: 12, height: 12, border: '1.5px solid #fff', borderTopColor: 'transparent', borderRadius: '50%', animation: 'cp-spin .8s linear infinite' }} />
               ) : (
-                <Camera className="w-3 h-3 text-white" />
+                <Camera size={13} />
               )}
             </button>
-            <input ref={fileInputRef} type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={handleAvatarChange} />
+            <input ref={fileInputRef} type="file" accept="image/jpeg,image/png,image/webp" style={{ display: 'none' }} onChange={handleAvatarChange} />
           </div>
           <div>
-            <p className="font-semibold text-gray-900">{form.firstName} {form.lastName}</p>
-            <p className="text-sm text-gray-500">{authUser?.email}</p>
+            <p className="cp-identity-name">{form.firstName} {form.lastName}</p>
+            <p className="cp-identity-mail">{authUser?.email}</p>
           </div>
         </div>
-      </Card>
+      </div>
 
-      {/* Informations personnelles */}
-      <Card>
-        <form onSubmit={handleSave} className="space-y-5">
-          <h2 className="text-base font-semibold text-gray-900">Informations personnelles</h2>
-          <div className="grid grid-cols-2 gap-3">
-            <Input
-              label="Prénom"
-              value={form.firstName}
-              onChange={(e) => setField('firstName', e.target.value)}
-            />
-            <Input
-              label="Nom"
-              value={form.lastName}
-              onChange={(e) => setField('lastName', e.target.value)}
+      {/* Informations personnelles + profil sportif */}
+      <div className="dsh-card">
+        <form onSubmit={handleSave} className="cp-form">
+          <h2 className="dsh-card-title">Informations personnelles</h2>
+
+          <div className="dsh-row">
+            <div>
+              <label className="dsh-label" htmlFor="firstName">Prénom</label>
+              <input
+                id="firstName"
+                className="dsh-input"
+                value={form.firstName}
+                onChange={(e) => setField('firstName', e.target.value)}
+              />
+            </div>
+            <div>
+              <label className="dsh-label" htmlFor="lastName">Nom</label>
+              <input
+                id="lastName"
+                className="dsh-input"
+                value={form.lastName}
+                onChange={(e) => setField('lastName', e.target.value)}
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="dsh-label" htmlFor="phone">Téléphone</label>
+            <input
+              id="phone"
+              className="dsh-input"
+              value={form.phone}
+              onChange={(e) => setField('phone', e.target.value)}
+              placeholder="+33 6 xx xx xx xx"
             />
           </div>
-          <Input
-            label="Téléphone"
-            value={form.phone}
-            onChange={(e) => setField('phone', e.target.value)}
-            placeholder="+33 6 xx xx xx xx"
-          />
+
           <div>
-            <label className="text-sm font-medium text-gray-700 block mb-1.5">Genre</label>
-            <div className="flex gap-2">
+            <span className="dsh-label">Genre</span>
+            <div className="dsh-chips">
               {[{ value: 'HOMME', label: 'Homme' }, { value: 'FEMME', label: 'Femme' }].map(({ value, label }) => (
                 <button
                   key={value}
                   type="button"
                   onClick={() => setField('gender', form.gender === value ? null : value)}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium border transition-colors ${
-                    form.gender === value
-                      ? 'bg-primary-600 text-white border-primary-600'
-                      : 'bg-surface text-gray-600 border-gray-200 hover:border-primary-400'
-                  }`}
+                  className={`dsh-chip${form.gender === value ? ' is-active' : ''}`}
                 >
                   {label}
                 </button>
               ))}
             </div>
           </div>
-          <Input
-            label="Ville"
-            value={form.profile.city}
-            onChange={(e) => setProfileField('city', e.target.value)}
-            placeholder="Paris"
-          />
 
-          <hr className="border-gray-100" />
+          <div>
+            <label className="dsh-label" htmlFor="city">Ville</label>
+            <input
+              id="city"
+              className="dsh-input"
+              value={form.profile.city}
+              onChange={(e) => setProfileField('city', e.target.value)}
+              placeholder="Paris"
+            />
+          </div>
 
-          <h2 className="text-base font-semibold text-gray-900">Profil sportif</h2>
+          <hr className="dsh-sep" />
 
-          {/* Level select */}
-          <div className="space-y-1">
-            <label className="block text-sm font-medium text-gray-900">Niveau</label>
+          <h2 className="dsh-card-title">Profil sportif</h2>
+
+          <div>
+            <label className="dsh-label" htmlFor="level">Niveau</label>
             <select
+              id="level"
+              className="dsh-select"
               value={form.profile.level}
               onChange={(e) => setProfileField('level', e.target.value)}
-              className="w-full px-3 py-2 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-primary-400"
             >
               {LEVELS.map((l) => (
-                <option key={l.value} value={l.value}>
-                  {l.label}
-                </option>
+                <option key={l.value} value={l.value}>{l.label}</option>
               ))}
             </select>
           </div>
 
-          <Input
-            label="Sport pratiqué"
-            value={form.profile.sportType}
-            onChange={(e) => setProfileField('sportType', e.target.value)}
-            placeholder="Football, Tennis, Natation..."
-          />
+          <div>
+            <label className="dsh-label" htmlFor="sportType">Sport pratiqué</label>
+            <input
+              id="sportType"
+              className="dsh-input"
+              value={form.profile.sportType}
+              onChange={(e) => setProfileField('sportType', e.target.value)}
+              placeholder="Football, Tennis, Natation..."
+            />
+          </div>
 
-          {/* Constraints textarea */}
-          <div className="space-y-1">
-            <label className="block text-sm font-medium text-gray-900">Contraintes physiques</label>
+          <div>
+            <label className="dsh-label" htmlFor="constraints">Contraintes physiques</label>
             <textarea
+              id="constraints"
+              className="dsh-textarea"
               value={form.profile.constraints}
               onChange={(e) => setProfileField('constraints', e.target.value)}
               placeholder="Blessures, limitations physiques..."
               rows={3}
-              className="w-full px-3 py-2 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-primary-400 resize-none"
             />
           </div>
 
           {/* Besoin spécifique (PRO / ELITE) — sinon objectifs */}
           {SPECIFIC_NEED_LEVELS.includes(form.profile.level) ? (
-            <div className="space-y-1">
-              <label className="block text-sm font-medium text-gray-900">Besoin spécifique</label>
+            <div>
+              <label className="dsh-label" htmlFor="specificNeed">Besoin spécifique</label>
               <textarea
+                id="specificNeed"
+                className="dsh-textarea"
                 value={form.profile.specificNeed}
                 onChange={(e) => setProfileField('specificNeed', e.target.value)}
                 placeholder="Décrivez précisément votre objectif de performance, votre discipline, vos échéances de compétition, vos contraintes…"
                 rows={4}
                 maxLength={1000}
-                className="w-full px-3 py-2 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-primary-400 resize-none"
               />
-              <p className="text-xs text-gray-500">Réservé aux niveaux Pro et Élite — un accompagnement sur-mesure.</p>
+              <p className="dsh-card-sub">Réservé aux niveaux Pro et Élite — un accompagnement sur-mesure.</p>
             </div>
           ) : (
-          <div className="space-y-2">
-            <label className="block text-sm font-medium text-gray-900">Objectifs</label>
-            <div className="flex gap-2">
-              <input
-                type="text"
-                value={objectiveInput}
-                onChange={(e) => setObjectiveInput(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addObjective())}
-                placeholder="Perte de poids, endurance..."
-                className="flex-1 h-9 px-3 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-primary-400"
-              />
-              <button
-                type="button"
-                onClick={addObjective}
-                className="px-4 py-1.5 text-sm font-medium bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
-              >
-                Ajouter
-              </button>
-            </div>
-            {form.profile.objectives.length > 0 && (
-              <div className="flex flex-wrap gap-2 pt-1">
-                {form.profile.objectives.map((obj, i) => (
-                  <span
-                    key={i}
-                    className="bg-primary-100 text-primary-700 rounded-full px-3 py-1 text-sm flex items-center gap-1.5"
-                  >
-                    {obj}
-                    <button
-                      type="button"
-                      onClick={() => removeObjective(i)}
-                      className="hover:text-primary-900 leading-none"
-                    >
-                      ×
-                    </button>
-                  </span>
-                ))}
+            <div>
+              <span className="dsh-label">Objectifs</span>
+              <div className="cp-obj-row">
+                <input
+                  type="text"
+                  className="dsh-input"
+                  value={objectiveInput}
+                  onChange={(e) => setObjectiveInput(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addObjective())}
+                  placeholder="Perte de poids, endurance..."
+                />
+                <button type="button" onClick={addObjective} className="dsh-btn dsh-btn--orange">
+                  Ajouter
+                </button>
               </div>
-            )}
-          </div>
+              {form.profile.objectives.length > 0 && (
+                <div className="dsh-chips" style={{ marginTop: 12 }}>
+                  {form.profile.objectives.map((obj, i) => (
+                    <span key={i} className="cp-tag">
+                      {obj}
+                      <button type="button" onClick={() => removeObjective(i)} aria-label={`Retirer ${obj}`}>
+                        <X size={13} />
+                      </button>
+                    </span>
+                  ))}
+                </div>
+              )}
+            </div>
           )}
 
-          <div className="pt-2">
-            <Button type="submit" loading={saving}>
-              Sauvegarder
-            </Button>
+          <div>
+            <button type="submit" className="dsh-btn dsh-btn--orange" disabled={saving}>
+              {saving ? 'Enregistrement…' : 'Sauvegarder'}
+            </button>
           </div>
         </form>
-      </Card>
-      
-      <div>
-        <h2 className="text-lg font-semibold text-gray-900 mb-3">Sécurité</h2>
-        <PasskeyManager />
       </div>
 
-      <div>
-        <h2 className="text-lg font-semibold text-gray-900 mb-3">Préférences</h2>
-        <Card>
-          <div className="flex items-center justify-between gap-4 flex-wrap">
-            <div>
-              <p className="text-sm font-medium text-gray-900">Thème de l'interface</p>
-              <p className="text-xs text-gray-500">{THEME_MODE_HINT[mode]}</p>
-            </div>
-            <ThemeSelector />
-          </div>
-        </Card>
-      </div>
+      {/* Sécurité */}
+      <PasskeyManager />
 
       <DeleteAccountSection />
     </div>

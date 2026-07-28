@@ -10,44 +10,23 @@ import {
   Users, Calendar, CheckCircle, Clock, Star, TrendingUp, AlertCircle, Euro,
 } from 'lucide-react';
 
-const CSS = `
-  .adash{font-family:"Inter Tight",ui-sans-serif,system-ui,sans-serif;color:#0a0a0a}
-  .adash-eyebrow{font-family:"JetBrains Mono",monospace;font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:#888;margin-bottom:4px}
-  .adash-title{font-family:"Archivo Narrow",sans-serif;font-weight:800;font-size:clamp(24px,3vw,32px);text-transform:uppercase;letter-spacing:-.01em;margin:0 0 2px}
-  .adash-sub{font-size:13px;color:#555;margin:0}
-  .adash-kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:28px}
-  @media(max-width:900px){.adash-kpi-grid{grid-template-columns:repeat(2,1fr)}}
-  @media(max-width:480px){.adash-kpi-grid{grid-template-columns:1fr}}
-  .adash-kpi{background:#fff;border:1px solid rgba(0,0,0,.10);padding:20px;display:flex;flex-direction:column;gap:6px}
-  .adash-kpi-val{font-family:"Archivo Narrow",sans-serif;font-weight:800;font-size:32px;letter-spacing:-.02em;line-height:1}
-  .adash-kpi-label{font-family:"JetBrains Mono",monospace;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:#888}
-  .adash-kpi-icon{display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;background:#f4f4f2;border:1px solid rgba(0,0,0,.08);margin-bottom:4px}
-  .adash-charts-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px}
-  @media(max-width:900px){.adash-charts-row{grid-template-columns:1fr}}
-  .adash-charts-row-3{display:grid;grid-template-columns:2fr 1fr;gap:12px;margin-top:12px}
-  @media(max-width:900px){.adash-charts-row-3{grid-template-columns:1fr}}
-  .adash-panel{background:#fff;border:1px solid rgba(0,0,0,.10);padding:24px}
-  .adash-panel-title{font-family:"JetBrains Mono",monospace;font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:#555;margin:0 0 20px;display:flex;align-items:center;gap:8px}
-  .adash-table{width:100%;border-collapse:collapse}
-  .adash-table th{font-family:"JetBrains Mono",monospace;font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:#888;text-align:left;padding:0 0 10px;border-bottom:1px solid rgba(0,0,0,.08);font-weight:400}
-  .adash-table td{font-size:13px;padding:10px 0;border-bottom:1px solid rgba(0,0,0,.06);vertical-align:middle}
-  .adash-table tr:last-child td{border-bottom:none}
-  .adash-badge{display:inline-block;font-family:"JetBrains Mono",monospace;font-size:9.5px;letter-spacing:.08em;padding:3px 8px;border:1px solid;font-weight:500}
-  .adash-badge.CONFIRMED{background:#e8f4e8;border-color:#5a9e5a;color:#2a6e2a}
-  .adash-badge.DONE{background:#e8eaf4;border-color:#5a6aae;color:#2a3a8e}
-  .adash-badge.PENDING{background:#f4f0e0;border-color:#ae9a4a;color:#6e5a0a}
-  .adash-badge.CANCELLED{background:#f4e8e8;border-color:#ae5a5a;color:#6e1a1a}
-  .adash-bar-item{display:flex;align-items:center;gap:12px;margin-bottom:12px}
-  .adash-bar-item:last-child{margin-bottom:0}
-  .adash-bar-track{flex:1;height:6px;background:#f4f4f2;border:1px solid rgba(0,0,0,.06)}
-  .adash-bar-fill{height:100%;background:#0a0a0a;transition:width .4s ease}
-`;
+// Palettes validées avec scripts/validate_palette.js (light, --pairs all) :
+// séries catégorielles orange/violet ; statuts vert/bleu/ambre/rouge.
+const SERIES = { primary: '#F4530F', secondary: '#6B4EBA' };
+const NEUTRAL_MARK = '#DCDAD4';
 
 const STATUS_COLORS = {
-  CONFIRMED: '#5a9e5a',
-  DONE: '#5a6aae',
-  PENDING: '#ae9a4a',
-  CANCELLED: '#ae5a5a',
+  CONFIRMED: '#2F7A47',
+  DONE: '#2563A8',
+  PENDING: '#D9A521',
+  CANCELLED: '#C0392B',
+};
+
+const STATUS_BADGE_CLASS = {
+  CONFIRMED: 'dsh-badge--ok',
+  DONE: 'dsh-badge--neutral',
+  PENDING: 'dsh-badge--wait',
+  CANCELLED: 'dsh-badge--err',
 };
 
 const STATUS_FR = {
@@ -57,19 +36,64 @@ const STATUS_FR = {
   CANCELLED: 'Annulé',
 };
 
-const PIE_COLORS = ['#5a9e5a', '#5a6aae', '#ae9a4a', '#ae5a5a'];
+const AD_CSS = `
+  .ad-kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+  @media(max-width:1100px){.ad-kpis{grid-template-columns:repeat(2,1fr)}}
+  @media(max-width:560px){.ad-kpis{grid-template-columns:1fr}}
+  .ad-kpi{background:#fff;border:1px solid var(--line);border-radius:16px;padding:20px 22px}
+  .ad-kpi.is-alert{border-color:#EBD9B4;background:#FBF7EF}
+  .ad-kpi-icon{width:38px;height:38px;border-radius:12px;background:var(--orange-soft);color:var(--orange);display:flex;align-items:center;justify-content:center;margin-bottom:14px}
+  .ad-kpi.is-alert .ad-kpi-icon{background:#FBF0DF;color:#A87616}
+  .ad-kpi-val{font-size:30px;font-weight:700;letter-spacing:-.02em;line-height:1;color:var(--ink)}
+  .ad-kpi-label{font-size:11.5px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);margin-top:10px}
+  .ad-kpi-sub{font-size:12.5px;color:var(--ink-3);margin-top:4px}
+
+  .ad-row{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  .ad-row--wide{grid-template-columns:1.6fr 1fr}
+  @media(max-width:1100px){.ad-row,.ad-row--wide{grid-template-columns:1fr}}
+  .ad-panel{background:#fff;border:1px solid var(--line);border-radius:18px;padding:22px 24px}
+  .ad-panel-title{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600;color:var(--ink);margin:0 0 18px}
+  .ad-panel-title svg{color:var(--ink-3)}
+
+  .ad-tip{background:#fff;border:1px solid var(--line);border-radius:12px;padding:11px 14px;box-shadow:0 6px 18px rgba(23,22,20,.10);font-family:"Inter",system-ui,sans-serif}
+  .ad-tip-label{font-size:11.5px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:#8a8781;margin:0 0 7px}
+  .ad-tip-row{display:flex;align-items:center;gap:8px;font-size:13px;color:#4c4a46;margin:3px 0}
+  .ad-tip-dot{width:8px;height:8px;border-radius:2px;flex-shrink:0}
+  .ad-tip-row b{color:#171614;font-weight:600}
+
+  .ad-table{width:100%;border-collapse:collapse;font-size:13.5px}
+  .ad-table th{text-align:left;padding:0 12px 12px 0;font-size:11.5px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3);border-bottom:1px solid var(--line);white-space:nowrap}
+  .ad-table td{padding:13px 12px 13px 0;color:var(--ink-2);border-bottom:1px solid #F0EFEB;vertical-align:middle}
+  .ad-table tr:last-child td{border-bottom:none}
+  .ad-table .ad-svc{font-weight:600;color:var(--ink);max-width:170px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .ad-table .ad-date{color:var(--ink-3);white-space:nowrap}
+
+  .ad-bar{display:flex;align-items:center;gap:14px}
+  .ad-bar + .ad-bar{margin-top:14px}
+  .ad-bar-name{min-width:104px;font-size:13px;font-weight:500;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .ad-bar-track{flex:1;height:8px;background:#F2F1ED;border-radius:999px;overflow:hidden}
+  .ad-bar-fill{height:100%;background:var(--orange);border-radius:999px;transition:width .4s ease}
+  .ad-bar-count{font-size:13px;font-weight:600;color:var(--ink);min-width:26px;text-align:right}
+  .ad-none{font-size:13.5px;color:var(--ink-3);font-weight:500;text-align:center;padding:26px 0}
+`;
+
+const AXIS_TICK = { fontSize: 11, fontFamily: 'Inter, system-ui, sans-serif', fill: '#8a8781' };
+const GRID_STROKE = '#F0EFEB';
 
 const fmt = (n) => n?.toLocaleString('fr-FR') ?? '—';
 
-const CustomTooltip = ({ active, payload, label }) => {
+const LEGEND_STYLE = { fontSize: 12, fontFamily: 'Inter, system-ui, sans-serif', color: '#4c4a46' };
+
+const CustomTooltip = ({ active, payload, label, unit }) => {
   if (!active || !payload?.length) return null;
   return (
-    <div style={{ background: 'var(--color-surface)', border: '1px solid var(--color-surface-border)', padding: '10px 14px', fontFamily: '"Inter Tight",sans-serif', fontSize: 12 }}>
-      <p style={{ fontFamily: '"JetBrains Mono",monospace', fontSize: 9, letterSpacing: '.14em', textTransform: 'uppercase', color: 'var(--color-gray-400)', marginBottom: 6 }}>{label}</p>
+    <div className="ad-tip">
+      <p className="ad-tip-label">{label}</p>
       {payload.map((p) => (
-        <p key={p.dataKey} style={{ color: p.color, margin: '2px 0' }}>
-          <span style={{ fontWeight: 600 }}>{fmt(p.value)}</span>{' '}{p.name}
-        </p>
+        <div key={p.dataKey} className="ad-tip-row">
+          <span className="ad-tip-dot" style={{ background: p.color }} />
+          <b>{fmt(p.value)}{unit || ''}</b> {p.name}
+        </div>
       ))}
     </div>
   );
@@ -78,14 +102,6 @@ const CustomTooltip = ({ active, payload, label }) => {
 export default function AdminDashboard() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const link = document.createElement('link');
-    link.rel = 'stylesheet';
-    link.href = 'https://fonts.googleapis.com/css2?family=Archivo+Narrow:wght@800&family=Inter+Tight:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap';
-    document.head.appendChild(link);
-    return () => { if (document.head.contains(link)) document.head.removeChild(link); };
-  }, []);
 
   useEffect(() => {
     analyticsApi.getAdmin()
@@ -113,142 +129,152 @@ export default function AdminDashboard() {
   const maxTopCount = topIntervenants[0]?.count || 1;
 
   return (
-    <div className="adash">
-      <style>{CSS}</style>
+    <div className="dsh-page">
+      <style>{AD_CSS}</style>
 
-      <div>
-        <div className="adash-eyebrow">Admin · Vue globale</div>
-        <h1 className="adash-title">Tableau de bord</h1>
-        <p className="adash-sub">Activité en temps réel sur l'ensemble de la plateforme.</p>
+      <div className="dsh-page-head">
+        <div>
+          <h1 className="dsh-h1">Tableau de bord</h1>
+          <p className="dsh-sub">Activité en temps réel sur l'ensemble de la plateforme.</p>
+        </div>
       </div>
 
-      {/* KPI grid */}
-      <div className="adash-kpi-grid">
+      {/* Indicateurs */}
+      <div className="ad-kpis">
         {kpiCards.map(({ label, value, icon: Icon, sub, alert }) => (
-          <div key={label} className="adash-kpi" style={alert ? { borderColor: '#ae9a4a' } : {}}>
-            <div className="adash-kpi-icon" style={alert ? { background: '#f4f0e0', borderColor: '#ae9a4a' } : {}}>
-              <Icon size={14} style={{ color: alert ? '#6e5a0a' : '#0a0a0a' }} />
-            </div>
-            <div className="adash-kpi-val">{value}</div>
-            <div className="adash-kpi-label">{label}</div>
-            <div style={{ fontSize: 11, color: 'var(--color-gray-400)', fontFamily: '"Inter Tight",sans-serif' }}>{sub}</div>
+          <div key={label} className={`ad-kpi${alert ? ' is-alert' : ''}`}>
+            <div className="ad-kpi-icon"><Icon size={17} /></div>
+            <div className="ad-kpi-val">{value}</div>
+            <div className="ad-kpi-label">{label}</div>
+            <div className="ad-kpi-sub">{sub}</div>
           </div>
         ))}
       </div>
 
-      {/* Row 1: Inscriptions + Appointments trends */}
-      <div className="adash-charts-row">
-        <div className="adash-panel">
-          <p className="adash-panel-title">
-            <Users size={11} /> Inscriptions · 6 derniers mois
+      {/* Inscriptions + rendez-vous */}
+      <div className="ad-row">
+        <div className="ad-panel">
+          <p className="ad-panel-title">
+            <Users size={14} /> Inscriptions · 6 derniers mois
           </p>
-          <ResponsiveContainer width="100%" height={220}>
-            <AreaChart data={months} margin={{ top: 4, right: 4, left: -20, bottom: 0 }}>
+          <ResponsiveContainer width="100%" height={230}>
+            <AreaChart data={months} margin={{ top: 4, right: 8, left: -18, bottom: 0 }}>
               <defs>
-                <linearGradient id="gc" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#0a0a0a" stopOpacity={0.12} />
-                  <stop offset="95%" stopColor="#0a0a0a" stopOpacity={0} />
+                <linearGradient id="gClients" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor={SERIES.primary} stopOpacity={0.18} />
+                  <stop offset="95%" stopColor={SERIES.primary} stopOpacity={0} />
                 </linearGradient>
-                <linearGradient id="gi" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#5a6aae" stopOpacity={0.15} />
-                  <stop offset="95%" stopColor="#5a6aae" stopOpacity={0} />
+                <linearGradient id="gCoachs" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor={SERIES.secondary} stopOpacity={0.16} />
+                  <stop offset="95%" stopColor={SERIES.secondary} stopOpacity={0} />
                 </linearGradient>
               </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,.06)" />
-              <XAxis dataKey="label" tick={{ fontSize: 10, fontFamily: '"JetBrains Mono",monospace', fill: '#888' }} axisLine={false} tickLine={false} />
-              <YAxis tick={{ fontSize: 10, fontFamily: '"JetBrains Mono",monospace', fill: '#888' }} axisLine={false} tickLine={false} allowDecimals={false} />
+              <CartesianGrid strokeDasharray="3 3" stroke={GRID_STROKE} vertical={false} />
+              <XAxis dataKey="label" tick={AXIS_TICK} axisLine={false} tickLine={false} />
+              <YAxis tick={AXIS_TICK} axisLine={false} tickLine={false} allowDecimals={false} />
               <Tooltip content={<CustomTooltip />} />
-              <Legend wrapperStyle={{ fontSize: 10, fontFamily: '"JetBrains Mono",monospace', letterSpacing: '.1em', textTransform: 'uppercase' }} />
-              <Area type="monotone" dataKey="clients" name="Clients" stroke="#0a0a0a" strokeWidth={1.5} fill="url(#gc)" dot={false} />
-              <Area type="monotone" dataKey="intervenants" name="Coachs" stroke="#5a6aae" strokeWidth={1.5} fill="url(#gi)" dot={false} />
+              <Legend wrapperStyle={LEGEND_STYLE} iconType="circle" iconSize={9} />
+              <Area type="monotone" dataKey="clients" name="Clients" stroke={SERIES.primary} strokeWidth={2} fill="url(#gClients)" dot={false} activeDot={{ r: 4, strokeWidth: 2, stroke: '#fff' }} />
+              <Area type="monotone" dataKey="intervenants" name="Coachs" stroke={SERIES.secondary} strokeWidth={2} fill="url(#gCoachs)" dot={false} activeDot={{ r: 4, strokeWidth: 2, stroke: '#fff' }} />
             </AreaChart>
           </ResponsiveContainer>
         </div>
 
-        <div className="adash-panel">
-          <p className="adash-panel-title">
-            <Calendar size={11} /> Rendez-vous · 6 derniers mois
+        <div className="ad-panel">
+          <p className="ad-panel-title">
+            <Calendar size={14} /> Rendez-vous · 6 derniers mois
           </p>
-          <ResponsiveContainer width="100%" height={220}>
-            <BarChart data={months} margin={{ top: 4, right: 4, left: -20, bottom: 0 }} barSize={14}>
-              <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,.06)" vertical={false} />
-              <XAxis dataKey="label" tick={{ fontSize: 10, fontFamily: '"JetBrains Mono",monospace', fill: '#888' }} axisLine={false} tickLine={false} />
-              <YAxis tick={{ fontSize: 10, fontFamily: '"JetBrains Mono",monospace', fill: '#888' }} axisLine={false} tickLine={false} allowDecimals={false} />
-              <Tooltip content={<CustomTooltip />} />
-              <Legend wrapperStyle={{ fontSize: 10, fontFamily: '"JetBrains Mono",monospace', letterSpacing: '.1em', textTransform: 'uppercase' }} />
-              <Bar dataKey="appointments" name="Total" fill="#d0d0cc" radius={[2, 2, 0, 0]} />
-              <Bar dataKey="done" name="Terminés" fill="#0a0a0a" radius={[2, 2, 0, 0]} />
+          <ResponsiveContainer width="100%" height={230}>
+            <BarChart data={months} margin={{ top: 4, right: 8, left: -18, bottom: 0 }} barSize={13} barGap={2}>
+              <CartesianGrid strokeDasharray="3 3" stroke={GRID_STROKE} vertical={false} />
+              <XAxis dataKey="label" tick={AXIS_TICK} axisLine={false} tickLine={false} />
+              <YAxis tick={AXIS_TICK} axisLine={false} tickLine={false} allowDecimals={false} />
+              <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(23,22,20,.04)' }} />
+              <Legend wrapperStyle={LEGEND_STYLE} iconType="circle" iconSize={9} />
+              <Bar dataKey="appointments" name="Total" fill={NEUTRAL_MARK} radius={[4, 4, 0, 0]} />
+              <Bar dataKey="done" name="Terminés" fill={SERIES.primary} radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </div>
       </div>
 
-      {/* Row 2: Revenue + Status donut + Top intervenants */}
-      <div className="adash-charts-row">
-        <div className="adash-panel">
-          <p className="adash-panel-title">
-            <Euro size={11} /> Revenus plateforme (€) · 6 derniers mois
+      {/* Revenus + répartition des statuts */}
+      <div className="ad-row">
+        <div className="ad-panel">
+          <p className="ad-panel-title">
+            <Euro size={14} /> Revenus plateforme · 6 derniers mois
           </p>
-          <ResponsiveContainer width="100%" height={200}>
-            <AreaChart data={months} margin={{ top: 4, right: 4, left: -20, bottom: 0 }}>
+          <ResponsiveContainer width="100%" height={210}>
+            <AreaChart data={months} margin={{ top: 4, right: 8, left: -12, bottom: 0 }}>
               <defs>
-                <linearGradient id="gr" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#5a9e5a" stopOpacity={0.18} />
-                  <stop offset="95%" stopColor="#5a9e5a" stopOpacity={0} />
+                <linearGradient id="gRevenue" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor={SERIES.primary} stopOpacity={0.2} />
+                  <stop offset="95%" stopColor={SERIES.primary} stopOpacity={0} />
                 </linearGradient>
               </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,.06)" />
-              <XAxis dataKey="label" tick={{ fontSize: 10, fontFamily: '"JetBrains Mono",monospace', fill: '#888' }} axisLine={false} tickLine={false} />
-              <YAxis tick={{ fontSize: 10, fontFamily: '"JetBrains Mono",monospace', fill: '#888' }} axisLine={false} tickLine={false} />
-              <Tooltip content={<CustomTooltip />} formatter={(v) => [`${fmt(v)} €`, 'Revenus']} />
-              <Area type="monotone" dataKey="revenue" name="Revenus (€)" stroke="#5a9e5a" strokeWidth={1.5} fill="url(#gr)" dot={false} />
+              <CartesianGrid strokeDasharray="3 3" stroke={GRID_STROKE} vertical={false} />
+              <XAxis dataKey="label" tick={AXIS_TICK} axisLine={false} tickLine={false} />
+              <YAxis tick={AXIS_TICK} axisLine={false} tickLine={false} />
+              <Tooltip content={<CustomTooltip unit=" €" />} />
+              <Area type="monotone" dataKey="revenue" name="Revenus" stroke={SERIES.primary} strokeWidth={2} fill="url(#gRevenue)" dot={false} activeDot={{ r: 4, strokeWidth: 2, stroke: '#fff' }} />
             </AreaChart>
           </ResponsiveContainer>
         </div>
 
-        <div className="adash-panel">
-          <p className="adash-panel-title">
-            <Clock size={11} /> Répartition des statuts RDV
+        <div className="ad-panel">
+          <p className="ad-panel-title">
+            <Clock size={14} /> Répartition des statuts RDV
           </p>
-          <ResponsiveContainer width="100%" height={200}>
+          <ResponsiveContainer width="100%" height={210}>
             <PieChart>
               <Pie
                 data={apptByStatus}
                 dataKey="count"
                 nameKey="status"
-                cx="40%"
+                cx="38%"
                 cy="50%"
-                innerRadius={52}
-                outerRadius={78}
+                innerRadius={54}
+                outerRadius={80}
                 paddingAngle={2}
-                strokeWidth={0}
+                stroke="#fff"
+                strokeWidth={2}
               >
-                {apptByStatus.map((entry, i) => (
-                  <Cell key={entry.status} fill={STATUS_COLORS[entry.status] || PIE_COLORS[i % PIE_COLORS.length]} />
+                {apptByStatus.map((entry) => (
+                  <Cell key={entry.status} fill={STATUS_COLORS[entry.status] || NEUTRAL_MARK} />
                 ))}
               </Pie>
               <Tooltip
-                formatter={(v, name) => [v, STATUS_FR[name] || name]}
-                contentStyle={{ fontFamily: '"Inter Tight",sans-serif', fontSize: 12, border: '1px solid var(--color-surface-border)' }}
+                formatter={(v, name) => [fmt(v), STATUS_FR[name] || name]}
+                contentStyle={{
+                  fontFamily: 'Inter, system-ui, sans-serif', fontSize: 13,
+                  border: '1px solid #E4E2DC', borderRadius: 12,
+                  boxShadow: '0 6px 18px rgba(23,22,20,.10)',
+                }}
               />
               <Legend
                 layout="vertical"
                 align="right"
                 verticalAlign="middle"
-                formatter={(v) => <span style={{ fontFamily: '"JetBrains Mono",monospace', fontSize: 9, letterSpacing: '.1em', textTransform: 'uppercase', color: 'var(--color-gray-500)' }}>{STATUS_FR[v] || v}</span>}
+                iconType="circle"
+                iconSize={9}
+                formatter={(v) => (
+                  <span style={{ fontSize: 12.5, fontFamily: 'Inter, system-ui, sans-serif', color: '#4c4a46' }}>
+                    {STATUS_FR[v] || v}
+                  </span>
+                )}
               />
             </PieChart>
           </ResponsiveContainer>
         </div>
       </div>
 
-      {/* Row 3: Top coachs + Recent appointments */}
-      <div className="adash-charts-row-3">
-        <div className="adash-panel">
-          <p className="adash-panel-title">
-            <Calendar size={11} /> Derniers rendez-vous
+      {/* Derniers RDV + top coachs */}
+      <div className="ad-row ad-row--wide">
+        <div className="ad-panel">
+          <p className="ad-panel-title">
+            <Calendar size={14} /> Derniers rendez-vous
           </p>
-          <table className="adash-table">
+          <table className="ad-table">
             <thead>
               <tr>
                 <th>Service</th>
@@ -260,19 +286,23 @@ export default function AdminDashboard() {
             </thead>
             <tbody>
               {recentAppointments.length === 0 ? (
-                <tr><td colSpan={5} style={{ textAlign: 'center', color: 'var(--color-gray-400)', padding: '24px 0', fontFamily: '"JetBrains Mono",monospace', fontSize: 11 }}>Aucun rendez-vous</td></tr>
+                <tr><td colSpan={5} className="ad-none">Aucun rendez-vous</td></tr>
               ) : (
                 recentAppointments.map((rdv) => (
                   <tr key={rdv.id}>
-                    <td style={{ fontWeight: 500, maxWidth: 140, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    <td className="ad-svc">
                       {rdv.coachService?.name || rdv.service?.name || '—'}
                     </td>
-                    <td style={{ color: 'var(--color-gray-500)' }}>{rdv.client?.firstName} {rdv.client?.lastName}</td>
-                    <td style={{ color: 'var(--color-gray-500)' }}>{rdv.intervenant?.firstName} {rdv.intervenant?.lastName}</td>
-                    <td style={{ fontFamily: '"JetBrains Mono",monospace', fontSize: 11, color: 'var(--color-gray-400)', whiteSpace: 'nowrap' }}>
+                    <td>{rdv.client?.firstName} {rdv.client?.lastName}</td>
+                    <td>{rdv.intervenant?.firstName} {rdv.intervenant?.lastName}</td>
+                    <td className="ad-date">
                       {new Date(rdv.scheduledAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
                     </td>
-                    <td><span className={`adash-badge ${rdv.status}`}>{STATUS_FR[rdv.status] || rdv.status}</span></td>
+                    <td>
+                      <span className={`dsh-badge ${STATUS_BADGE_CLASS[rdv.status] || 'dsh-badge--neutral'}`}>
+                        <i />{STATUS_FR[rdv.status] || rdv.status}
+                      </span>
+                    </td>
                   </tr>
                 ))
               )}
@@ -280,20 +310,20 @@ export default function AdminDashboard() {
           </table>
         </div>
 
-        <div className="adash-panel">
-          <p className="adash-panel-title">
-            <Star size={11} /> Top coachs · RDV
+        <div className="ad-panel">
+          <p className="ad-panel-title">
+            <Star size={14} /> Top coachs · rendez-vous
           </p>
           {topIntervenants.length === 0 ? (
-            <p style={{ color: 'var(--color-gray-400)', fontFamily: '"JetBrains Mono",monospace', fontSize: 11 }}>Aucune donnée</p>
+            <p className="ad-none">Aucune donnée</p>
           ) : (
             topIntervenants.map((item) => (
-              <div key={item.name} className="adash-bar-item">
-                <div style={{ minWidth: 100, fontSize: 12, color: 'var(--color-gray-900)', fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{item.name}</div>
-                <div className="adash-bar-track">
-                  <div className="adash-bar-fill" style={{ width: `${Math.round((item.count / maxTopCount) * 100)}%` }} />
+              <div key={item.name} className="ad-bar">
+                <div className="ad-bar-name">{item.name}</div>
+                <div className="ad-bar-track">
+                  <div className="ad-bar-fill" style={{ width: `${Math.round((item.count / maxTopCount) * 100)}%` }} />
                 </div>
-                <div style={{ fontFamily: '"JetBrains Mono",monospace', fontSize: 11, color: 'var(--color-gray-500)', minWidth: 24, textAlign: 'right' }}>{item.count}</div>
+                <div className="ad-bar-count">{item.count}</div>
               </div>
             ))
           )}

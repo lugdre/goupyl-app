@@ -1,1008 +1,677 @@
-import { useState, useEffect, Fragment } from 'react';
+import { useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import PublicNavbar from '../../components/layout/PublicNavbar';
-import logo from '../../assets/logo-goupyl-sport.png';
-import HumanBody3D from "../../components/layout/body.jsx";
 
-// ─── Icon primitives ───────────────────────────────────────────────
-const Icon = ({ d, size = 18, stroke = 1.6 }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={stroke} strokeLinecap="round" strokeLinejoin="round">{d}</svg>
+// IMAGES — importez ici chaque photo du dossier src/assets/
+// puis utilisez la variable dans src={...} (sans guillemets).
+import couvertureHome from '../../assets/couverture-home.jpg';
+import santeMentale from '../../assets/friendly-couple-posing-her-home.jpg';
+import nutrition from '../../assets/nutritionist.jpg';
+import coachingSportif from '../../assets/coachingSportif.jpg';
+import coach from '../../assets/coach.jpg';
+import coach1 from '../../assets/coach-1.jpg';
+import coach2 from '../../assets/coach-2.jpg';
+import coach3 from '../../assets/coach-3.jpg';
+import coach4 from '../../assets/coach-4.jpg';
+import coach5 from '../../assets/coach-5.jpg';
+import coach6 from '../../assets/coach-6.jpg';
+import equipementSportif from '../../assets/equipement-sportif.jpg';
+import bilanSportif from '../../assets/bilan-sportif.jpg';
+import coachingBienEtre from '../../assets/coaching-bien-etre.jpg';
+import sportive from '../../assets/sportive.jpg';
+import cardGoupylW from '../../assets/card-goupyl-white.png';
+import cardGoupylB from '../../assets/card-goupyl-black.png';
+
+const PLACEHOLDER = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='800' height='600'%3E%3Crect width='800' height='600' fill='%23DFDDD7'/%3E%3Cg stroke='%237a7873' stroke-width='3' fill='none' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='352' y='262' width='96' height='76' rx='10'/%3E%3Ccircle cx='380' cy='290' r='9'/%3E%3Cpath d='M448 322l-34-30-62 46'/%3E%3C/g%3E%3C/svg%3E";
+const PLACEHOLDER_DARK = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='800' height='600'%3E%3Crect width='800' height='600' fill='%236d6b66'/%3E%3Cg stroke='%23d8d6d1' stroke-width='3' fill='none' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='352' y='262' width='96' height='76' rx='10'/%3E%3Ccircle cx='380' cy='290' r='9'/%3E%3Cpath d='M448 322l-34-30-62 46'/%3E%3C/g%3E%3C/svg%3E";
+
+// ─── Icônes ────────────────────────────────────────────────────────
+const ArrowUpRight = ({ size = 16, color = 'currentColor', stroke = 2 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={stroke} strokeLinecap="round" strokeLinejoin="round">
+    <path d="M7 17L17 7" /><path d="M8 7h9v9" />
+  </svg>
 );
-const IcArrow = (p) => <Icon {...p} d={<><path d="M5 12h14" /><path d="M13 5l7 7-7 7" /></>} />;
-const IcCheck = (p) => <Icon {...p} d={<path d="M4 12l5 5L20 6" />} stroke={2.4} />;
-const IcPlus = (p) => <Icon {...p} d={<><path d="M12 5v14" /><path d="M5 12h14" /></>} />;
-const IcRun = (p) => <Icon {...p} d={<><circle cx="13" cy="4" r="2" /><path d="M4 22l4-9 5 2 3-3" /><path d="M9 13l-2 5" /><path d="M15 8l3 4 4-1" /></>} />;
-const IcLeaf = (p) => <Icon {...p} d={<><path d="M21 3c-9 0-16 7-16 16h2c0-7 7-14 14-14z" /><path d="M5 19c4-4 8-7 14-12" /></>} />;
-const IcBrain = (p) => <Icon {...p} d={<><path d="M9 4a3 3 0 00-3 3v1a3 3 0 00-2 3v1a3 3 0 002 3v2a3 3 0 003 3h0V4z" /><path d="M15 4a3 3 0 013 3v1a3 3 0 012 3v1a3 3 0 01-2 3v2a3 3 0 01-3 3h0V4z" /></>} />;
-const IcBuilding = (p) => <Icon {...p} d={<><path d="M3 21h18" /><path d="M5 21V5a2 2 0 012-2h10a2 2 0 012 2v16" /><path d="M9 8h1" /><path d="M14 8h1" /><path d="M9 12h1" /><path d="M14 12h1" /><path d="M9 16h1" /><path d="M14 16h1" /></>} />;
-const IcUsers = (p) => <Icon {...p} d={<><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M23 21v-2a4 4 0 00-3-3.87" /><path d="M16 3.13a4 4 0 010 7.75" /></>} />;
-const IcShield = (p) => <Icon {...p} d={<path d="M12 2l9 4v6c0 5-3.5 9.5-9 10-5.5-.5-9-5-9-10V6l9-4z" />} />;
-const IcZap = (p) => <Icon {...p} d={<path d="M13 2L3 14h7l-1 8 10-12h-7l1-8z" />} />;
-const IcChart = (p) => <Icon {...p} d={<><path d="M3 3v18h18" /><path d="M7 14l4-4 4 4 5-5" /></>} />;
+const ArrowLeft = ({ size = 16 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M19 12H5" /><path d="M12 19l-7-7 7-7" />
+  </svg>
+);
+const ArrowRight = ({ size = 16 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M5 12h14" /><path d="M12 5l7 7-7 7" />
+  </svg>
+);
+const ImageGlyph = ({ size = 26 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" opacity=".45">
+    <rect x="3" y="3" width="18" height="18" rx="3" /><circle cx="9" cy="9" r="2" /><path d="M21 15l-5-5L5 21" />
+  </svg>
+);
+const SocialIcon = ({ path }) => (
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">{path}</svg>
+);
 
-// ─── Enterprise plans ──────────────────────────────────────────────
-const ENTERPRISE_PLANS = [
-  {
-    id: 'essentiel', tag: 'Entrée', name: 'Essentiel',
-    priceMonthly: 54, priceYearly: 43,
-    desc: "Jusqu'à 10 collaborateurs",
-    cta: 'Demander une démo',
-    features: [
-      'Programme de remise en activité',
-      'Contenus santé & bien-être',
-      'Suivi d\'engagement de base',
-      'Support email',
-    ],
-  },
-  {
-    id: 'boost', tag: 'Recommandé', name: 'Boost',
-    priceMonthly: 122, priceYearly: 98,
-    desc: "Jusqu'à 50 collaborateurs",
-    cta: 'Demander une démo', reco: true,
-    features: [
-      'Coaching sportif structuré',
-      'Plans d\'entraînement personnalisés',
-      'Suivi nutritionnel & indicateurs de progression',
-      'Accompagnement mental allégé',
-    ],
-  },
-  {
-    id: 'ultra', tag: 'Haut de gamme', name: 'Ultra',
-    priceMonthly: null, priceYearly: null,
-    desc: "Jusqu'à 200 collaborateurs",
-    cta: 'Parler à un expert',
-    features: [
-      'Suivi nutritionnel individualisé',
-      'Accompagnement mental (prépa, stress, performance)',
-      'Biomarqueurs sanguins & tests à l\'effort',
-      'Programme de progression avec objectifs & jalons',
-    ],
-  },
-];
+// ─── Pile d'avatars ────────────────────────────────────────────────
+// Un jeu de photos distinct par section, pour ne pas répéter les mêmes
+// visages dans le même ordre d'un bloc à l'autre.
+const AVATARS_HERO = [coach6, coach3, coach1];        // hero « 500+ coachs »
+const AVATARS_DOMAINES = [coach5, coach2, coach4];    // bloc « 100 % vérifiés »
+const AVATAR_PHOTOS = [coach1, coach2, coach3, coach4, coach5, coach6]; // repli
 
-const COMPARE_SECTIONS = [
-  {
-    head: 'Accompagnement', rows: [
-      ['Professionnels certifiés', true, true, true],
-      ['Séances / collaborateur / semaine', '1', '2', '4'],
-      ['Tous les domaines sport-santé', false, true, true],
-      ['Suivi nutritionnel', false, true, true],
-      ['Préparation mentale', false, false, true],
-      ['Tests à l\'effort & biomarqueurs', false, false, true],
-    ]
-  },
-  {
-    head: 'Application & data', rows: [
-      ['App iOS & Android', true, true, true],
-      ['Suivi des performances', 'Basique', 'Avancé', 'Avancé'],
-      ['Reporting RH mensuel', false, true, true],
-      ['Export de données agrégées', false, false, true],
-      ['API & intégration SIRH', false, false, true],
-    ]
-  },
-  {
-    head: 'Gestion entreprise', rows: [
-      ['Kit de lancement & communication', true, true, true],
-      ['Collaborateurs inclus', '10', '50', '200'],
-      ['Account manager dédié', false, true, true],
-      ['SLA garanti', false, false, true],
-    ]
-  },
-  {
-    head: 'Support', rows: [
-      ['Support email', true, true, true],
-      ['Support chat 7j/7', false, true, true],
-      ['Conseiller dédié', false, false, true],
-      ['Garantie satisfait', '14 jours', '30 jours', '60 jours'],
-    ]
-  },
-];
-
-const FAQS = [
-  ["Comment fonctionne l'offre entreprise ?", "Vous souscrivez un abonnement mensuel ou annuel par collaborateur. Une fois le contrat signé, nous vous livrons un kit de lancement et un code d'invitation à diffuser en interne. Vos collaborateurs créent leur compte en quelques minutes et accèdent immédiatement à nos professionnels certifiés."],
-  ["Les professionnels sont-ils certifiés ?", "Oui. Chaque intervenant soumet ses diplômes et certifications lors de son inscription. Notre équipe vérifie chaque dossier avant l'activation du profil. Nos coachs sportifs, diététiciens et préparateurs mentaux sont tous diplômés et expérimentés."],
-  ["Puis-je changer de plan ?", "Oui, à tout moment. Le prorata est calculé automatiquement lors d'un upgrade. Vous pouvez aussi ajuster le nombre de collaborateurs à chaque échéance. Annulation possible après l'engagement minimum, sans frais cachés."],
-  ["Comment mes collaborateurs accèdent-ils à la plateforme ?", "Chaque collaborateur reçoit un code d'invitation unique (par email, intranet ou QR code). Il crée son compte en 2 minutes, réalise un bilan initial, puis accède à son plan personnalisé et à son tableau de bord de progression sur web et mobile."],
-  ["Nos données RH sont-elles protégées ?", "Absolument. Goupyl Sport est conforme RGPD. Vos données RH et celles de vos collaborateurs sont chiffrées et hébergées en Europe. Les tableaux de bord entreprise ne présentent que des données agrégées et anonymisées — aucune information individuelle n'est partagée avec l'employeur."],
-];
-
-// ─── FAQ item ──────────────────────────────────────────────────────
-function FaqItem({ q, a, n, open, onToggle }) {
+function AvatarStack({ count = 3, badge, size = 40, light, photos = AVATAR_PHOTOS }) {
   return (
-    <div style={{ borderTop: '1px solid var(--line)', padding: '24px 0', cursor: 'pointer' }} onClick={onToggle}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontWeight: 600, fontSize: 17 }}>
-        <div style={{ display: 'flex', alignItems: 'center' }}>
-          <span style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 11, color: 'var(--ink-3)', letterSpacing: '.14em', marginRight: 18 }}>{String(n).padStart(2, '0')}</span>
-          <span>{q}</span>
-        </div>
-        <span style={{ width: 24, height: 24, border: '1px solid var(--line)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, transition: 'transform .25s ease', transform: open ? 'rotate(45deg)' : 'none' }}>
-          <IcPlus size={12} />
-        </span>
-      </div>
-      {open && <div style={{ marginTop: 14, color: 'var(--ink-3)', fontSize: 14.5, maxWidth: 680 }}>{a}</div>}
+    <div className="avstack" style={{ '--av-size': `${size}px` }}>
+      {Array.from({ length: count }).map((_, i) => {
+        const photo = photos[i % photos.length];
+        return (
+          <span key={i} className={`av ${light ? 'av--light' : ''}`} style={{ zIndex: i + 1 }}>
+            {photo
+              ? <img src={photo} alt="" className="av-img" loading="lazy" />
+              : <ImageGlyph size={size * 0.4} />}
+          </span>
+        );
+      })}
+      {badge && <span className="av av--badge" style={{ zIndex: count + 1 }}>{badge}</span>}
     </div>
   );
 }
 
-// ─── Main component ────────────────────────────────────────────────
-export default function Landing() {
-  const [billingCycle, setBillingCycle] = useState('monthly');
-  const [comparePlan, setComparePlan] = useState(1);
-  const [openFaq, setOpenFaq] = useState(0);
-  const [demoSent, setDemoSent] = useState(false);
-  const [demoForm, setDemoForm] = useState({
-    company: '', name: '', email: '', phone: '', size: '', message: '',
-  });
+// ─── Chip de section ───────────────────────────────────────────────
+const Chip = ({ children }) => (
+  <span className="chip"><span className="chip-dot" />{children}</span>
+);
 
+// ─── Données ───────────────────────────────────────────────────────
+// `category` doit correspondre aux valeurs acceptées par /search (?category=…) :
+// SPORT, NUTRITION, MENTAL, BIENETRE.
+const FOCUS_CARDS = [
+  // IMAGE — petite carte gauche (changez la valeur de `img`)
+  { title: 'Coaching sportif', caption: 'Musculation, running, remise en forme — en solo, duo ou petit groupe.', img: coachingSportif, category: 'SPORT' },
+  // IMAGE — petite carte droite
+  { title: 'Nutrition', caption: 'Équilibre alimentaire et suivi nutritionnel au quotidien.', img: nutrition, category: 'NUTRITION' },
+];
+
+// Chaque onglet renvoie vers /search avec son filtre pré-activé.
+const COACH_TABS = [
+  { label: 'Coaching sportif', category: 'SPORT' },
+  { label: 'Nutrition', category: 'NUTRITION' },
+  { label: 'Santé mentale', category: 'MENTAL' },
+  { label: 'Bien-être', category: 'BIENETRE' },
+];
+
+// IMAGE — une photo par coach (champ `img`)
+const COACHES = [
+  { name: 'Marc Leroy', role: 'Coaching sportif', offset: 60, tone: 'a', img: coach1 },
+  { name: 'Sophie Martin', role: 'Basket-ball', offset: 120, tone: 'b', img: coach2 },
+  { name: 'Julien Blanc', role: 'Nutrition sportive', offset: 0, tone: 'c', img: coach5 },
+  { name: 'Bastien Laurent', role: 'Basketball', offset: 90, tone: 'd', img: coach4 },
+];
+
+const PLANS = [
+  {
+    name: 'Formule Essentiel',
+    price: '43', old: '54',
+    desc: 'Remise en activité, contenus santé & bien-être et suivi d’engagement. Jusqu’à 10 collaborateurs, 4 séances par collaborateur chaque mois.',
+    cta: 'Commencer', to: '/register',
+    image: cardGoupylB,
+    avatars: [coach2, coach6],
+  },
+  {
+    name: 'Formule Boost',
+    price: '98', old: '122',
+    desc: 'Coaching sportif structuré, plans personnalisés et suivi nutritionnel. Jusqu’à 50 collaborateurs, 8 séances par collaborateur chaque mois.',
+    cta: 'Commencer', to: '/register',
+    image: cardGoupylW, // IMAGE — fond de la carte « Formule Boost »
+    avatars: [coach3, coach5],
+  },
+  {
+    name: 'Formule Ultra',
+    price: null, old: null,
+    desc: 'Nutrition individualisée, préparation mentale, tests à l’effort et biomarqueurs. Jusqu’à 200 collaborateurs, 16 séances par collaborateur chaque mois.',
+    cta: 'Parler à un expert', to: null,
+    image: cardGoupylB,
+    avatars: [coach1, coach4],
+  },
+];
+
+// ─── Page ──────────────────────────────────────────────────────────
+export default function Landing() {
   useEffect(() => {
     const link = document.createElement('link');
     link.rel = 'stylesheet';
-    link.href = 'https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800;900&family=Archivo+Narrow:wght@400;500;600;700;800&family=Inter+Tight:wght@300;400;500;600;700&family=JetBrains+Mono:wght@300;400;500;600&display=swap';
+    link.href = 'https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,400..900;1,14..32,400..900&display=swap';
     document.head.appendChild(link);
-    return () => { if (document.head.contains(link)) document.head.removeChild(link); };
+    return () => { document.head.removeChild(link); };
   }, []);
 
-  const isYearly = billingCycle === 'yearly';
-
-  const tableCell = (val) => {
-    if (val === true) return (
-      <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 22, height: 22, borderRadius: '50%', background: 'var(--ink)', color: 'var(--bg)' }}>
-        <IcCheck size={12} />
-      </span>
-    );
-    if (val === false) return <span style={{ color: 'var(--ink-4)', fontFamily: '"JetBrains Mono", monospace' }}>—</span>;
-    return <span style={{ fontFamily: '"Archivo", sans-serif', fontWeight: 600 }}>{val}</span>;
-  };
-
-  const recoCellStyle = { background: '#d0d3e1ff' };
-
-  const handleDemoChange = (k) => (e) => setDemoForm({ ...demoForm, [k]: e.target.value });
-  const handleDemoSubmit = (e) => {
-    e.preventDefault();
-    setDemoSent(true);
-  };
-
   return (
-    <div style={{ background: 'var(--bg)', color: 'var(--ink)', fontFamily: '"Inter Tight", ui-sans-serif, system-ui, sans-serif', fontSize: 15, lineHeight: 1.5 }}>
-      <style>{`
-        :root {
-          --bg: #f4f4f2;
-          --bg-soft: #ebebe7;
-          --bg-dark: #0a0a0a;
-          --ink: #0a0a0a;
-          --ink-2: #2a2a2a;
-          --ink-3: #555;
-          --ink-4: #888;
-          --line: rgba(0,0,0,.10);
-          --line-2: rgba(0,0,0,.06);
-          --accent: #252d62;
-          --accent-soft: #252d62;
-          --on-accent: #fff;
-        }
-        *{box-sizing:border-box}
-        ::selection{background:var(--accent);color:var(--on-accent)}
-        .display{font-family:"Archivo Narrow","Archivo",sans-serif;font-weight:700;letter-spacing:-.015em;line-height:.95;text-transform:uppercase}
-        .mono{font-family:"JetBrains Mono",monospace}
-        .eyebrow{font-family:"JetBrains Mono",monospace;font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--ink-3)}
-        .num{font-family:"Archivo",sans-serif;font-variant-numeric:tabular-nums}
-        .container{max-width:1280px;margin:0 auto;padding:0 32px}
+    <div className="lp">
+      <style>{CSS}</style>
 
-        html{scroll-behavior:smooth}
+      {/* ═══ HERO ═══════════════════════════════════════════════════ */}
+      <section className="lp-block hero-block" id="hero">
+        <div className="hero">
+          {/* IMAGE — grande photo plein écran du haut de page */}
+          <img className="hero-bg" src={couvertureHome} alt="Sportifà l'entraînement" />
+          <div className="hero-inner">
 
-        /* buttons */
-        .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:44px;padding:0 22px;font-family:"Inter Tight",sans-serif;font-weight:600;font-size:13.5px;letter-spacing:.02em;border-radius:999px;border:1px solid transparent;cursor:pointer;text-decoration:none;transition:transform .15s ease,background .2s ease,color .2s ease,border-color .2s ease;white-space:nowrap;background:transparent}
-        .btn:hover{transform:translateY(-1px)}
-        .btn-primary{background:var(--ink);color:var(--bg)}
-        .btn-primary:hover{background:var(--ink-2)}
-        .btn-accent{background:var(--accent);color:var(--on-accent)}
-        .btn-ghost{background:transparent;color:var(--ink);border-color:var(--line)}
-        .btn-ghost:hover{border-color:var(--ink)}
-        .btn-sm{height:36px;padding:0 16px;font-size:12.5px}
-        .btn-lg{height:52px;padding:0 28px;font-size:14.5px}
-        .btn-block{width:100%;justify-content:center}
-        .btn-on-dark{background:#fff;color:#000;border-color:transparent}
+            <header className="hero-nav">
+              <nav className="hero-nav-links">
+                <a href="#hero">Accueil</a>
+                <a href="#domaines">Domaines</a>
+                <a href="#coaches">Coachs</a>
+                <a href="#pricing">Tarifs</a>
+              </nav>
+              <div className="hero-logo"><img src="/public/logo-goupyl-sport-white.png" alt="Logo Goupyl Sport" /></div>
+              <Link to="/login" className="btn-pill btn-pill--white">
+                Commencer
+                <span className="btn-circle btn-circle--orange"><ArrowUpRight size={15} color="#fff" /></span>
+              </Link>
+            </header>
 
-        /* sections */
-        .l-section{padding:96px 0;border-bottom:1px solid var(--line)}
-        .section-head{display:grid;grid-template-columns:.8fr 1.2fr;gap:48px;align-items:end;margin-bottom:56px}
-        .section-head h2{margin:0;font-size:clamp(40px,5vw,72px)}
-        .lede{color:var(--ink-2);font-size:16px;max-width:540px}
-
-        /* hero */
-        .hero-grid{display:grid;grid-template-columns:1.15fr .85fr;gap:64px;padding:96px 0 80px;align-items:center}
-        .hero-h1{margin:0;font-size:clamp(52px,7.6vw,116px)}
-        .hero-sub{margin-top:28px;max-width:560px;font-size:17px;line-height:1.5;color:var(--ink-2)}
-        .hero-meta{margin-top:36px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
-        .hero-stats{margin-top:56px;display:grid;grid-template-columns:repeat(3,1fr);border-top:1px solid var(--line);padding-top:24px;gap:24px}
-        .stat-num{font-size:28px;font-weight:700;letter-spacing:-.02em;line-height:1;font-family:"Archivo Narrow",sans-serif;text-transform:uppercase}
-        .stat-label{font-size:12px;color:var(--ink-3);margin-top:6px}
-
-        /* hero visual */
-        .hero-visual{position:relative;aspect-ratio:4/5;min-height:480px;background:var(--ink);overflow:hidden;border:1px solid var(--ink)}
-        .hero-visual-grid{position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,.04) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.04) 1px,transparent 1px);background-size:32px 32px}
-        .hero-visual-blob{position:absolute;width:420px;height:420px;border-radius:50%;left:50%;top:50%;transform:translate(-50%,-50%);background:radial-gradient(circle at 30% 30%,var(--accent),transparent 70%);filter:blur(40px);opacity:.7;animation:floaty 8s ease-in-out infinite}
-        @keyframes floaty{0%,100%{transform:translate(-50%,-50%) scale(1)}50%{transform:translate(-50%,-58%) scale(1.06)}}
-        .hero-visual-tag{position:absolute;left:20px;top:20px;font-family:"JetBrains Mono",monospace;font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;background:#fff;color:var(--ink);padding:6px 10px}
-        .hero-visual-rings{position:absolute;inset:0;display:flex;align-items:center;justify-content:center}
-        .hero-visual-ring{position:absolute;border:1px solid rgba(255,255,255,.10);border-radius:50%}
-        .hero-pill-stack{position:absolute;left:24px;bottom:24px;display:flex;flex-direction:column;gap:8px}
-        .hero-pill{font-family:"JetBrains Mono",monospace;font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:#fff;padding:8px 12px;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.04);backdrop-filter:blur(4px);width:max-content}
-        .hero-badge{position:absolute;right:20px;bottom:20px;border:1px solid #fff;background:var(--ink);color:#fff;padding:14px 16px;display:flex;align-items:center;gap:12px;min-width:200px}
-        .hero-badge-dot{width:10px;height:10px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 4px rgba(37,45,98,.35)}
-        .hero-badge-num{font-family:"Archivo",sans-serif;font-weight:800;font-size:22px;line-height:1}
-        .hero-badge-label{font-size:10px;color:#aaa;letter-spacing:.14em;text-transform:uppercase;margin-top:4px}
-
-        /* ticker */
-        .ticker{border-top:1px solid var(--line);border-bottom:1px solid var(--line);overflow:hidden;background:var(--bg)}
-        .ticker-track{display:flex;gap:64px;padding:18px 0;animation:tick 38s linear infinite;width:max-content}
-        .ticker-item{font-family:"Archivo Narrow",sans-serif;font-weight:700;font-size:14px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3);display:flex;align-items:center;gap:64px;white-space:nowrap}
-        .ticker-item::after{content:"●";color:var(--accent);font-size:8px}
-        @keyframes tick{from{transform:translateX(0)}to{transform:translateX(-50%)}}
-
-        /* usages — asymmetric contrast split */
-        .usage-split{display:grid;grid-template-columns:1.04fr .96fr;border:1px solid var(--ink)}
-        .upanel{position:relative;padding:52px 46px;display:flex;flex-direction:column;overflow:hidden;isolation:isolate}
-        .upanel--dark{background:var(--ink);color:var(--bg)}
-        .upanel--light{background:var(--bg);color:var(--ink);border-left:1px solid var(--ink)}
-        .upanel-ghost{position:absolute;top:-28px;right:14px;font-family:"Archivo Narrow",sans-serif;font-weight:800;font-size:210px;line-height:1;letter-spacing:-.05em;z-index:-1;pointer-events:none;user-select:none}
-        .upanel--dark .upanel-ghost{color:rgba(255,255,255,.05)}
-        .upanel--light .upanel-ghost{color:rgba(0,0,0,.045)}
-        .upanel-kicker{display:flex;align-items:center;gap:12px;font-family:"JetBrains Mono",monospace;font-size:11px;letter-spacing:.16em;text-transform:uppercase;opacity:.65}
-        .upanel-kicker::before{content:"";width:26px;height:1px;background:currentColor;opacity:.5}
-        .upanel-icon{width:52px;height:52px;margin:28px 0 22px;border:1px solid currentColor;border-radius:50%;display:flex;align-items:center;justify-content:center;opacity:.9}
-        .upanel-title{font-family:"Archivo Narrow",sans-serif;font-weight:700;font-size:clamp(34px,3.4vw,46px);text-transform:uppercase;letter-spacing:-.015em;line-height:.96}
-        .upanel-sub{font-size:14.5px;margin-top:10px;opacity:.6;max-width:360px}
-        .upanel-list{margin-top:32px;list-style:none;padding:0}
-        .upanel-list li{display:grid;grid-template-columns:auto 1fr;gap:16px;align-items:start;font-size:14.5px;line-height:1.45;padding:15px 0;border-top:1px solid currentColor}
-        .upanel--dark .upanel-list li{border-color:rgba(255,255,255,.13)}
-        .upanel--light .upanel-list li{border-color:var(--line)}
-        .upanel-list li:last-child{border-bottom:1px solid currentColor}
-        .upanel--dark .upanel-list li:last-child{border-bottom-color:rgba(255,255,255,.13)}
-        .upanel--light .upanel-list li:last-child{border-bottom-color:var(--line)}
-        .upanel-list .li-idx{font-family:"JetBrains Mono",monospace;font-size:11px;letter-spacing:.06em;padding-top:2px;opacity:.45}
-
-        /* process — swimlane timeline */
-        .process{display:flex;flex-direction:column}
-        .process-lane{display:grid;grid-template-columns:minmax(150px,.72fr) repeat(4,1fr)}
-        .process-lane + .process-lane{margin-top:40px}
-        .process-rowlabel{padding:24px 28px 24px 0;display:flex;flex-direction:column;justify-content:center}
-        .process-lane-name{font-family:"Archivo Narrow",sans-serif;font-weight:700;font-size:26px;text-transform:uppercase;letter-spacing:-.01em;line-height:1}
-        .process-lane-sub{font-size:12.5px;color:var(--ink-3);margin-top:8px;max-width:210px;line-height:1.4}
-        .process-cell{position:relative;padding:30px 22px 28px;border-top:1px solid var(--line);transition:background .2s}
-        .process-cell + .process-cell{border-left:1px solid var(--line-2)}
-        .process-cell:hover{background:var(--bg-soft)}
-        .process-node{position:absolute;top:-5px;left:22px;width:9px;height:9px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 4px var(--bg)}
-        .process-step{font-family:"JetBrains Mono",monospace;font-size:11px;letter-spacing:.16em;color:var(--accent);display:block;margin-bottom:14px}
-        .process-cell-title{font-weight:600;font-size:15px;margin-bottom:6px}
-        .process-cell-desc{font-size:13px;color:var(--ink-3);line-height:1.5}
-
-        /* profiles */
-        .prof-grid{display:grid;grid-template-columns:repeat(3,1fr);border:1px solid var(--line)}
-        .prof{position:relative;background:var(--bg);padding:34px 30px 30px;display:flex;flex-direction:column;min-height:264px;transition:background .2s}
-        .prof + .prof{border-left:1px solid var(--line)}
-        .prof:hover{background:var(--bg-soft)}
-        .prof::before{content:"";position:absolute;left:0;top:0;bottom:0;width:2px;background:var(--accent);transform:scaleY(0);transform-origin:top;transition:transform .3s}
-        .prof:hover::before{transform:scaleY(1)}
-        .prof-top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:24px}
-        .prof-tag{font-family:"JetBrains Mono",monospace;font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-4)}
-        .prof-idx{font-family:"Archivo Narrow",sans-serif;font-weight:700;font-size:13px;color:var(--ink-4);line-height:1}
-        .prof-mark{width:38px;height:38px;border:1px solid var(--ink);border-radius:50%;display:flex;align-items:center;justify-content:center;color:var(--ink);flex-shrink:0}
-        .prof-title{font-family:"Archivo Narrow",sans-serif;font-weight:700;font-size:clamp(26px,2.4vw,32px);text-transform:uppercase;letter-spacing:-.01em;line-height:.98}
-        .prof-desc{font-size:13.5px;color:var(--ink-3);margin-top:14px;flex:1;line-height:1.5}
-        .prof-foot{margin-top:22px;padding-top:16px;border-top:1px solid var(--line);display:flex;align-items:center;gap:10px;font-family:"JetBrains Mono",monospace;font-size:11px;letter-spacing:.04em;color:var(--ink-2)}
-        .prof-foot .dot{width:5px;height:5px;border-radius:50%;background:var(--accent);flex-shrink:0}
-
-        /* proof / stat cards */
-        .proof-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line);border:1px solid var(--line);margin-bottom:48px}
-        .proof{background:var(--bg);padding:36px 32px;min-height:200px;display:flex;flex-direction:column;justify-content:space-between}
-        .proof-icon{width:48px;height:48px;border:1px solid var(--ink);border-radius:50%;display:flex;align-items:center;justify-content:center;margin-bottom:24px}
-        .proof-num{font-family:"Archivo Narrow",sans-serif;font-weight:700;font-size:42px;text-transform:uppercase;letter-spacing:-.01em;line-height:1}
-        .proof-label{font-size:13px;color:var(--ink-3);margin-top:8px}
-        .quote{background:var(--ink);color:var(--bg);padding:48px;border:1px solid var(--ink);display:grid;grid-template-columns:auto 1fr;gap:32px;align-items:center}
-        .quote-mark{font-family:"Archivo Narrow",sans-serif;font-weight:800;font-size:120px;color:var(--accent);line-height:.8;align-self:flex-start}
-        .quote-text{font-family:"Archivo Narrow",sans-serif;font-weight:500;font-size:24px;line-height:1.3;letter-spacing:-.01em}
-        .quote-author{margin-top:18px;display:flex;align-items:center;gap:14px}
-        .quote-author-name{font-weight:600;font-size:14px}
-        .quote-author-role{font-size:12px;color:#999;margin-top:2px}
-
-        /* compare */
-        .compare-table{width:100%;border-collapse:collapse;font-size:14px}
-        .compare-table thead th{padding:24px 20px;text-align:center;border-bottom:1px solid var(--line);vertical-align:bottom;position:sticky;top:64px;background:var(--bg);z-index:5}
-        .compare-table thead th:first-child{text-align:left}
-        .compare-col-name{font-family:"Archivo Narrow",sans-serif;font-weight:700;text-transform:uppercase;font-size:22px;letter-spacing:.01em;line-height:1}
-        .compare-col-tag{display:inline-block;margin-bottom:14px;font-family:"JetBrains Mono",monospace;font-size:10px;letter-spacing:.16em;text-transform:uppercase;padding:4px 10px;border:1px solid var(--line);color:var(--ink-3)}
-        .compare-col-recommended .compare-col-tag{background:var(--accent);color:var(--on-accent);border-color:var(--accent)}
-        .compare-price{font-family:"Archivo",sans-serif;font-weight:800;font-size:32px;margin-top:14px;line-height:1;letter-spacing:-.02em}
-        .compare-price-sub{font-size:11px;color:var(--ink-3);margin-top:4px;font-family:"JetBrains Mono",monospace}
-        .compare-cta{margin-top:18px}
-        .compare-row-head{background:var(--bg-soft)}
-        .compare-row-head td{padding:14px 20px;font-family:"JetBrains Mono",monospace;font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-3);border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
-        .compare-table td{padding:18px 20px;border-bottom:1px solid var(--line-2);vertical-align:top}
-        .compare-table td.feat{color:var(--ink-2);font-weight:500;width:32%}
-        .compare-table td.cell{text-align:center}
-        .compare-col-recommended .check{background:var(--accent);color:var(--on-accent)}
-
-        /* pricing cards */
-        .price-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin-bottom:64px}
-        .price-card{background:var(--bg);border:1px solid var(--line);padding:32px 28px;display:flex;flex-direction:column;position:relative}
-        .price-card.reco{border-color:var(--ink);background:#fff}
-        .price-tag{display:inline-block;font-family:"JetBrains Mono",monospace;font-size:10px;letter-spacing:.16em;text-transform:uppercase;padding:4px 10px;border:1px solid var(--line);color:var(--ink-3);margin-bottom:18px;align-self:flex-start}
-        .price-card.reco .price-tag{background:var(--accent);color:var(--on-accent);border-color:var(--accent)}
-        .price-name{font-family:"Archivo Narrow",sans-serif;font-weight:700;font-size:38px;text-transform:uppercase;letter-spacing:-.01em;line-height:1}
-        .price-desc{font-size:13px;color:var(--ink-3);margin-top:8px}
-        .price-amount{margin-top:24px;font-family:"Archivo",sans-serif;font-weight:800;font-size:42px;letter-spacing:-.02em;line-height:1}
-        .price-amount-sub{font-size:12px;color:var(--ink-3);margin-top:6px;font-family:"JetBrains Mono",monospace}
-        .price-features{list-style:none;padding:0;margin:28px 0 24px;display:flex;flex-direction:column;gap:12px;flex:1}
-        .price-features li{display:flex;gap:12px;align-items:flex-start;font-size:14px;color:var(--ink-2)}
-        .price-features li svg{flex-shrink:0;margin-top:3px;color:var(--accent)}
-
-        /* billing toggle */
-        .billing-bar{display:flex;align-items:center;justify-content:center;gap:14px;margin-bottom:40px}
-        .billing-bar span{font-size:13px;font-weight:600;color:var(--ink-3);display:flex;align-items:center}
-        .billing-bar span.active{color:var(--ink)}
-        .billing-bar em{font-style:normal;background:var(--accent);color:#fff;font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;font-family:"JetBrains Mono",monospace;margin-left:8px}
-        .billing-switch{width:44px;height:24px;border-radius:12px;border:none;cursor:pointer;position:relative;flex-shrink:0}
-        .billing-switch span{position:absolute;top:2px;width:20px;height:20px;background:#fff;border-radius:50%;box-shadow:0 1px 4px rgba(0,0,0,.2);transition:left .25s}
-
-        /* compare — mobile selectable */
-        .compare-table-wrap{overflow-x:auto}
-        .compare-mobile{display:none}
-        .compare-tabs{display:flex;gap:8px;margin-bottom:24px}
-        .compare-tab{flex:1;padding:14px 8px;border:1px solid var(--line);background:var(--bg);font-family:"Archivo Narrow",sans-serif;font-weight:700;text-transform:uppercase;font-size:17px;letter-spacing:.01em;line-height:1;cursor:pointer;color:var(--ink-3);transition:background .15s,color .15s,border-color .15s}
-        .compare-tab.active{background:var(--ink);color:var(--bg);border-color:var(--ink)}
-        .compare-m-price{text-align:center;margin-bottom:24px}
-        .compare-m-price .amt{font-family:"Archivo",sans-serif;font-weight:800;font-size:42px;letter-spacing:-.02em;line-height:1}
-        .compare-m-price .sub{font-size:12px;color:var(--ink-3);font-family:"JetBrains Mono",monospace;margin-top:6px}
-        .compare-m-head{font-family:"JetBrains Mono",monospace;font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-3);background:var(--bg-soft);padding:12px 16px;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
-        .compare-m-row{display:flex;justify-content:space-between;align-items:center;gap:16px;padding:14px 16px;border-bottom:1px solid var(--line-2);font-size:14px}
-        .compare-m-row .lbl{color:var(--ink-2);font-weight:500}
-        .compare-m-row .val{flex-shrink:0;text-align:right}
-        .compare-m-cta{margin-top:28px}
-
-        /* dark card */
-        .dark-card{background:var(--bg-dark);color:#f4f4f2;padding:88px 64px;text-align:center;border:1px solid var(--line)}
-        .dark-card h2{font-size:clamp(40px,5.5vw,80px);margin:0 auto;max-width:14ch}
-        .dark-card p{color:#bbb;font-size:15px;max-width:560px;margin:18px auto 0}
-
-        /* demo form */
-        .demo-grid{display:grid;grid-template-columns:1fr 1fr;gap:64px;align-items:start}
-        .demo-info h2{font-size:clamp(40px,5vw,72px);margin:0 0 24px}
-        .demo-info p{color:var(--ink-2);font-size:16px;max-width:480px;margin-bottom:32px}
-        .demo-bullet{display:flex;align-items:center;gap:14px;padding:14px 0;border-top:1px solid var(--line);font-size:14.5px}
-        .demo-bullet:last-child{border-bottom:1px solid var(--line)}
-        .demo-bullet svg{color:var(--accent);flex-shrink:0}
-        .demo-form{background:#fff;border:1px solid var(--line);padding:32px}
-        .demo-form-row{display:grid;grid-template-columns:1fr 1fr;gap:16px}
-        .demo-field{margin-bottom:18px;display:flex;flex-direction:column}
-        .demo-field label{font-family:"JetBrains Mono",monospace;font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3);margin-bottom:8px}
-        .demo-field input,.demo-field select,.demo-field textarea{border:1px solid var(--line);background:var(--bg);padding:12px 14px;font-family:inherit;font-size:14px;color:var(--ink);outline:none;transition:border-color .15s}
-        .demo-field input:focus,.demo-field select:focus,.demo-field textarea:focus{border-color:var(--ink)}
-        .demo-field textarea{resize:vertical;min-height:96px;font-family:inherit}
-        .demo-success{background:#fff;border:1px solid var(--line);padding:48px;text-align:center}
-        .demo-success-icon{width:64px;height:64px;border-radius:50%;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;margin:0 auto 24px}
-
-        /* footer */
-        .l-foot{padding:64px 0 28px;border-top:1px solid var(--line)}
-        .foot-grid{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:48px;margin-bottom:48px}
-        .foot-col h4{margin:0 0 14px;font-family:"JetBrains Mono",monospace;font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-3);font-weight:500}
-        .foot-col a{display:block;padding:5px 0;color:var(--ink-2);text-decoration:none;font-size:13.5px}
-        .foot-col a:hover{color:var(--ink)}
-        .foot-bottom{border-top:1px solid var(--line);padding-top:24px;display:flex;justify-content:space-between;align-items:center;color:var(--ink-3);font-size:12px}
-        .foot-bottom a{color:inherit;text-decoration:none}
-        .foot-bottom a:hover{color:var(--ink)}
-
-        /* responsive */
-        @media(max-width:980px){
-          .hero-grid{grid-template-columns:1fr;gap:32px;padding:64px 0}
-          .section-head{grid-template-columns:1fr;gap:16px}
-          .usage-split{grid-template-columns:1fr}
-          .upanel--light{border-left:none;border-top:1px solid var(--ink)}
-          .upanel{padding:40px 28px}
-          .upanel-ghost{font-size:150px}
-          .process-lane{grid-template-columns:1fr}
-          .process-lane + .process-lane{margin-top:24px}
-          .process-rowlabel{padding:0 0 8px}
-          .process-cell + .process-cell{border-left:none}
-          .prof-grid{grid-template-columns:1fr}
-          .prof + .prof{border-left:none;border-top:1px solid var(--line)}
-          .proof-grid{grid-template-columns:1fr}
-          .price-grid{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;gap:16px;margin:0 -32px 56px;padding:0 32px 12px;-webkit-overflow-scrolling:touch}
-          .price-card{min-width:82%;scroll-snap-align:center}
-          .quote{grid-template-columns:1fr;gap:20px;padding:32px}
-          .quote-mark{font-size:80px}
-          .quote-text{font-size:20px}
-          .demo-grid{grid-template-columns:1fr;gap:32px}
-          .foot-grid{grid-template-columns:1fr 1fr}
-        }
-        @media(max-width:768px){
-          .compare-table-wrap{display:none}
-          .compare-mobile{display:block}
-        }
-        @media(max-width:640px){
-          .hero-stats{grid-template-columns:1fr 1fr}
-          .demo-form-row{grid-template-columns:1fr}
-        }
-      `}</style>
-
-
-      <PublicNavbar />
-
-      {/* ── HERO ────────────────────────────────────────────────── */}
-      <section id="hero" style={{ borderBottom: '1px solid var(--line)', overflow: 'hidden' }}>
-        <div className="container">
-          <div className="hero-grid">
-            <div>
-              <div className="eyebrow" style={{ marginBottom: 24 }}>Plateforme B2B · Sport-santé en entreprise</div>
-              <h1 className="hero-h1 display">
-                Pilotez<br />
-                <span style={{ color: 'var(--accent)' }}>votre santé.</span>
-              </h1>
-              <p className="hero-sub">
-                Offrez à vos équipes un accompagnement complet par des professionnels certifiés : sport, nutrition, mental. Une plateforme, trois domaines, un seul abonnement.
-              </p>
-              <div className="hero-meta">
-                <a href="#demo" className="btn btn-primary btn-lg">Demander une démo <IcArrow size={16} /></a>
-                <a href="#offres" className="btn btn-ghost btn-lg">Voir les offres</a>
-              </div>
-
-              <div className="hero-stats">
-                <div>
-                  <div className="stat-num">48 h</div>
-                  <div className="stat-label">Déploiement</div>
-                </div>
-                <div>
-                  <div className="stat-num">100%</div>
-                  <div className="stat-label">Pros certifiés</div>
-                </div>
-                <div>
-                  <div className="stat-num">3</div>
-                  <div className="stat-label">Domaines couverts</div>
-                </div>
-              </div>
+            <div className="hero-social">
+              <AvatarStack count={3} badge="500+" size={40} light photos={AVATARS_HERO} />
+              <p>Particuliers, entreprises et coachs<br />certifiés, réunis sur une plateforme</p>
             </div>
 
-            <div className="hero-media">
-              <HumanBody3D
-                width="100%"
-                height="100%"
-                background="transparent"
-                wireColor={0x1e40af}
-                fillOpacity={0.08}
-                showPoints={true}
-                showMeridians={true}
-                autoRotate={true}
-              />
-            </div>
+            <p className="hero-desc">
+              La plateforme qui connecte particuliers et entreprises à des coachs sport & bien-être certifiés, près de chez vous.
+            </p>
+
+            <h1 className="hero-title">Repoussez<br />vos limites.</h1>
           </div>
         </div>
       </section>
 
-      {/* ── TICKER ──────────────────────────────────────────────── */}
-      <div className="ticker">
-        <div className="ticker-track">
-          {['Sport en entreprise', 'QVCT', 'Nutrition', 'Mental', 'RH', 'Bien-être', 'CSE', 'Performance', 'Engagement', 'Prévention',
-            'Sport en entreprise', 'QVCT', 'Nutrition', 'Mental', 'RH', 'Bien-être', 'CSE', 'Performance', 'Engagement', 'Prévention',
-          ].map((it, i) => <div className="ticker-item" key={i}>{it}</div>)}
-        </div>
-      </div>
-
-      {/* ── DEUX PARCOURS ───────────────────────────────────────── */}
-      <section className="l-section" id="parcours">
-        <div className="container">
-          <div className="section-head">
-            <div>
-              <div className="eyebrow" style={{ marginBottom: 14 }}>Deux parcours</div>
-              <h2 className="display">Un projet,<br />deux usages.</h2>
+      {/* ═══ FOCUS / ÉVÉNEMENT ═════════════════════════════════════ */}
+      <section className="lp-block" id="domaines">
+        <div className="wrap section-pad">
+          <div className="focus-head">
+            <div className="focus-head-left">
+              <Chip>Nos domaines</Chip>
+              <p className="focus-tagline">Un accompagnement complet.<br />Des coachs vérifiés.</p>
             </div>
-            <p className="lede">Goupyl Sport s'adresse autant aux décideurs qu'aux collaborateurs. Chaque audience trouve sa réponse, dans une seule plateforme.</p>
+            <h2 className="h2">
+              Un Accompagnement<br />Sport & <em>Bien-être</em>
+            </h2>
           </div>
 
-          <div className="usage-split">
-            <div className="upanel upanel--dark">
-              <span className="upanel-ghost">01</span>
-              <div className="upanel-kicker">Décideur</div>
-              <div className="upanel-icon"><IcBuilding size={24} stroke={1.5} /></div>
-              <div className="upanel-title">DRH, Dirigeant,<br />CSE.</div>
-              <div className="upanel-sub">Pilotez la santé et la performance de vos équipes.</div>
-              <ul className="upanel-list">
-                {[
-                  'Pourquoi déployer : prévention, attractivité, fidélisation.',
-                  'ROI mesurable : engagement, absentéisme, satisfaction.',
-                  'Pilotage simple : tableau de bord RH agrégé et anonymisé.',
-                  'Renouvellement transparent : périmètre ajusté à chaque échéance.',
-                ].map((t, i) => (
-                  <li key={i}><span className="li-idx">{String(i + 1).padStart(2, '0')}</span><span>{t}</span></li>
-                ))}
-              </ul>
-            </div>
-            <div className="upanel upanel--light">
-              <span className="upanel-ghost">02</span>
-              <div className="upanel-kicker">Collaborateur</div>
-              <div className="upanel-icon"><IcUsers size={24} stroke={1.5} /></div>
-              <div className="upanel-title">Salarié,<br />équipier.</div>
-              <div className="upanel-sub">Un accompagnement sur-mesure, à votre rythme.</div>
-              <ul className="upanel-list">
-                {[
-                  "Accès en 2 minutes avec un code d'invitation entreprise.",
-                  'Tout au même endroit : coachs, diététiciens, préparateurs mentaux.',
-                  'Plan personnalisé, séances en visio ou en présentiel, suivi continu.',
-                  'Progression visible : objectifs, bilans, historique.',
-                ].map((t, i) => (
-                  <li key={i}><span className="li-idx">{String(i + 1).padStart(2, '0')}</span><span>{t}</span></li>
-                ))}
-              </ul>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ── COMMENT CA MARCHE ───────────────────────────────────── */}
-      <section className="l-section" id="comment-ca-marche">
-        <div className="container">
-          <div className="section-head">
-            <div>
-              <div className="eyebrow" style={{ marginBottom: 14 }}>Onboarding</div>
-              <h2 className="display">Comment<br />ça marche.</h2>
-            </div>
-            <p className="lede">Deux parcours d'onboarding pensés pour fluidifier le déploiement côté entreprise, et l'engagement côté collaborateurs.</p>
-          </div>
-
-          <div className="process">
-            {[
-              {
-                name: 'Entreprise',
-                sub: 'Du contrat aux premiers résultats, en moins de deux semaines.',
-                steps: [
-                  { t: 'Contractualisation', d: 'Choix de l\'offre, signature en ligne, configuration du compte.' },
-                  { t: 'Kit de lancement', d: 'Codes d\'invitation, supports de communication interne, FAQ.' },
-                  { t: 'Communication interne', d: 'Annonce coordonnée : email, intranet, affichage.' },
-                  { t: 'Premiers résultats', d: 'Tableau de bord RH actif, bilans, indicateurs d\'engagement.' },
-                ],
-              },
-              {
-                name: 'Collaborateur',
-                sub: 'Du code d\'invitation au premier rendez-vous, en quelques minutes.',
-                steps: [
-                  { t: 'Inscription par code', d: 'Création du compte via le code entreprise reçu par email.' },
-                  { t: 'Bilan initial', d: 'Questionnaire santé, objectifs, préférences. Confidentiel.' },
-                  { t: 'Plan personnalisé', d: 'Professionnels adaptés, planification des séances.' },
-                  { t: 'Suivi des résultats', d: 'Progression visible, ajustements, accès continu aux experts.' },
-                ],
-              },
-            ].map((lane, li) => (
-              <div className="process-lane" key={li}>
-                <div className="process-rowlabel">
-                  <span className="process-lane-name">{lane.name}</span>
-                  <span className="process-lane-sub">{lane.sub}</span>
-                </div>
-                {lane.steps.map((s, i) => (
-                  <div className="process-cell" key={i}>
-                    <span className="process-node" />
-                    <span className="process-step">{String(i + 1).padStart(2, '0')}</span>
-                    <div className="process-cell-title">{s.t}</div>
-                    <div className="process-cell-desc">{s.d}</div>
-                  </div>
-                ))}
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── POUR QUI ────────────────────────────────────────────── */}
-      <section className="l-section" id="pour-qui">
-        <div className="container">
-          <div className="section-head">
-            <div>
-              <div className="eyebrow" style={{ marginBottom: 14 }}>Pour qui</div>
-              <h2 className="display">Une réponse<br />pour chaque<br />organisation.</h2>
-            </div>
-            <p className="lede">Que vous soyez une PME en croissance ou un grand groupe, nous adaptons le déploiement à vos enjeux. Et chaque collaborateur trouve son parcours, du sédentaire au sportif aguerri.</p>
-          </div>
-
-          <div className="eyebrow" style={{ marginBottom: 14 }}>Par profil d'entreprise</div>
-          <div className="prof-grid" style={{ marginBottom: 32 }}>
-            {[
-              { tag: 'PME · 10–50', title: 'PME', desc: "Outils clé en main, déploiement express, impact rapide sur la cohésion d'équipe.", foot: 'Essentiel ou Boost' },
-              { tag: 'ETI · 50–500', title: 'ETI', desc: 'Reporting RH avancé, account manager dédié, communication interne pilotée.', foot: 'Boost' },
-              { tag: 'Grand groupe · 500+', title: 'Grand groupe', desc: 'Intégration SIRH, SLA, accompagnement premium, programme multi-sites.', foot: 'Ultra' },
-            ].map((s, i) => (
-              <div className="prof" key={i}>
-                <div className="prof-top">
-                  <span className="prof-tag">{s.tag}</span>
-                  <span className="prof-idx">{String(i + 1).padStart(2, '0')}</span>
-                </div>
-                <div className="prof-title">{s.title}</div>
-                <div className="prof-desc">{s.desc}</div>
-                <div className="prof-foot"><span className="dot" />Recommandé&nbsp;: {s.foot}</div>
-              </div>
-            ))}
-          </div>
-
-          <div className="eyebrow" style={{ marginBottom: 14 }}>Par profil de collaborateur</div>
-          <div className="prof-grid">
-            {[
-              { Ic: IcLeaf, tag: 'Sédentaire', title: "Reprise d'activité", desc: 'Reprise en douceur, équilibre alimentaire, gestion du stress et du sommeil.', foot: 'Coachs en réathlétisation' },
-              { Ic: IcRun, tag: 'Régulier', title: 'Sportif régulier', desc: "Plans d'entraînement structurés, nutrition adaptée, progression mesurée.", foot: 'Coachs sportifs & diététiciens' },
-              { Ic: IcZap, tag: 'Performance', title: 'Haute performance', desc: "Préparation physique avancée, mental, tests à l'effort, suivi biomarqueurs.", foot: 'Préparateurs & médecins du sport' },
-            ].map((s, i) => (
-              <div className="prof" key={i}>
-                <div className="prof-top">
-                  <span className="prof-tag">{s.tag}</span>
-                  <span className="prof-mark"><s.Ic size={18} stroke={1.5} /></span>
-                </div>
-                <div className="prof-title">{s.title}</div>
-                <div className="prof-desc">{s.desc}</div>
-                <div className="prof-foot"><span className="dot" />{s.foot}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── OFFRES ──────────────────────────────────────────────── */}
-      <section className="l-section" id="offres" style={{ paddingBottom: 96 }}>
-        <div className="container">
-          <div className="section-head">
-            <div>
-              <div className="eyebrow" style={{ marginBottom: 14 }}>Trois paliers</div>
-              <h2 className="display">Nos offres<br />entreprise.</h2>
-            </div>
-            <p className="lede">Un abonnement par collaborateur. Engagement minimum 10 mois. -20% sur la facturation annuelle.</p>
-          </div>
-
-          {/* Billing toggle */}
-          <div className="billing-bar">
-            <span className={!isYearly ? 'active' : ''}>Mensuel</span>
-            <button
-              className="billing-switch"
-              onClick={() => setBillingCycle(isYearly ? 'monthly' : 'yearly')}
-              style={{ background: isYearly ? 'var(--accent)' : '#ddd' }}
-              aria-label="Basculer mensuel / annuel"
-            >
-              <span style={{ left: isYearly ? 22 : 2 }} />
-            </button>
-            <span className={isYearly ? 'active' : ''}>Annuel {isYearly && <em>-20%</em>}</span>
-          </div>
-
-          {/* Pricing cards */}
-          <div className="price-grid">
-            {ENTERPRISE_PLANS.map((p) => {
-              const price = isYearly ? p.priceYearly : p.priceMonthly;
-              return (
-                <div key={p.id} className={'price-card' + (p.reco ? ' reco' : '')}>
-                  <span className="price-tag">{p.tag}</span>
-                  <div className="price-name">{p.name}</div>
-                  <div className="price-desc">{p.desc}</div>
-                  {price != null ? (
-                    <>
-                      <div className="price-amount num">{price}€</div>
-                      <div className="price-amount-sub">/ collaborateur / mois{isYearly ? ` · facturé ${price * 12}€/an` : ''}</div>
-                    </>
-                  ) : (
-                    <>
-                      <div className="price-amount num">Sur devis</div>
-                      <div className="price-amount-sub">Adapté à votre périmètre</div>
-                    </>
-                  )}
-                  <ul className="price-features">
-                    {p.features.map((f, i) => (
-                      <li key={i}><IcCheck size={14} /> {f}</li>
-                    ))}
-                  </ul>
-                  <a href="#demo" className={'btn btn-block ' + (p.reco ? 'btn-accent' : 'btn-primary')}>{p.cta}</a>
-                </div>
-              );
-            })}
-          </div>
-
-          <div style={{ textAlign: 'center', marginBottom: 48, color: 'var(--ink-3)', fontSize: 13, fontFamily: '"JetBrains Mono", monospace' }}>
-            Prix HT · TVA 20% en sus · Engagement minimum 10 mois
-          </div>
-
-          {/* Comparison table */}
-          <div className="eyebrow" style={{ marginBottom: 14, textAlign: 'center' }}>Comparer en détail</div>
-          <div className="compare-table-wrap">
-            <table className="compare-table">
-              <thead>
-                <tr>
-                  <th />
-                  {ENTERPRISE_PLANS.map(p => {
-                    const price = isYearly ? p.priceYearly : p.priceMonthly;
-                    return (
-                      <th key={p.id} className={p.reco ? 'compare-col-recommended' : ''}>
-                        <div className="compare-col-tag">{p.tag}</div>
-                        <div className="compare-col-name">{p.name}</div>
-                        <div style={{ fontSize: 12, color: 'var(--ink-3)', fontFamily: '"JetBrains Mono",monospace', marginBottom: 4 }}>{p.desc}</div>
-                        {price != null ? (
-                          <>
-                            <div className="compare-price num">{price}€</div>
-                            <div className="compare-price-sub">/ collab / mois</div>
-                          </>
-                        ) : (
-                          <>
-                            <div className="compare-price num">Sur devis</div>
-                            <div className="compare-price-sub">Custom</div>
-                          </>
-                        )}
-                        <div className="compare-cta">
-                          <a href="#demo" className={'btn btn-block ' + (p.reco ? 'btn-accent' : 'btn-primary')}>
-                            {p.cta}
-                          </a>
-                        </div>
-                      </th>
-                    );
-                  })}
-                </tr>
-              </thead>
-              <tbody>
-                {COMPARE_SECTIONS.map((s, si) => (
-                  <Fragment key={si}>
-                    <tr className="compare-row-head">
-                      <td colSpan={4}>{`/ ${String(si + 1).padStart(2, '0')} — ${s.head}`}</td>
-                    </tr>
-                    {s.rows.map((r, ri) => (
-                      <tr key={`${si}-${ri}`}>
-                        <td className="feat">{r[0]}</td>
-                        <td className="cell">{tableCell(r[1])}</td>
-                        <td className="cell" style={recoCellStyle}>{tableCell(r[2])}</td>
-                        <td className="cell">{tableCell(r[3])}</td>
-                      </tr>
-                    ))}
-                  </Fragment>
-                ))}
-              </tbody>
-            </table>
-          </div>
-
-          {/* Comparison — mobile : select one plan */}
-          <div className="compare-mobile">
-            <div className="compare-tabs">
-              {ENTERPRISE_PLANS.map((p, i) => (
-                <button
-                  key={p.id}
-                  className={'compare-tab' + (comparePlan === i ? ' active' : '')}
-                  onClick={() => setComparePlan(i)}
+          <div className="focus-grid">
+            {FOCUS_CARDS.map((c) => (
+              <article key={c.title} className="focus-card focus-card--small">
+                <img className="focus-card-bg" src={c.img} alt={c.title} />
+                <Link
+                  to={`/search?category=${c.category}`}
+                  className="card-arrow"
+                  aria-label={`Voir les coachs — ${c.title}`}
                 >
-                  {p.name}
-                </button>
-              ))}
-            </div>
-
-            {(() => {
-              const p = ENTERPRISE_PLANS[comparePlan];
-              const price = isYearly ? p.priceYearly : p.priceMonthly;
-              return (
-                <div className="compare-m-price">
-                  {price != null ? (
-                    <>
-                      <div className="amt num">{price}€</div>
-                      <div className="sub">/ collaborateur / mois{isYearly ? ` · ${price * 12}€ / an` : ''}</div>
-                    </>
-                  ) : (
-                    <>
-                      <div className="amt num">Sur devis</div>
-                      <div className="sub">Adapté à votre périmètre</div>
-                    </>
-                  )}
+                  <ArrowUpRight size={14} />
+                </Link>
+                <div className="focus-card-caption">
+                  <h3>{c.title}</h3>
+                  <p>{c.caption}</p>
                 </div>
-              );
-            })()}
-
-            {COMPARE_SECTIONS.map((s, si) => (
-              <div className="compare-m-section" key={si}>
-                <div className="compare-m-head">{`/ ${String(si + 1).padStart(2, '0')} — ${s.head}`}</div>
-                {s.rows.map((r, ri) => (
-                  <div className="compare-m-row" key={`${si}-${ri}`}>
-                    <span className="lbl">{r[0]}</span>
-                    <span className="val">{tableCell(r[comparePlan + 1])}</span>
-                  </div>
-                ))}
-              </div>
+              </article>
             ))}
 
-            <a href="#demo" className={'btn btn-block compare-m-cta ' + (ENTERPRISE_PLANS[comparePlan].reco ? 'btn-accent' : 'btn-primary')}>
-              {ENTERPRISE_PLANS[comparePlan].cta}
-            </a>
+            <article className="focus-card focus-card--big">
+              {/* IMAGE — grande carte de droite */}
+              <img className="focus-card-bg" src={santeMentale} alt="Santé mentale & bien-être" />
+              <Link
+                to="/search?category=MENTAL"
+                className="card-arrow"
+                aria-label="Voir les coachs — Santé mentale & Bien-être"
+              >
+                <ArrowUpRight size={14} />
+              </Link>
+              <div className="focus-card-caption focus-card-caption--big">
+                <h3>Santé mentale & Bien-être</h3>
+                <p>Gestion du stress, préparation mentale, sophrologie.</p>
+              </div>
+            </article>
+
+            <div className="focus-proof">
+              <AvatarStack count={3} badge="100%" size={36} photos={AVATARS_DOMAINES} />
+              <p>Des coachs 100 % vérifiés —<br />diplômes et identité contrôlés</p>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* ── PREUVES / RESSOURCES ────────────────────────────────── */}
-      <section className="l-section" id="preuves">
-        <div className="container">
-          <div className="section-head">
+      {/* ═══ COMMENT ÇA MARCHE ═════════════════════════════════════ */}
+      <section className="lp-block">
+        <div className="wrap section-pad">
+          <div className="how-top">
+            {/* IMAGE — grande photo de gauche */}
+            <img className="how-img-main" src={coach} alt="Séance de coaching" />
+            <div className="how-content">
+              <Chip>Comment ça marche</Chip>
+              <h2 className="h2">
+                Réservez Votre Séance<br />en Quelques <em>Clics</em>
+              </h2>
+              <p className="how-desc">
+                Choisissez un coach, réservez un créneau directement dans son agenda et payez en ligne ou laissez votre entreprise couvrir la séance.
+              </p>
+              <Link to="/search" className="btn-pill btn-pill--outline">
+                Trouver mon coach
+                <span className="btn-circle btn-circle--orange"><ArrowUpRight size={15} color="#fff" /></span>
+              </Link>
+            </div>
+          </div>
+
+          <div className="how-bottom">
+            <div className="how-thumbs">
+              {/* IMAGE — vignette 1 */}
+              <img className="how-thumb" src={bilanSportif} alt="Sport collectif" />
+              {/* IMAGE — vignette 2 */}
+              <img className="how-thumb" src={coachingBienEtre} alt="Sport individuel" />
+            </div>
+            <div className="how-step">
+              <div className="how-step-num">01<span>/04</span><i /></div>
+              <div className="how-step-text">
+                <h3>Trouvez Votre<br />Coach Idéal</h3>
+                <p>Filtrez par spécialité, ville et lieu de pratique, puis comparez les profils et les avis.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ═══ COACHS ════════════════════════════════════════════════ */}
+      <section className="lp-block lp-block--tint" id="coaches">
+        <div className="wrap section-pad">
+          <Chip>Nos coachs</Chip>
+          <div className="coaches-head">
             <div>
-              <div className="eyebrow" style={{ marginBottom: 14 }}>Preuves</div>
-              <h2 className="display">Ce qui<br />nous distingue.</h2>
-            </div>
-            <p className="lede">Une promesse claire, une exécution rigoureuse. Nos engagements de qualité et de conformité sont au cœur de la plateforme.</p>
-          </div>
-
-          <div className="proof-grid">
-            <div className="proof">
-              <div>
-                <div className="proof-icon"><IcZap size={22} stroke={1.5} /></div>
-                <div className="proof-num">48 h</div>
-                <div className="proof-label">Déploiement complet de l'offre, du contrat aux premiers accès collaborateurs.</div>
-              </div>
-            </div>
-            <div className="proof">
-              <div>
-                <div className="proof-icon"><IcShield size={22} stroke={1.5} /></div>
-                <div className="proof-num">Certifiés</div>
-                <div className="proof-label">Tous nos professionnels sont diplômés et leurs documents vérifiés un à un.</div>
-              </div>
-            </div>
-            <div className="proof">
-              <div>
-                <div className="proof-icon"><IcChart size={22} stroke={1.5} /></div>
-                <div className="proof-num">3 domaines</div>
-                <div className="proof-label">Sport, nutrition, mental — une plateforme unique pour la santé globale.</div>
-              </div>
-            </div>
-          </div>
-
-          <div className="quote">
-            <div className="quote-mark">"</div>
-            <div>
-              <div className="quote-text">
-                Nous cherchions une solution simple à déployer, conforme RGPD, et qui couvre vraiment les trois piliers de la santé au travail. Goupyl Sport a coché toutes les cases en moins de deux semaines.
-              </div>
-              <div className="quote-author">
-                <div style={{ width: 44, height: 44, borderRadius: '50%', background: 'var(--accent)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 700, fontFamily: 'Archivo, sans-serif' }}>CL</div>
-                <div>
-                  <div className="quote-author-name">Camille Laurent</div>
-                  <div className="quote-author-role">DRH · Groupe industriel · 320 collaborateurs</div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ── DEMO / CONTACT ──────────────────────────────────────── */}
-      <section className="l-section" id="demo">
-        <div className="container">
-          <div className="demo-grid">
-            <div className="demo-info">
-              <div className="eyebrow" style={{ marginBottom: 18 }}>Démo</div>
-              <h2 className="display">Parlons<br />de vos équipes.</h2>
-              <p>30 minutes pour comprendre vos enjeux, vous présenter la plateforme et co-construire un plan de déploiement adapté.</p>
-              <div className="demo-bullet"><IcCheck size={16} stroke={2.4} /> Diagnostic personnalisé en 30 minutes</div>
-              <div className="demo-bullet"><IcCheck size={16} stroke={2.4} /> Démonstration plateforme & reporting RH</div>
-              <div className="demo-bullet"><IcCheck size={16} stroke={2.4} /> Devis adapté à votre périmètre</div>
-              <div className="demo-bullet"><IcCheck size={16} stroke={2.4} /> Sans engagement, sans pression</div>
-            </div>
-
-            {demoSent ? (
-              <div className="demo-success">
-                <div className="demo-success-icon"><IcCheck size={28} stroke={3} /></div>
-                <h3 className="display" style={{ fontSize: 32, margin: '0 0 14px' }}>Merci !</h3>
-                <p style={{ color: 'var(--ink-3)', fontSize: 14.5, maxWidth: 360, margin: '0 auto' }}>
-                  Votre demande est bien reçue. Un expert Goupyl Sport vous recontacte sous 24 h ouvrées pour caler un créneau.
-                </p>
-              </div>
-            ) : (
-              <form className="demo-form" onSubmit={handleDemoSubmit}>
-                <div className="demo-form-row">
-                  <div className="demo-field">
-                    <label>Entreprise</label>
-                    <input type="text" required value={demoForm.company} onChange={handleDemoChange('company')} placeholder="Nom de l'entreprise" />
-                  </div>
-                  <div className="demo-field">
-                    <label>Effectif</label>
-                    <select required value={demoForm.size} onChange={handleDemoChange('size')}>
-                      <option value="">Sélectionner</option>
-                      <option>10–50</option>
-                      <option>50–200</option>
-                      <option>200–500</option>
-                      <option>500–1000</option>
-                      <option>1000+</option>
-                    </select>
-                  </div>
-                </div>
-                <div className="demo-form-row">
-                  <div className="demo-field">
-                    <label>Nom & prénom</label>
-                    <input type="text" required value={demoForm.name} onChange={handleDemoChange('name')} placeholder="Votre nom" />
-                  </div>
-                  <div className="demo-field">
-                    <label>Téléphone</label>
-                    <input type="tel" value={demoForm.phone} onChange={handleDemoChange('phone')} placeholder="06 12 34 56 78" />
-                  </div>
-                </div>
-                <div className="demo-field">
-                  <label>Email professionnel</label>
-                  <input type="email" required value={demoForm.email} onChange={handleDemoChange('email')} placeholder="vous@entreprise.fr" />
-                </div>
-                <div className="demo-field">
-                  <label>Votre projet</label>
-                  <textarea value={demoForm.message} onChange={handleDemoChange('message')} placeholder="Quelques mots sur votre contexte, vos enjeux..." />
-                </div>
-                <button type="submit" className="btn btn-primary btn-lg btn-block">Demander une démo gratuite <IcArrow size={16} /></button>
-                <div style={{ marginTop: 14, fontSize: 11, color: 'var(--ink-3)', fontFamily: '"JetBrains Mono", monospace', textAlign: 'center' }}>
-                  Vos données sont traitées conformément au RGPD.
-                </div>
-              </form>
-            )}
-          </div>
-        </div>
-      </section>
-
-      {/* ── PROS ────────────────────────────────────────────────── */}
-      <section className="l-section">
-        <div className="container">
-          <div className="dark-card">
-            <div className="eyebrow" style={{ marginBottom: 18, color: '#999' }}>Réseau de pros</div>
-            <h2 className="display">Rejoindre Goupyl<br />en tant que pro.</h2>
-            <p>Coachs sportifs, diététiciens, préparateurs mentaux : intégrez notre réseau dédié aux entreprises et accompagnez des collaborateurs engagés dans des programmes structurés.</p>
-            <div style={{ display: 'flex', gap: 8, justifyContent: 'center', flexWrap: 'wrap', marginTop: 32 }}>
-              {[IcRun, IcLeaf, IcBrain].map((I, i) => (
-                <span key={i} style={{ width: 48, height: 48, border: '1px solid rgba(255,255,255,.2)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff' }}>
-                  <I size={20} stroke={1.5} />
-                </span>
-              ))}
-            </div>
-            <div style={{ marginTop: 32 }}>
-              <Link to="/register?role=INTERVENANT" className="btn btn-on-dark btn-lg">Devenir intervenant <IcArrow size={16} /></Link>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ── FAQ ─────────────────────────────────────────────────── */}
-      <section className="l-section">
-        <div className="container" style={{ maxWidth: 880 }}>
-          <div className="eyebrow" style={{ textAlign: 'center', marginBottom: 14 }}>FAQ</div>
-          <h2 className="display" style={{ textAlign: 'center', fontSize: 'clamp(40px,5vw,72px)', marginBottom: 48 }}>Questions fréquentes.</h2>
-          {FAQS.map((faq, i) => (
-            <FaqItem key={i} q={faq[0]} a={faq[1]} n={i + 1} open={openFaq === i} onToggle={() => setOpenFaq(openFaq === i ? -1 : i)} />
-          ))}
-          <div style={{ borderTop: '1px solid var(--line)' }} />
-        </div>
-      </section>
-
-      {/* ── FOOTER ──────────────────────────────────────────────── */}
-      <footer className="l-foot">
-        <div className="container">
-          <div className="foot-grid">
-            <div>
-              <img src={logo} alt="Goupyl Sport" className="w-55 h-auto ml-[-18px]" />
-              <p style={{ color: 'var(--ink-3)', fontSize: 13.5, maxWidth: 280, marginTop: 4 }}>
-                La plateforme B2B de sport-santé en entreprise. Sport, nutrition, mental — par des professionnels certifiés.
+              <h2 className="h2 h2--xl">
+                L’Équipe Derrière<br />Vos <em>Progrès</em>
+              </h2>
+              <p className="coaches-sub">
+                Coachs sportifs, nutritionnistes et préparateurs mentaux : chaque diplôme est vérifié par notre équipe avant l’activation du profil.
               </p>
             </div>
-            <div className="foot-col">
-              <h4>Plateforme</h4>
-              <a href="#parcours">Deux parcours</a>
-              <a href="#comment-ca-marche">Comment ça marche</a>
-              <a href="#pour-qui">Pour qui</a>
-              <a href="#preuves">Preuves</a>
-            </div>
-            <div className="foot-col">
-              <h4>Offres</h4>
-              <a href="#offres">Essentiel</a>
-              <a href="#offres">Boost</a>
-              <a href="#offres">Ultra</a>
-              <a href="#demo">Demander une démo</a>
-            </div>
-            <div className="foot-col">
-              <h4>Légal</h4>
-              <Link to="/cgu">CGU</Link>
-              <Link to="/confidentialite">Confidentialité</Link>
-              <a href="mailto:contact@goupylsport.fr">Contact</a>
+            <div className="coaches-tabs">
+              {COACH_TABS.map((t) => (
+                <Link key={t.category} to={`/search?category=${t.category}`} className="tab">
+                  {t.label}
+                </Link>
+              ))}
             </div>
           </div>
-          <div className="foot-bottom">
-            <div>© 2026 Goupyl Sport SAS — Tous droits réservés.</div>
-            <div style={{ display: 'flex', gap: 24 }}>
-              <Link to="/confidentialite">Confidentialité</Link>
-              <Link to="/cgu">CGU</Link>
-            </div>
+
+          <div className="coaches-grid">
+            {COACHES.map((c, i) => (
+              <article key={i} className={`coach-card coach-card--${c.tone}`} style={{ marginTop: `${c.offset}px` }}>
+                <img className="coach-card-img" src={c.img} alt={c.name} />
+                <div className="coach-label">
+                  <strong>{c.name}</strong>
+                  <span>{c.role}</span>
+                </div>
+              </article>
+            ))}
           </div>
         </div>
+      </section>
+
+      {/* ═══ TARIFS ════════════════════════════════════════════════ */}
+      <section className="lp-block" id="pricing">
+        <div className="wrap section-pad section-pad--center">
+          <Chip>Tarifs entreprise</Chip>
+          <h2 className="h2 h2--center">Choisissez Votre <em>Formule</em></h2>
+          <p className="section-sub">
+            Par collaborateur et par mois, jusqu’à −20 % en facturation annuelle. Formule Ultra sur devis.<br />
+            Vous êtes un particulier ? Vous payez simplement à la séance, au tarif du coach.
+          </p>
+
+          <div className="plans">
+            {PLANS.map((p) => (
+              <article key={p.name} className={`plan ${p.image ? 'plan--image' : ''}`}>
+                {p.image && <img className="plan-bg" src={p.image} alt="" />}
+                <div className="plan-avatars"><AvatarStack count={2} size={34} light photos={p.avatars} /></div>
+                <div className="plan-body">
+                  {p.price
+                    ? <div className="plan-price">{p.price} € / <s>{p.old}</s></div>
+                    : <div className="plan-price">Sur devis</div>}
+                  <div className="plan-cycle">Par collaborateur / mois</div>
+                  <h3 className="plan-name">{p.name}</h3>
+                  {p.to ? (
+                    <Link to={p.to} className="btn-pill btn-pill--orange">
+                      {p.cta}
+                      <span className="btn-circle btn-circle--white"><ArrowUpRight size={15} color="#F4530F" /></span>
+                    </Link>
+                  ) : (
+                    <a href="mailto:support@goupylsport.fr" className="btn-pill btn-pill--orange">
+                      {p.cta}
+                      <span className="btn-circle btn-circle--white"><ArrowUpRight size={15} color="#F4530F" /></span>
+                    </a>
+                  )}
+                  <p className="plan-desc">{p.desc}</p>
+                </div>
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ═══ TÉMOIGNAGE ════════════════════════════════════════════ */}
+      <section className="lp-block">
+        <div className="wrap section-pad section-pad--center">
+          <Chip>Témoignage</Chip>
+          <h2 className="h2 h2--center">Ce Que Disent Nos <em>Sportifs</em></h2>
+          <p className="section-sub">Approuvé par les entreprises, adoré des sportifs.</p>
+
+          <div className="testimonial">
+            <div className="testimonial-left">
+              <div className="quote-mark">““</div>
+              <div className="testimonial-arrows">
+                <button type="button" className="arrow-btn" aria-label="Précédent"><ArrowLeft size={15} /></button>
+                <button type="button" className="arrow-btn arrow-btn--orange" aria-label="Suivant"><ArrowRight size={15} /></button>
+              </div>
+              <blockquote>
+                Mon entreprise couvre mes séances : je réserve un créneau chez ma coach en deux clics, je valide la séance par QR code et je suis mes progrès. Reprendre le sport n’a jamais été aussi simple — en trois mois, je ne rate plus une séance.
+              </blockquote>
+              <div className="testimonial-author">
+                <span className="testimonial-avatar"><img src={sportive} alt="" loading="lazy" /></span>
+                <div>
+                  <strong>Sarah Benali</strong>
+                  <span>Collaboratrice — Acme Corp</span>
+                </div>
+              </div>
+            </div>
+            <img className="testimonial-img" src={sportive} alt="Sarah Benali" />
+          </div>
+        </div>
+      </section>
+
+      {/* ═══ FOOTER ════════════════════════════════════════════════ */}
+      <footer className="lp-block footer">
+        <div className="wrap">
+          <div className="footer-top">
+            <div className="footer-left">
+              <h2 className="footer-title">Transformer l’effort<br />en excellence.</h2>
+              <form className="footer-form" onSubmit={(e) => e.preventDefault()}>
+                <input type="email" placeholder="Votre email" aria-label="Votre email" />
+                <button type="submit" className="btn-circle btn-circle--orange" aria-label="S’inscrire">
+                  <ArrowUpRight size={15} color="#fff" />
+                </button>
+              </form>
+            </div>
+
+            <div className="footer-right">
+              <nav className="footer-nav">
+                <a href="#hero">Accueil</a>
+                <a href="#domaines">Domaines</a>
+                <a href="#coaches">Coachs</a>
+                <a href="#pricing">Tarifs</a>
+                <a href="mailto:support@goupylsport.fr">Contact</a>
+              </nav>
+              <div className="footer-cols">
+                <div>
+                  <h4>Contactez-nous</h4>
+                  <p>+33 1 23 45 67 89<br />support@goupylsport.fr</p>
+                </div>
+                <div>
+                  <h4>Localisation</h4>
+                  <p>10A rue prémartine<br />72000 Le Mans, France</p>
+                </div>
+                <div className="footer-socials">
+                  <a href="#" aria-label="Facebook"><SocialIcon path={<path d="M14 13.5h2.5l1-4H14v-2c0-1.03 0-2 2-2h1.5V2.14C17.17 2.1 15.95 2 14.66 2 11.97 2 10 3.66 10 6.7v2.8H7v4h3V22h4v-8.5z" />} /></a>
+                  <a href="#" aria-label="Instagram"><SocialIcon path={<path d="M12 2.2c3.2 0 3.58.01 4.85.07 3.25.15 4.77 1.69 4.92 4.92.06 1.27.07 1.65.07 4.85s-.01 3.58-.07 4.85c-.15 3.23-1.66 4.77-4.92 4.92-1.27.06-1.64.07-4.85.07s-3.58-.01-4.85-.07c-3.26-.15-4.77-1.7-4.92-4.92C2.21 15.58 2.2 15.2 2.2 12s.01-3.58.07-4.85C2.42 3.92 3.94 2.38 7.15 2.27 8.42 2.21 8.8 2.2 12 2.2zm0 1.8c-3.15 0-3.5.01-4.74.07-2.4.11-3.48 1.2-3.59 3.59C3.61 8.9 3.6 9.25 3.6 12s.01 3.1.07 4.34c.11 2.39 1.19 3.48 3.59 3.59 1.24.06 1.59.07 4.74.07s3.5-.01 4.74-.07c2.4-.11 3.48-1.2 3.59-3.59.06-1.24.07-1.59.07-4.34s-.01-3.1-.07-4.34c-.11-2.39-1.19-3.48-3.59-3.59C15.5 4.01 15.15 4 12 4zm0 3.06A4.94 4.94 0 1 1 7.06 12 4.94 4.94 0 0 1 12 7.06zm0 1.8A3.14 3.14 0 1 0 15.14 12 3.14 3.14 0 0 0 12 8.86zm5.15-3.04a1.15 1.15 0 1 1-1.15 1.15 1.15 1.15 0 0 1 1.15-1.15z" />} /></a>
+                  <a href="#" aria-label="LinkedIn"><SocialIcon path={<path d="M4.98 3.5C4.98 4.88 3.87 6 2.5 6S0 4.88 0 3.5 1.12 1 2.5 1s2.48 1.12 2.48 2.5zM.24 8.31h4.52V22.7H.24zM8.34 8.31h4.33v1.97h.06c.6-1.14 2.08-2.34 4.28-2.34 4.58 0 5.42 3.01 5.42 6.92v7.84h-4.51v-6.95c0-1.66-.03-3.79-2.31-3.79-2.31 0-2.66 1.8-2.66 3.67v7.07H8.34z" />} /></a>
+                  <a href="#" aria-label="YouTube"><SocialIcon path={<path d="M23.5 6.19a3.02 3.02 0 0 0-2.12-2.14C19.51 3.55 12 3.55 12 3.55s-7.51 0-9.38.5A3.02 3.02 0 0 0 .5 6.19 31.6 31.6 0 0 0 0 12a31.6 31.6 0 0 0 .5 5.81 3.02 3.02 0 0 0 2.12 2.14c1.87.5 9.38.5 9.38.5s7.51 0 9.38-.5a3.02 3.02 0 0 0 2.12-2.14A31.6 31.6 0 0 0 24 12a31.6 31.6 0 0 0-.5-5.81zM9.6 15.6V8.4l6.27 3.6z" />} /></a>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="footer-brand-row">
+            <span className="footer-brand">Goupyl Sport</span>
+          </div>
+        </div>
+
+        <div className="footer-giant" aria-hidden="true">Goupyl Sport</div>
       </footer>
     </div>
   );
 }
+
+// ─── Styles ────────────────────────────────────────────────────────
+const CSS = `
+.lp{
+  --bg:#EBEAE6;
+  --card:#FFFFFF;
+  --tint:#F5F4F1;
+  --ink:#171614;
+  --ink-2:#4c4a46;
+  --ink-3:#8a8781;
+  --line:#E4E2DC;
+  --orange:#F4530F;
+  --dark:#191917;
+  font-family:"Inter",system-ui,-apple-system,sans-serif;
+  background:var(--bg);
+  color:var(--ink);
+  display:flex;flex-direction:column;
+  -webkit-font-smoothing:antialiased;
+  overflow-x:hidden;
+}
+.lp *{box-sizing:border-box;margin:0;padding:0}
+.lp a{color:inherit;text-decoration:none}
+.lp button{font-family:inherit;background:none;border:none;cursor:pointer;color:inherit}
+.lp img{max-width:100%}
+.lp s{text-decoration-thickness:1.5px}
+
+
+/* ── Défilement fluide vers les ancres de la nav ─────────────────── */
+html{scroll-behavior:smooth}
+/* La cible s'arrête un peu avant le haut de l'écran, pas collée au bord */
+.lp-block[id]{scroll-margin-top:24px}
+/* Respecte les préférences système « réduire les animations » */
+@media (prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto}
+  .lp *,.lp *::before,.lp *::after{transition-duration:.01ms !important;animation-duration:.01ms !important}
+}
+
+.lp-block{background:var(--card)}
+.lp-block--tint{background:var(--tint)}
+.wrap{max-width:1240px;margin:0 auto;padding:0 40px}
+.section-pad{padding-top:88px;padding-bottom:88px}
+.section-pad--center{display:flex;flex-direction:column;align-items:center;text-align:center}
+
+/* ── Typo ─────────────────────────────────── */
+.h2{font-size:46px;font-weight:600;letter-spacing:-.03em;line-height:1.08}
+.h2--xl{font-size:54px}
+.h2--center{margin-top:26px}
+.h2 em{font-style:italic;color:var(--orange);font-weight:500}
+.section-sub{margin-top:16px;font-size:14.5px;color:var(--ink-2);line-height:1.55}
+
+/* ── Chip ─────────────────────────────────── */
+.chip{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line);background:#fff;border-radius:999px;padding:7px 14px;font-size:12.5px;font-weight:500;color:var(--ink)}
+.chip-dot{width:5px;height:5px;border-radius:50%;background:var(--orange)}
+
+/* ── Boutons ──────────────────────────────── */
+.btn-pill{display:inline-flex;align-items:center;gap:12px;border-radius:999px;padding:6px 6px 6px 22px;font-size:15px;font-weight:500;white-space:nowrap;transition:transform .15s ease,background-color .2s ease,color .2s ease}
+.btn-pill:hover{transform:translateY(-1px)}
+.btn-pill:active{transform:translateY(0) scale(.98)}
+.lp .btn-pill--white{background:#fff;color:var(--ink)}
+.lp .btn-pill--outline{background:#fff;color:var(--ink);border:1px solid var(--orange)}
+.lp .btn-pill--orange{background:var(--orange);color:#fff}
+.btn-circle{width:38px;height:38px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0}
+.btn-circle--orange{background:linear-gradient(145deg,#FF7A33,#F4530F)}
+.btn-circle--white{background:#fff}
+
+/* ── Photos ───────────────────────────────────
+   Toutes les photos sont recadrées en "cover" : quel que soit le
+   format du fichier fourni, il remplit son cadre sans déformation. */
+.hero-bg,.focus-card-bg,.how-img-main,.how-thumb,
+.plan-bg,.testimonial-img,.coach-card-img{
+  display:block;width:100%;height:100%;object-fit:cover;background:#DFDDD7
+}
+
+/* ── Avatars ──────────────────────────────── */
+.avstack{display:flex;align-items:center;background:#fff;border-radius:999px;padding:4px;width:max-content}
+.av{width:var(--av-size,40px);height:var(--av-size,40px);border-radius:50%;background:linear-gradient(145deg,#E0DED8,#C9C7C1);border:2px solid #fff;display:flex;align-items:center;justify-content:center;color:#5f5d58;overflow:hidden}
+.av-img{width:100%;height:100%;object-fit:cover;border-radius:50%;display:block}
+.av + .av{margin-left:calc(var(--av-size,40px) * -0.32)}
+.av--badge{background:#171614;color:#fff;font-size:11px;font-weight:600;letter-spacing:.01em}
+
+/* ═══ HERO ═════════════════════════════════ */
+.hero-block{padding:20px}
+.hero{position:relative;border-radius:22px;overflow:hidden;min-height:640px;height:calc(100vh - 40px);max-height:820px}
+.hero-bg{position:absolute;inset:0;border-radius:0}
+/* Voile sombre : garde le titre blanc lisible sur une photo claire */
+.hero::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(15,15,15,.30) 0%,rgba(15,15,15,.10) 40%,rgba(15,15,15,.55) 100%);pointer-events:none;z-index:1}
+.hero-inner{position:absolute;inset:0;z-index:2;display:flex;flex-direction:column;padding:26px 40px 44px;color:#fff}
+.hero-nav{display:flex;align-items:center;justify-content:space-between;position:relative}
+.hero-nav-links{display:flex;gap:30px;font-size:15px;font-weight:500}
+.hero-nav-links a{opacity:.95;transition:opacity .2s ease}
+.hero-nav-links a:hover{opacity:.7; color: #F8601B}
+.hero-logo{width:20%;position:absolute;left:50%;transform:translateX(-50%);font-size:21px;font-weight:800;letter-spacing:-.02em;white-space:nowrap}
+.hero-social{margin-top:44px;display:flex;flex-direction:column;gap:14px}
+.hero-social p{font-size:15.5px;font-weight:500;line-height:1.4}
+.hero-desc{margin-top:auto;max-width:360px;font-size:17px;line-height:1.5;font-weight:400;margin-bottom:34px}
+.hero-title{font-size:clamp(64px,8.6vw,124px);font-weight:700;letter-spacing:-.025em;line-height:.96}
+
+/* ═══ FOCUS ════════════════════════════════ */
+.focus-head{display:flex;justify-content:space-between;align-items:flex-start;gap:40px}
+.focus-head-left{display:flex;flex-direction:column;gap:26px}
+.focus-tagline{font-size:14px;font-weight:500;line-height:1.5;color:var(--ink)}
+.focus-head .h2{text-align:left}
+.focus-grid{margin-top:54px;display:grid;grid-template-columns:1fr 1fr 1.45fr;grid-template-rows:auto auto;gap:18px}
+.focus-card{position:relative;border-radius:14px;overflow:hidden}
+.focus-card--small{height:170px}
+.focus-card--big{grid-column:3;grid-row:1 / span 2;height:100%;min-height:330px}
+.focus-card-bg{position:absolute;inset:0;border-radius:0}
+/* Voile sombre : garde les légendes blanches lisibles */
+.focus-card::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(15,15,15,0) 40%,rgba(15,15,15,.62) 100%);pointer-events:none;z-index:1}
+.lp .card-arrow{position:absolute;top:12px;right:12px;width:32px;height:32px;border-radius:50%;background:#fff;color:var(--ink);display:flex;align-items:center;justify-content:center;z-index:2;text-decoration:none;transition:transform .15s ease,background-color .2s ease,color .2s ease}
+.lp .card-arrow:hover{background:var(--orange);color:#fff;transform:scale(1.08)}
+.lp .card-arrow:active{transform:scale(.94)}
+.focus-card-caption{position:absolute;left:16px;right:52px;bottom:14px;color:#fff;z-index:2}
+.focus-card-caption h3{font-size:15.5px;font-weight:600;letter-spacing:-.01em}
+.focus-card-caption p{font-size:11px;margin-top:4px;opacity:.85;line-height:1.4}
+.focus-card-caption--big h3{font-size:26px}
+.focus-card-caption--big p{font-size:12.5px;margin-top:6px}
+.focus-proof{grid-column:1 / span 2;display:flex;align-items:center;gap:16px;padding-top:8px}
+.focus-proof .avstack{background:var(--tint)}
+.focus-proof p{font-size:15px;font-weight:500;line-height:1.4}
+
+/* ═══ COMMENT ÇA MARCHE ════════════════════ */
+.how-top{display:grid;grid-template-columns:1.05fr 1fr;gap:56px;align-items:start}
+.how-img-main{height:400px;border-radius:16px}
+.how-content{display:flex;flex-direction:column;align-items:flex-start;gap:22px;padding-top:8px}
+.how-desc{font-size:15px;color:var(--ink-2);line-height:1.55;max-width:400px}
+.how-bottom{margin-top:22px;display:grid;grid-template-columns:1.05fr 1fr;gap:56px;align-items:center}
+.how-thumbs{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.how-thumb{height:160px;border-radius:14px}
+.how-step{display:flex;gap:28px;align-items:flex-start}
+.how-step-num{font-size:34px;font-weight:600;letter-spacing:-.02em;display:flex;align-items:baseline;flex-shrink:0}
+.how-step-num span{font-size:14px;color:var(--ink-3);font-weight:500;margin-left:2px}
+.how-step-num i{display:block;width:74px;height:1px;background:var(--ink);align-self:center;margin-left:18px}
+.how-step-text h3{font-size:22px;font-weight:600;letter-spacing:-.02em;line-height:1.2}
+.how-step-text p{margin-top:10px;font-size:12.5px;color:var(--ink-2);line-height:1.5;max-width:300px}
+
+/* ═══ COACHS ═══════════════════════════════ */
+.coaches-head{margin-top:26px;display:flex;justify-content:space-between;align-items:flex-end;gap:40px}
+.coaches-sub{margin-top:18px;font-size:14.5px;color:var(--ink-2);line-height:1.55;max-width:420px}
+.coaches-tabs{display:flex;gap:6px;flex-wrap:wrap}
+/* Préfixé .lp pour passer devant la règle générique « .lp a{color:inherit} » */
+.lp .tab{padding:9px 18px;border-radius:999px;font-size:13.5px;font-weight:500;color:var(--ink-2);background:transparent;text-decoration:none;transition:background-color .25s ease,color .25s ease,transform .15s ease}
+.lp .tab:hover{background:var(--orange);color:#fff}
+.lp .tab:active{transform:scale(.97)}
+.coaches-grid{margin-top:44px;display:grid;grid-template-columns:repeat(4,1fr);gap:22px;align-items:start}
+.coach-card{position:relative;border-radius:16px;height:340px;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.coach-card--a{background:linear-gradient(150deg,#C4553B,#8E3323);color:#f3d9d0}
+.coach-card--b{background:linear-gradient(150deg,#D8D6D1,#B4B2AC);color:#6a6863}
+.coach-card--c{background:linear-gradient(150deg,#EFEDE8,#D5D3CD);color:#8a8781}
+.coach-card--d{background:linear-gradient(150deg,#3E4657,#232936);color:#aab2c2}
+.coach-card-img{position:absolute;inset:0}
+/* Voile sombre : garde le nom du coach lisible */
+.coach-card::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(15,15,15,0) 45%,rgba(15,15,15,.5) 100%);pointer-events:none;z-index:1}
+.coach-label{position:absolute;z-index:2;left:12px;right:12px;bottom:12px;background:rgba(255,255,255,.16);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.25);border-radius:12px;padding:12px 16px;text-align:center;color:#fff;display:flex;flex-direction:column;gap:2px}
+.coach-label strong{font-size:16px;font-weight:600}
+.coach-label span{font-size:11.5px;opacity:.85}
+
+/* ═══ TARIFS ═══════════════════════════════ */
+.plans{margin-top:52px;display:grid;grid-template-columns:repeat(3,1fr);gap:20px;width:100%}
+.plan{position:relative;border-radius:20px;overflow:hidden;background:var(--dark);color:#fff;padding:26px 26px 34px;min-height:430px;display:flex;flex-direction:column}
+.plan-bg{position:absolute;inset:0;border-radius:0}
+.plan-bg + .plan-avatars,.plan--image .plan-body{position:relative}
+.plan--image::before{content:"";position:absolute;inset:0;background:rgba(15,15,20,.38);z-index:1}
+.plan > :not(.plan-bg){position:relative;z-index:2}
+.plan-avatars{display:flex;justify-content:flex-end}
+.plan-avatars .avstack{background:transparent;padding:0}
+.plan-body{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;text-align:center}
+.plan-price{font-size:30px;font-weight:600;letter-spacing:-.02em}
+.plan-price s{font-size:18px;color:rgba(255,255,255,.5);font-weight:500;margin-left:2px}
+.plan-cycle{margin-top:24px;font-size:12.5px;font-weight:500;color:#FF9C6B}
+.plan-name{margin-top:8px;font-size:27px;font-weight:600;letter-spacing:-.02em}
+.plan .btn-pill{margin-top:22px;padding:5px 5px 5px 20px;font-size:14px}
+.plan .btn-circle{width:34px;height:34px}
+.plan-desc{margin-top:34px;font-size:13px;line-height:1.6;color:rgba(255,255,255,.85);max-width:420px}
+
+/* ═══ TÉMOIGNAGE ═══════════════════════════ */
+.testimonial{margin-top:56px;display:grid;grid-template-columns:1fr 1.1fr;gap:56px;width:100%;text-align:left;align-items:stretch}
+.testimonial-left{display:flex;flex-direction:column;position:relative;padding-top:6px}
+.quote-mark{font-size:150px;line-height:.7;font-weight:800;color:#DCDAD4;letter-spacing:-.12em;user-select:none;height:90px}
+.testimonial-arrows{position:absolute;top:6px;right:0;display:flex;gap:10px}
+.arrow-btn{width:40px;height:40px;border-radius:50%;border:1px solid var(--line);display:flex;align-items:center;justify-content:center;color:var(--ink);transition:transform .15s ease,background-color .2s ease,border-color .2s ease}
+.arrow-btn:hover{background:var(--tint)}
+.arrow-btn:active{transform:scale(.93)}
+.arrow-btn--orange{background:var(--orange);border-color:var(--orange);color:#fff}
+.testimonial blockquote{margin-top:34px;font-size:17px;line-height:1.65;color:var(--ink);max-width:480px}
+.testimonial-author{margin-top:auto;padding-top:38px;display:flex;align-items:center;gap:12px}
+.testimonial-avatar{width:40px;height:40px;border-radius:50%;background:linear-gradient(145deg,#E0DED8,#C9C7C1);display:flex;align-items:center;justify-content:center;color:#5f5d58;flex-shrink:0;overflow:hidden}
+.testimonial-avatar img{width:100%;height:100%;object-fit:cover;display:block}
+.testimonial-author div{display:flex;flex-direction:column}
+.testimonial-author strong{font-size:14.5px;font-weight:600}
+.testimonial-author span{font-size:12px;color:var(--ink-3)}
+.testimonial-img{height:440px;border-radius:16px}
+
+/* ═══ FOOTER ═══════════════════════════════ */
+.footer{padding-top:88px;overflow:hidden}
+.footer-top{display:grid;grid-template-columns:1fr 1.1fr;gap:64px;align-items:start}
+.footer-title{font-size:36px;font-weight:600;letter-spacing:-.025em;line-height:1.15}
+.footer-form{margin-top:30px;display:flex;align-items:center;gap:8px;border:1px solid var(--line);border-radius:999px;padding:5px 5px 5px 22px;max-width:340px;background:#fff}
+.footer-form input{flex:1;border:none;outline:none;font-family:inherit;font-size:14px;color:var(--ink);background:transparent;min-width:0}
+.footer-form input::placeholder{color:var(--ink-3)}
+.footer-form .btn-circle{width:36px;height:36px;cursor:pointer}
+.footer-nav{display:flex;gap:28px;font-size:14px;font-weight:500;justify-content:flex-end;flex-wrap:wrap}
+.footer-nav a:hover{color:var(--orange)}
+.footer-cols{margin-top:54px;display:flex;justify-content:flex-end;gap:56px;flex-wrap:wrap;align-items:flex-start}
+.footer-cols h4{font-size:13.5px;font-weight:600;margin-bottom:10px}
+.footer-cols p{font-size:13px;color:var(--ink-2);line-height:1.6}
+.footer-socials{display:flex;gap:8px}
+.footer-socials a{width:32px;height:32px;border-radius:50%;border:1px solid var(--line);display:flex;align-items:center;justify-content:center;color:var(--ink)}
+.footer-socials a:hover{background:var(--ink);color:#fff;border-color:var(--ink)}
+.footer-brand-row{margin-top:70px;padding:26px 0;border-top:1px solid var(--line)}
+.footer-brand{font-size:22px;font-weight:800;letter-spacing:-.02em}
+.footer-giant{font-size:clamp(60px,12.6vw,210px);font-weight:900;letter-spacing:-.05em;line-height:.82;text-align:center;white-space:nowrap;color:var(--ink);padding:10px 0 0;transform:translateY(6%)}
+
+/* ═══ RESPONSIVE ═══════════════════════════ */
+@media (max-width:1024px){
+  .h2{font-size:38px}
+  .h2--xl{font-size:42px}
+  .focus-grid{grid-template-columns:1fr 1fr}
+  .focus-card--big{grid-column:1 / span 2;grid-row:auto;min-height:280px}
+  .focus-proof{grid-column:1 / span 2}
+  .how-top,.how-bottom,.testimonial,.footer-top{grid-template-columns:1fr;gap:36px}
+  .coaches-grid{grid-template-columns:repeat(2,1fr)}
+  .coach-card{margin-top:0!important}
+  .plans{grid-template-columns:1fr}
+  .footer-nav,.footer-cols{justify-content:flex-start}
+}
+@media (max-width:640px){
+  .wrap{padding:0 20px}
+  .section-pad{padding-top:60px;padding-bottom:60px}
+  .hero-block{padding:10px}
+  .hero{height:auto;min-height:560px}
+  .hero-inner{padding:20px 20px 30px}
+  .hero-nav-links{display:none}
+  .hero-logo{position:static;transform:none}
+  .hero-title{font-size:52px}
+  .h2,.h2--xl{font-size:31px}
+  .coaches-head{flex-direction:column;align-items:flex-start;gap:24px}
+  .coaches-grid{grid-template-columns:1fr}
+  .focus-head{flex-direction:column}
+  .how-step{flex-direction:column;gap:16px}
+  .footer-giant{white-space:normal;line-height:.9}
+}
+`;

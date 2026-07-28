@@ -1,14 +1,20 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../hooks/useAuth';
 import { userApi } from '../../services/user.api';
-import Card from '../../components/ui/Card';
-import Input from '../../components/ui/Input';
-import Button from '../../components/ui/Button';
 import Spinner from '../../components/ui/Spinner';
 import { Building2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import DeleteAccountSection from '../../components/profile/DeleteAccountSection';
 import PasskeyManager from '../../components/PasskeyManager';
+
+const EP_CSS = `
+  .ep-identity{display:flex;align-items:center;gap:18px;flex-wrap:wrap}
+  .ep-identity-icon{width:64px;height:64px;border-radius:50%;background:var(--orange-soft);color:var(--orange);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+  .ep-identity-name{font-size:17px;font-weight:700;letter-spacing:-.015em;color:var(--ink);margin:0}
+  .ep-identity-mail{font-size:13px;color:var(--ink-3);margin:3px 0 0}
+  .ep-identity-role{font-size:12.5px;font-weight:600;color:var(--orange);margin:5px 0 0}
+  .ep-form{display:flex;flex-direction:column;gap:18px}
+`;
 
 export default function EntrepriseProfile() {
   const { user: authUser } = useAuth();
@@ -72,95 +78,122 @@ export default function EntrepriseProfile() {
   if (loading) return <Spinner />;
 
   return (
-    <div className="space-y-6 max-w-2xl">
-      <div>
-        <h1 className="text-2xl font-semibold text-gray-900">Profil entreprise</h1>
-        <p className="text-gray-500 mt-1">Gérez les informations de votre entreprise</p>
+    <div className="dsh-page" style={{ maxWidth: 760 }}>
+      <style>{EP_CSS}</style>
+
+      <div className="dsh-page-head">
+        <div>
+          <h1 className="dsh-h1">Profil entreprise</h1>
+          <p className="dsh-sub">Gérez les informations de votre entreprise</p>
+        </div>
       </div>
 
-      {/* Company identity */}
-      <Card>
-        <div className="flex items-center gap-4">
-          <div className="w-16 h-16 bg-violet-100 rounded-full flex items-center justify-center shrink-0">
-            <Building2 className="w-8 h-8 text-violet-600" />
-          </div>
+      {/* Identité entreprise */}
+      <div className="dsh-card">
+        <div className="ep-identity">
+          <div className="ep-identity-icon"><Building2 size={26} /></div>
           <div>
-            <p className="font-semibold text-gray-900">
+            <p className="ep-identity-name">
               {form.companyName || authUser?.companyName || 'Mon entreprise'}
             </p>
-            <p className="text-sm text-gray-500">{authUser?.email}</p>
-            <p className="text-sm text-violet-600 font-medium mt-0.5">Compte entreprise</p>
+            <p className="ep-identity-mail">{authUser?.email}</p>
+            <p className="ep-identity-role">Compte entreprise</p>
           </div>
         </div>
-      </Card>
+      </div>
 
-      <form onSubmit={handleSave} className="space-y-5">
+      <form onSubmit={handleSave} className="dsh-page">
         {/* Informations entreprise */}
-        <Card>
-          <h2 className="text-base font-semibold text-gray-900 mb-4">Informations entreprise</h2>
-          <Input
-            label="Nom de l'entreprise"
-            value={form.companyName}
-            onChange={(e) => setField('companyName', e.target.value)}
-            placeholder="Acme Corp"
-          />
-        </Card>
-
-        {/* Contact */}
-        <Card>
-          <h2 className="text-base font-semibold text-gray-900 mb-4">Contact</h2>
-          <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-3">
-              <Input
-                label="Prénom du contact"
-                value={form.firstName}
-                onChange={(e) => setField('firstName', e.target.value)}
-              />
-              <Input
-                label="Nom du contact"
-                value={form.lastName}
-                onChange={(e) => setField('lastName', e.target.value)}
+        <div className="dsh-card">
+          <div className="ep-form">
+            <h2 className="dsh-card-title">Informations entreprise</h2>
+            <div>
+              <label className="dsh-label" htmlFor="companyName">Nom de l'entreprise</label>
+              <input
+                id="companyName"
+                className="dsh-input"
+                value={form.companyName}
+                onChange={(e) => setField('companyName', e.target.value)}
+                placeholder="Acme Corp"
               />
             </div>
-            <Input
-              label="Téléphone"
-              value={form.phone}
-              onChange={(e) => setField('phone', e.target.value)}
-              placeholder="+33 6 xx xx xx xx"
-            />
-            <Input
-              label="Ville (optionnel)"
-              value={form.profile.city}
-              onChange={(e) => setProfileField('city', e.target.value)}
-              placeholder="Paris"
-            />
           </div>
-        </Card>
+        </div>
+
+        {/* Contact */}
+        <div className="dsh-card">
+          <div className="ep-form">
+            <h2 className="dsh-card-title">Contact</h2>
+            <div className="dsh-row">
+              <div>
+                <label className="dsh-label" htmlFor="firstName">Prénom du contact</label>
+                <input
+                  id="firstName"
+                  className="dsh-input"
+                  value={form.firstName}
+                  onChange={(e) => setField('firstName', e.target.value)}
+                />
+              </div>
+              <div>
+                <label className="dsh-label" htmlFor="lastName">Nom du contact</label>
+                <input
+                  id="lastName"
+                  className="dsh-input"
+                  value={form.lastName}
+                  onChange={(e) => setField('lastName', e.target.value)}
+                />
+              </div>
+            </div>
+            <div>
+              <label className="dsh-label" htmlFor="phone">Téléphone</label>
+              <input
+                id="phone"
+                className="dsh-input"
+                value={form.phone}
+                onChange={(e) => setField('phone', e.target.value)}
+                placeholder="+33 6 xx xx xx xx"
+              />
+            </div>
+            <div>
+              <label className="dsh-label" htmlFor="city">Ville (optionnel)</label>
+              <input
+                id="city"
+                className="dsh-input"
+                value={form.profile.city}
+                onChange={(e) => setProfileField('city', e.target.value)}
+                placeholder="Paris"
+              />
+            </div>
+          </div>
+        </div>
 
         {/* À propos */}
-        <Card>
-          <h2 className="text-base font-semibold text-gray-900 mb-4">À propos</h2>
-          <div className="space-y-1">
-            <label className="block text-sm font-medium text-gray-900">Description</label>
-            <textarea
-              value={form.profile.bio}
-              onChange={(e) => setProfileField('bio', e.target.value)}
-              placeholder="Décrivez votre entreprise et vos objectifs bien-être..."
-              rows={5}
-              className="w-full px-3 py-2 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-violet-400 resize-none"
-            />
+        <div className="dsh-card">
+          <div className="ep-form">
+            <h2 className="dsh-card-title">À propos</h2>
+            <div>
+              <label className="dsh-label" htmlFor="bio">Description</label>
+              <textarea
+                id="bio"
+                className="dsh-textarea"
+                value={form.profile.bio}
+                onChange={(e) => setProfileField('bio', e.target.value)}
+                placeholder="Décrivez votre entreprise et vos objectifs bien-être..."
+                rows={5}
+              />
+            </div>
           </div>
-        </Card>
+        </div>
 
-        <Button type="submit" loading={saving}>
-          Sauvegarder
-        </Button>
+        <div>
+          <button type="submit" className="dsh-btn dsh-btn--orange" disabled={saving}>
+            {saving ? 'Enregistrement…' : 'Sauvegarder'}
+          </button>
+        </div>
       </form>
-      
-      <div>
-        <h2 className="text-lg font-semibold text-gray-900 mb-3">Sécurité</h2>
-        <PasskeyManager />
-      </div>
+
+      {/* Sécurité */}
+      <PasskeyManager />
 
       <DeleteAccountSection />
     </div>

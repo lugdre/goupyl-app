@@ -2,21 +2,53 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { subscriptionApi } from '../../services/subscription.api';
-import Card from '../../components/ui/Card';
-import Badge from '../../components/ui/Badge';
-import Button from '../../components/ui/Button';
 import Spinner from '../../components/ui/Spinner';
-import { CreditCard, Search, ArrowRight, Phone, CheckCircle, BarChart2 } from 'lucide-react';
+import { CreditCard, Search, ArrowRight, Phone, CheckCircle, BarChart2, Users } from 'lucide-react';
 import OnboardingChecklist from '../../components/onboarding/OnboardingChecklist';
 import { userApi } from '../../services/user.api';
 import { companyApi } from '../../services/company.api';
 import { PLAN_LABELS, BILLING_CYCLE_LABELS } from '../../utils/constants';
 
 const PLAN_FEATURES = {
-  ESSENTIEL_ENTREPRISE: { employees: '10',  sessions: '1/semaine', domains: 'Sport + Bien-être' },
-  BOOST_ENTREPRISE:     { employees: '50',  sessions: '2/semaine', domains: 'Tous les domaines' },
-  ULTRA_ENTREPRISE:     { employees: '200', sessions: '4/semaine', domains: 'Tous les domaines' },
+  ESSENTIEL_ENTREPRISE: { employees: '10',  sessions: '4/mois', domains: 'Sport + Bien-être' },
+  BOOST_ENTREPRISE:     { employees: '50',  sessions: '8/mois', domains: 'Tous les domaines' },
+  ULTRA_ENTREPRISE:     { employees: '200', sessions: '16/mois', domains: 'Tous les domaines' },
 };
+
+const ED_CSS = `
+  .ed-hero{background:#191917;border-radius:20px;padding:26px 28px;color:#fff}
+  .ed-hero-top{display:flex;align-items:center;gap:22px;flex-wrap:wrap}
+  .ed-hero-icon{width:56px;height:56px;border-radius:16px;background:rgba(244,83,15,.18);border:1px solid rgba(244,83,15,.35);display:flex;align-items:center;justify-content:center;color:#FF9C6B;flex-shrink:0}
+  .ed-hero-body{flex:1;min-width:220px}
+  .ed-hero-eyebrow{font-size:11.5px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:#FF9C6B}
+  .ed-hero-title{font-size:24px;font-weight:700;letter-spacing:-.02em;margin-top:6px;line-height:1.15}
+  .ed-hero-sub{font-size:13.5px;color:rgba(255,255,255,.75);margin-top:6px}
+  .ed-hero-cta{display:inline-flex;align-items:center;gap:10px;height:44px;padding:0 20px;border-radius:999px;background:#F4530F;color:#fff;font-size:13.5px;font-weight:600;text-decoration:none;white-space:nowrap;transition:transform .15s ease}
+  .ed-hero-cta:hover{transform:translateY(-1px)}
+  .ed-hero-badge{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;padding:7px 14px;border-radius:999px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);color:#fff}
+  .ed-hero-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:22px;padding-top:20px;border-top:1px solid rgba(255,255,255,.2)}
+  @media(max-width:640px){.ed-hero-stats{grid-template-columns:1fr}}
+  .ed-hero-stat{text-align:center}
+  .ed-hero-stat-val{font-size:24px;font-weight:700;letter-spacing:-.02em;color:#FF9C6B;line-height:1}
+  .ed-hero-stat-label{font-size:12px;color:rgba(255,255,255,.7);margin-top:6px}
+
+  .ed-links{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+  @media(max-width:900px){.ed-links{grid-template-columns:1fr}}
+  .ed-link{border:1px solid var(--line);border-radius:16px;padding:20px 22px;display:flex;align-items:center;gap:16px;text-decoration:none;color:inherit;background:#fff;transition:border-color .2s,transform .15s ease,box-shadow .2s}
+  .ed-link:hover{border-color:#c9c7c1;transform:translateY(-2px);box-shadow:0 6px 18px rgba(23,22,20,.06)}
+  .ed-link-icon{width:46px;height:46px;border-radius:14px;background:var(--orange-soft);color:var(--orange);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+  .ed-link-title{font-size:14.5px;font-weight:600;color:var(--ink)}
+  .ed-link-sub{font-size:12.5px;color:var(--ink-3);margin-top:2px}
+  .ed-link svg.ed-link-arrow{margin-left:auto;color:var(--ink-3);flex-shrink:0}
+
+  .ed-services{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  @media(max-width:640px){.ed-services{grid-template-columns:1fr}}
+  .ed-service{display:flex;align-items:center;gap:10px;font-size:13.5px;color:var(--ink-2);border:1px solid var(--line);border-radius:12px;padding:12px 15px;background:#fff}
+  .ed-service svg{color:#2F7A47;flex-shrink:0}
+
+  .ed-contact{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+  .ed-contact-icon{width:46px;height:46px;border-radius:14px;background:#FAF9F7;border:1px solid var(--line);color:var(--ink-3);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+`;
 
 export default function EntrepriseDashboard() {
   const { user } = useAuth();
@@ -45,19 +77,8 @@ export default function EntrepriseDashboard() {
   const planInfo = subscription ? PLAN_FEATURES[subscription.plan] : null;
 
   return (
-    <div className="space-y-6 max-w-4xl">
-      {/* Header */}
-      <div className="flex items-start justify-between">
-        <div>
-          <div className="flex items-center gap-3 mb-1">
-            <h1 className="text-2xl font-semibold text-gray-900">
-              {user.companyName || `${user.firstName} ${user.lastName}`}
-            </h1>
-            <Badge variant="ENTREPRISE">Entreprise</Badge>
-          </div>
-          <p className="text-gray-500">Espace bien-être entreprise · Goupyl Sport</p>
-        </div>
-      </div>
+    <div className="dsh-page">
+      <style>{ED_CSS}</style>
 
       <OnboardingChecklist
         storageKey={`onboarding-entreprise-${user.id}`}
@@ -95,116 +116,93 @@ export default function EntrepriseDashboard() {
         ]}
       />
 
-      {/* Abonnement actif */}
+      {/* ── Abonnement ── */}
       {subscription ? (
-        <Card className="border-violet-500/20 bg-violet-500/[0.07]">
-          <div className="flex items-start justify-between gap-4">
-            <div className="flex items-start gap-4">
-              <div className="p-3 bg-violet-500/15 rounded-lg shrink-0">
-                <CreditCard className="w-6 h-6 text-violet-400" />
-              </div>
-              <div>
-                <p className="font-semibold text-gray-900">Formule {PLAN_LABELS[subscription.plan]}</p>
-                <p className="text-sm text-gray-400 mt-0.5">
-                  {BILLING_CYCLE_LABELS[subscription.billingCycle]} · Valable jusqu'au{' '}
-                  {new Date(subscription.endDate).toLocaleDateString('fr-FR', {
-                    day: 'numeric', month: 'long', year: 'numeric',
-                  })}
-                </p>
-              </div>
+        <section className="ed-hero">
+          <div className="ed-hero-top">
+            <div className="ed-hero-icon"><CreditCard size={24} /></div>
+            <div className="ed-hero-body">
+              <div className="ed-hero-eyebrow">Abonnement actif</div>
+              <h2 className="ed-hero-title">Formule {PLAN_LABELS[subscription.plan]}</h2>
+              <p className="ed-hero-sub">
+                {BILLING_CYCLE_LABELS[subscription.billingCycle]} · Valable jusqu'au{' '}
+                {new Date(subscription.endDate).toLocaleDateString('fr-FR', {
+                  day: 'numeric', month: 'long', year: 'numeric',
+                })}
+                {' · '}{employeeCount} collaborateur{employeeCount > 1 ? 's' : ''} rattaché{employeeCount > 1 ? 's' : ''}
+              </p>
             </div>
-            <div className="flex items-center gap-2">
-              <Badge variant="ACTIVE">Actif</Badge>
-              <Link to="/dashboard/entreprise/subscription">
-                <Button variant="ghost" size="sm">Gérer</Button>
-              </Link>
-            </div>
+            <Link to="/dashboard/entreprise/subscription" className="ed-hero-cta">
+              Gérer <ArrowRight size={15} />
+            </Link>
           </div>
 
           {planInfo && (
-            <div className="grid grid-cols-3 gap-4 mt-4 pt-4 border-t border-violet-500/20">
-              <div className="text-center">
-                <p className="text-2xl font-bold text-violet-400">{planInfo.employees}</p>
-                <p className="text-xs text-gray-400 mt-0.5">Collaborateurs couverts</p>
+            <div className="ed-hero-stats">
+              <div className="ed-hero-stat">
+                <p className="ed-hero-stat-val">{planInfo.employees}</p>
+                <p className="ed-hero-stat-label">Collaborateurs couverts</p>
               </div>
-              <div className="text-center border-x border-violet-500/20">
-                <p className="text-2xl font-bold text-violet-400">{planInfo.sessions}</p>
-                <p className="text-xs text-gray-400 mt-0.5">Séances/semaine</p>
+              <div className="ed-hero-stat">
+                <p className="ed-hero-stat-val">{planInfo.sessions}</p>
+                <p className="ed-hero-stat-label">Séances par collaborateur</p>
               </div>
-              <div className="text-center">
-                <p className="text-sm font-semibold text-violet-400">{planInfo.domains}</p>
-                <p className="text-xs text-gray-400 mt-0.5">Domaines inclus</p>
+              <div className="ed-hero-stat">
+                <p className="ed-hero-stat-val" style={{ fontSize: 17, paddingTop: 4 }}>{planInfo.domains}</p>
+                <p className="ed-hero-stat-label">Domaines inclus</p>
               </div>
             </div>
           )}
-        </Card>
+        </section>
       ) : (
-        <Card className="border-dashed border-violet-500/30">
-          <div className="text-center py-4">
-            <CreditCard className="w-10 h-10 text-violet-500/40 mx-auto mb-3" />
-            <p className="font-medium text-gray-400">Aucun abonnement actif</p>
-            <p className="text-sm text-gray-500 mt-1">Choisissez une formule adaptée à votre équipe</p>
-            <Link to="/dashboard/entreprise/subscription">
-              <Button variant="primary" size="sm" className="mt-4">Choisir une formule</Button>
+        <section className="ed-hero">
+          <div className="ed-hero-top">
+            <div className="ed-hero-icon"><CreditCard size={24} /></div>
+            <div className="ed-hero-body">
+              <div className="ed-hero-eyebrow">Abonnement</div>
+              <h2 className="ed-hero-title">Aucun abonnement actif</h2>
+              <p className="ed-hero-sub">Choisissez une formule adaptée à la taille de votre équipe.</p>
+            </div>
+            <Link to="/dashboard/entreprise/subscription" className="ed-hero-cta">
+              Choisir une formule <ArrowRight size={15} />
             </Link>
           </div>
-        </Card>
+        </section>
       )}
 
-      {/* Actions rapides */}
-      <div>
-        <h2 className="text-lg font-semibold text-gray-900 mb-3">Actions rapides</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <Link to="/dashboard/entreprise/search">
-            <Card className="hover:border-violet-500/40 transition-colors cursor-pointer">
-              <div className="flex items-center gap-4">
-                <div className="p-3 bg-violet-500/15 rounded-lg shrink-0">
-                  <Search className="w-6 h-6 text-violet-400" />
-                </div>
-                <div className="min-w-0">
-                  <p className="font-medium text-gray-900">Trouver un coach</p>
-                  <p className="text-sm text-gray-500">Réserver pour vos collaborateurs</p>
-                </div>
-                <ArrowRight className="w-5 h-5 text-gray-500 ml-auto shrink-0" />
-              </div>
-            </Card>
-          </Link>
-          <Link to="/dashboard/entreprise/analytics">
-            <Card className="hover:border-violet-500/40 transition-colors cursor-pointer">
-              <div className="flex items-center gap-4">
-                <div className="p-3 bg-violet-500/15 rounded-lg shrink-0">
-                  <BarChart2 className="w-6 h-6 text-violet-400" />
-                </div>
-                <div className="min-w-0">
-                  <p className="font-medium text-gray-900">Statistiques</p>
-                  <p className="text-sm text-gray-500">Suivi de l'activité de votre équipe</p>
-                </div>
-                <ArrowRight className="w-5 h-5 text-gray-500 ml-auto shrink-0" />
-              </div>
-            </Card>
-          </Link>
-          <Link to="/dashboard/entreprise/subscription">
-            <Card className="hover:border-violet-500/40 transition-colors cursor-pointer">
-              <div className="flex items-center gap-4">
-                <div className="p-3 bg-violet-500/15 rounded-lg shrink-0">
-                  <CreditCard className="w-6 h-6 text-violet-400" />
-                </div>
-                <div className="min-w-0">
-                  <p className="font-medium text-gray-900">Gérer l'abonnement</p>
-                  <p className="text-sm text-gray-500">Changer ou renouveler votre formule</p>
-                </div>
-                <ArrowRight className="w-5 h-5 text-gray-500 ml-auto shrink-0" />
-              </div>
-            </Card>
-          </Link>
-        </div>
-      </div>
+      {/* ── Actions rapides ── */}
+      <section className="ed-links">
+        <Link to="/dashboard/entreprise/employees" className="ed-link">
+          <div className="ed-link-icon"><Users size={20} /></div>
+          <div>
+            <div className="ed-link-title">Collaborateurs</div>
+            <div className="ed-link-sub">Invitations et code entreprise</div>
+          </div>
+          <ArrowRight size={18} className="ed-link-arrow" />
+        </Link>
+        <Link to="/dashboard/entreprise/search" className="ed-link">
+          <div className="ed-link-icon"><Search size={20} /></div>
+          <div>
+            <div className="ed-link-title">Trouver un coach</div>
+            <div className="ed-link-sub">Réserver pour vos collaborateurs</div>
+          </div>
+          <ArrowRight size={18} className="ed-link-arrow" />
+        </Link>
+        <Link to="/dashboard/entreprise/analytics" className="ed-link">
+          <div className="ed-link-icon"><BarChart2 size={20} /></div>
+          <div>
+            <div className="ed-link-title">Statistiques</div>
+            <div className="ed-link-sub">Activité de votre équipe</div>
+          </div>
+          <ArrowRight size={18} className="ed-link-arrow" />
+        </Link>
+      </section>
 
-      {/* Services inclus */}
+      {/* ── Services inclus ── */}
       {subscription && (
-        <div>
-          <h2 className="text-lg font-semibold text-gray-900 mb-3">Services inclus dans votre formule</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div className="dsh-card">
+          <h2 className="dsh-card-title" style={{ marginBottom: 16 }}>Services inclus dans votre formule</h2>
+          <div className="ed-services">
             {[
               'Coaching sportif individuel',
               'Coaching sportif en duo',
@@ -213,8 +211,8 @@ export default function EntrepriseDashboard() {
               'Séance de yoga',
               'Atelier bien-être collectif',
             ].map((service) => (
-              <div key={service} className="flex items-center gap-2 text-sm text-gray-400">
-                <CheckCircle className="w-4 h-4 text-violet-400 shrink-0" />
+              <div key={service} className="ed-service">
+                <CheckCircle size={15} />
                 {service}
               </div>
             ))}
@@ -222,23 +220,19 @@ export default function EntrepriseDashboard() {
         </div>
       )}
 
-      {/* Contact account manager */}
-      <Card>
-        <div className="flex items-center gap-4">
-          <div className="p-3 bg-white/[0.05] border border-white/[0.08] rounded-lg shrink-0">
-            <Phone className="w-6 h-6 text-gray-400" />
+      {/* ── Account manager ── */}
+      <div className="dsh-card">
+        <div className="ed-contact">
+          <div className="ed-contact-icon"><Phone size={20} /></div>
+          <div style={{ flex: 1, minWidth: 200 }}>
+            <h2 className="dsh-card-title">Votre account manager</h2>
+            <p className="dsh-card-sub">Une question ? Besoin d'ajuster votre formule ? Contactez-nous.</p>
           </div>
-          <div>
-            <p className="font-medium text-gray-900">Votre account manager</p>
-            <p className="text-sm text-gray-500">Une question ? Besoin d'ajuster votre formule ? Contactez-nous.</p>
-          </div>
-          <a href="mailto:entreprises@goupylsport.fr" className="ml-auto shrink-0">
-            <Button variant="secondary" size="sm">
-              Nous écrire
-            </Button>
+          <a href="mailto:entreprises@goupylsport.fr" className="dsh-btn dsh-btn--ghost dsh-btn--sm">
+            Nous écrire
           </a>
         </div>
-      </Card>
+      </div>
     </div>
   );
 }

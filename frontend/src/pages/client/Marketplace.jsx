@@ -1,15 +1,35 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { productApi } from '../../services/product.api';
-import Card from '../../components/ui/Card';
-import Badge from '../../components/ui/Badge';
-import Button from '../../components/ui/Button';
 import Spinner from '../../components/ui/Spinner';
-import { ShoppingBag, Package, Receipt } from 'lucide-react';
+import { Package, Receipt } from 'lucide-react';
 import { ORDER_STATUS_LABELS } from '../../utils/constants';
 import toast from 'react-hot-toast';
 
-const ORDER_BADGE_VARIANT = { PENDING: 'PENDING', PAID: 'CONFIRMED', CANCELLED: 'CANCELLED' };
+const ORDER_BADGE_CLASS = { PENDING: 'dsh-badge--wait', PAID: 'dsh-badge--ok', CANCELLED: 'dsh-badge--err' };
+
+const MP_CSS = `
+  .mp-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+  @media(max-width:1100px){.mp-grid{grid-template-columns:repeat(2,1fr)}}
+  @media(max-width:640px){.mp-grid{grid-template-columns:1fr}}
+  .mp-card{background:#fff;border:1px solid var(--line);border-radius:18px;padding:16px;display:flex;flex-direction:column;transition:border-color .2s,transform .15s ease,box-shadow .2s}
+  .mp-card:hover{border-color:#c9c7c1;transform:translateY(-2px);box-shadow:0 6px 18px rgba(23,22,20,.06)}
+  .mp-thumb{height:158px;border-radius:14px;background:linear-gradient(145deg,#EFEDE8,#DCDAD4);display:flex;align-items:center;justify-content:center;color:#8a8781;overflow:hidden;margin-bottom:16px}
+  .mp-thumb img{width:100%;height:100%;object-fit:cover}
+  .mp-meta{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px}
+  .mp-brand{font-size:11.5px;font-weight:600;padding:4px 11px;border-radius:999px;background:var(--orange-soft);color:var(--orange)}
+  .mp-cat{font-size:12px;color:var(--ink-3)}
+  .mp-name{font-size:15px;font-weight:600;letter-spacing:-.01em;color:var(--ink);margin:0}
+  .mp-desc{font-size:13px;color:var(--ink-3);line-height:1.5;margin:6px 0 0;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  .mp-foot{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:18px;padding-top:14px;border-top:1px solid var(--line)}
+  .mp-price{font-size:22px;font-weight:700;letter-spacing:-.02em;color:var(--ink)}
+  .mp-orders{display:flex;flex-direction:column;gap:10px}
+  .mp-order{background:#fff;border:1px solid var(--line);border-radius:14px;padding:16px 18px;display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap}
+  .mp-order-name{font-size:14px;font-weight:600;color:var(--ink);margin:0}
+  .mp-order-date{font-size:12px;color:var(--ink-3);margin:3px 0 0}
+  .mp-order-right{display:flex;align-items:center;gap:12px;flex-shrink:0}
+  .mp-order-amount{font-size:15px;font-weight:700;color:var(--ink)}
+`;
 
 export default function Marketplace() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -64,55 +84,62 @@ export default function Marketplace() {
   if (loading) return <Spinner />;
 
   return (
-    <div className="space-y-8">
-      <div>
-        <h1 className="text-2xl font-semibold text-gray-900 flex items-center gap-2">
-          <ShoppingBag className="w-6 h-6 text-primary-600" />
-          Boutique
-        </h1>
-        <p className="text-gray-500 mt-1">
-          Équipements et nutrition sélectionnés par nos partenaires — livrés directement par la marque.
-        </p>
+    <div className="dsh-page">
+      <style>{MP_CSS}</style>
+
+      <div className="dsh-page-head">
+        <div>
+          <h1 className="dsh-h1">Boutique</h1>
+          <p className="dsh-sub">
+            Équipements et nutrition sélectionnés par nos partenaires — livrés directement par la marque.
+          </p>
+        </div>
+        {orders.length > 0 && (
+          <span className="dsh-badge dsh-badge--orange">
+            <Receipt size={13} /> {orders.length} commande{orders.length > 1 ? 's' : ''}
+          </span>
+        )}
       </div>
 
       {/* Grille produits */}
       {products.length === 0 ? (
-        <Card>
-          <div className="text-center py-8">
-            <Package className="w-10 h-10 text-gray-400 mx-auto mb-3" />
-            <p className="text-gray-500">Aucun produit disponible pour le moment</p>
-          </div>
-        </Card>
+        <div className="dsh-empty">
+          <Package size={26} />
+          Aucun produit disponible pour le moment
+        </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="mp-grid">
           {products.map((product) => (
-            <Card key={product.id} className="flex flex-col">
-              <div className="h-36 rounded-xl bg-gray-100 flex items-center justify-center mb-4 overflow-hidden">
+            <article key={product.id} className="mp-card">
+              <div className="mp-thumb">
                 {product.imageUrl ? (
-                  <img src={product.imageUrl} alt={product.name} className="w-full h-full object-cover" />
+                  <img src={product.imageUrl} alt={product.name} />
                 ) : (
-                  <Package className="w-10 h-10 text-gray-300" />
+                  <Package size={26} />
                 )}
               </div>
-              <div className="flex-1">
-                <div className="flex items-center gap-2 mb-1">
-                  {product.brand && <Badge variant="secondary">{product.brand}</Badge>}
-                  {product.category && <span className="text-xs text-gray-400">{product.category}</span>}
+              <div style={{ flex: 1 }}>
+                <div className="mp-meta">
+                  {product.brand && <span className="mp-brand">{product.brand}</span>}
+                  {product.category && <span className="mp-cat">{product.category}</span>}
                 </div>
-                <p className="font-semibold text-gray-900">{product.name}</p>
-                {product.description && (
-                  <p className="text-sm text-gray-500 mt-1 line-clamp-2">{product.description}</p>
-                )}
+                <h3 className="mp-name">{product.name}</h3>
+                {product.description && <p className="mp-desc">{product.description}</p>}
               </div>
-              <div className="flex items-center justify-between mt-4 pt-3 border-t border-gray-100">
-                <span className="text-xl font-bold text-gray-900">
+              <div className="mp-foot">
+                <span className="mp-price">
                   {(product.priceCents / 100).toFixed(2)} €
                 </span>
-                <Button size="sm" loading={buyingId === product.id} onClick={() => handleBuy(product)}>
-                  Acheter
-                </Button>
+                <button
+                  type="button"
+                  className="dsh-btn dsh-btn--orange dsh-btn--sm"
+                  disabled={buyingId === product.id}
+                  onClick={() => handleBuy(product)}
+                >
+                  {buyingId === product.id ? 'Redirection…' : 'Acheter'}
+                </button>
               </div>
-            </Card>
+            </article>
           ))}
         </div>
       )}
@@ -120,29 +147,24 @@ export default function Marketplace() {
       {/* Mes commandes */}
       {orders.length > 0 && (
         <div>
-          <h2 className="text-lg font-semibold text-gray-900 mb-3 flex items-center gap-2">
-            <Receipt className="w-5 h-5 text-gray-500" />
-            Mes commandes
-          </h2>
-          <div className="space-y-2 max-w-2xl">
+          <h2 className="dsh-card-title" style={{ marginBottom: 14 }}>Mes commandes</h2>
+          <div className="mp-orders">
             {orders.map((order) => (
-              <Card key={order.id}>
-                <div className="flex items-center justify-between gap-3">
-                  <div>
-                    <p className="font-medium text-gray-900">{order.product?.name}</p>
-                    <p className="text-xs text-gray-500">
-                      {order.quantity > 1 ? `${order.quantity} × ` : ''}
-                      {new Date(order.createdAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-3 shrink-0">
-                    <span className="font-semibold text-gray-900">{(order.amountCents / 100).toFixed(2)} €</span>
-                    <Badge variant={ORDER_BADGE_VARIANT[order.status] || 'PENDING'}>
-                      {ORDER_STATUS_LABELS[order.status]}
-                    </Badge>
-                  </div>
+              <div key={order.id} className="mp-order">
+                <div style={{ minWidth: 0 }}>
+                  <p className="mp-order-name">{order.product?.name}</p>
+                  <p className="mp-order-date">
+                    {order.quantity > 1 ? `${order.quantity} × ` : ''}
+                    {new Date(order.createdAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}
+                  </p>
                 </div>
-              </Card>
+                <div className="mp-order-right">
+                  <span className="mp-order-amount">{(order.amountCents / 100).toFixed(2)} €</span>
+                  <span className={`dsh-badge ${ORDER_BADGE_CLASS[order.status] || 'dsh-badge--neutral'}`}>
+                    <i />{ORDER_STATUS_LABELS[order.status]}
+                  </span>
+                </div>
+              </div>
             ))}
           </div>
         </div>

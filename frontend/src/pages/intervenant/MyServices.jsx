@@ -1,10 +1,7 @@
 import { useState, useEffect } from 'react';
 import { coachServiceApi } from '../../services/coachService.api';
-import Card from '../../components/ui/Card';
-import Input from '../../components/ui/Input';
-import Button from '../../components/ui/Button';
 import Spinner from '../../components/ui/Spinner';
-import { Plus, Pencil, X, Clock, Zap, Leaf, Heart } from 'lucide-react';
+import { Plus, Pencil, X, Clock, Zap, Leaf, Heart, Package } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { CATEGORY_LABELS } from '../../utils/constants';
 
@@ -32,6 +29,26 @@ const EMPTY_SERVICE_FORM = {
   sessionType: 'SOLO',
   maxParticipants: '',
 };
+
+const SV_CSS = `
+  .sv-form{background:#FAF9F7;border:1px solid var(--line);border-radius:16px;padding:20px;display:flex;flex-direction:column;gap:16px;margin-bottom:20px}
+  .sv-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}
+  @media(max-width:900px){.sv-grid{grid-template-columns:1fr}}
+  .sv-card{position:relative;border:1px solid var(--line);border-radius:16px;padding:18px 20px;background:#fff;transition:border-color .2s,box-shadow .2s}
+  .sv-card:hover{border-color:#c9c7c1;box-shadow:0 6px 18px rgba(23,22,20,.06)}
+  .sv-card.is-off{opacity:.6;background:#FAF9F7}
+  .sv-card-top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:12px}
+  .sv-cat{display:inline-flex;align-items:center;gap:6px;font-size:11.5px;font-weight:600;padding:5px 12px;border-radius:999px;background:var(--orange-soft);color:var(--orange)}
+  .sv-actions{display:flex;gap:6px;flex-shrink:0}
+  .sv-icon-btn{width:30px;height:30px;border-radius:50%;border:1px solid var(--line);background:#fff;color:var(--ink-3);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:border-color .15s,color .15s}
+  .sv-icon-btn:hover{border-color:#c9c7c1;color:var(--ink)}
+  .sv-icon-btn.is-danger:hover{border-color:#EFC7BE;color:#C0392B;background:#FBEAE7}
+  .sv-name{font-size:15px;font-weight:600;letter-spacing:-.01em;color:var(--ink);margin:0}
+  .sv-desc{font-size:12.5px;color:var(--ink-3);line-height:1.5;margin:6px 0 0;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  .sv-meta{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:14px;padding-top:12px;border-top:1px solid var(--line)}
+  .sv-dur{display:inline-flex;align-items:center;gap:5px;font-size:12.5px;font-weight:500;color:var(--ink-3)}
+  .sv-price{font-size:19px;font-weight:700;letter-spacing:-.02em;color:var(--ink);margin-left:auto}
+`;
 
 export default function MyServices() {
   const [loading, setLoading] = useState(true);
@@ -126,76 +143,86 @@ export default function MyServices() {
   if (loading) return <Spinner />;
 
   return (
-    <div className="space-y-6 max-w-2xl">
-      <div>
-        <h1 className="text-2xl font-semibold text-gray-900">Mes services</h1>
-        <p className="text-gray-500 mt-1">Créez et gérez les prestations que vos clients peuvent réserver</p>
+    <div className="dsh-page" style={{ maxWidth: 920 }}>
+      <style>{SV_CSS}</style>
+
+      <div className="dsh-page-head">
+        <div>
+          <h1 className="dsh-h1">Mes services</h1>
+          <p className="dsh-sub">Créez et gérez les prestations que vos clients peuvent réserver</p>
+        </div>
+        {!showServiceForm && (
+          <button type="button" onClick={openAddServiceForm} className="dsh-btn dsh-btn--orange">
+            <Plus size={15} /> Ajouter un service
+          </button>
+        )}
       </div>
 
-      <Card>
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-base font-semibold text-gray-900">Mes services</h2>
-          {!showServiceForm && (
-            <button
-              type="button"
-              onClick={openAddServiceForm}
-              className="flex items-center gap-1.5 text-sm font-medium text-primary-600 hover:text-primary-700 transition-colors"
-            >
-              <Plus className="w-4 h-4" />
-              Ajouter un service
-            </button>
-          )}
-        </div>
+      {/* Formulaire d'ajout / édition */}
+      {showServiceForm && (
+        <div className="sv-form">
+          <h2 className="dsh-card-title">
+            {editingServiceId ? 'Modifier le service' : 'Nouveau service'}
+          </h2>
 
-        {/* Inline add/edit form */}
-        {showServiceForm && (
-          <div className="mb-5 p-4 bg-gray-50 rounded-xl space-y-3 border border-gray-200">
-            <div className="grid grid-cols-2 gap-3">
-              <Input
-                label="Nom du service"
+          <div className="sv-grid">
+            <div>
+              <label className="dsh-label" htmlFor="svcName">Nom du service</label>
+              <input
+                id="svcName"
+                className="dsh-input"
                 value={serviceForm.name}
                 onChange={(e) => setServiceForm({ ...serviceForm, name: e.target.value })}
                 placeholder="Coaching sportif"
               />
-              <div>
-                <label className="block text-sm font-medium text-gray-900 mb-1">Catégorie</label>
-                <select
-                  value={serviceForm.category}
-                  onChange={(e) => setServiceForm({ ...serviceForm, category: e.target.value })}
-                  className="w-full h-11 px-3 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-primary-400"
-                >
-                  {Object.entries(CATEGORY_LABELS).map(([k, v]) => (
-                    <option key={k} value={k}>{v}</option>
-                  ))}
-                </select>
-              </div>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-900 mb-1">Description</label>
-              <textarea
-                value={serviceForm.description}
-                onChange={(e) => setServiceForm({ ...serviceForm, description: e.target.value })}
-                placeholder="Décrivez votre service..."
-                rows={2}
-                maxLength={300}
-                className="w-full px-3 py-2 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-primary-400 resize-none"
-              />
+              <label className="dsh-label" htmlFor="svcCat">Catégorie</label>
+              <select
+                id="svcCat"
+                className="dsh-select"
+                value={serviceForm.category}
+                onChange={(e) => setServiceForm({ ...serviceForm, category: e.target.value })}
+              >
+                {Object.entries(CATEGORY_LABELS).map(([k, v]) => (
+                  <option key={k} value={k}>{v}</option>
+                ))}
+              </select>
             </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="block text-sm font-medium text-gray-900 mb-1">Durée</label>
-                <select
-                  value={serviceForm.durationMinutes}
-                  onChange={(e) => setServiceForm({ ...serviceForm, durationMinutes: parseInt(e.target.value) })}
-                  className="w-full h-11 px-3 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-primary-400"
-                >
-                  {DURATION_OPTIONS.map((d) => (
-                    <option key={d} value={d}>{d} min</option>
-                  ))}
-                </select>
-              </div>
-              <Input
-                label="Prix (€)"
+          </div>
+
+          <div>
+            <label className="dsh-label" htmlFor="svcDesc">Description</label>
+            <textarea
+              id="svcDesc"
+              className="dsh-textarea"
+              value={serviceForm.description}
+              onChange={(e) => setServiceForm({ ...serviceForm, description: e.target.value })}
+              placeholder="Décrivez votre service..."
+              rows={2}
+              maxLength={300}
+            />
+          </div>
+
+          <div className="sv-grid">
+            <div>
+              <label className="dsh-label" htmlFor="svcDur">Durée</label>
+              <select
+                id="svcDur"
+                className="dsh-select"
+                value={serviceForm.durationMinutes}
+                onChange={(e) => setServiceForm({ ...serviceForm, durationMinutes: parseInt(e.target.value) })}
+              >
+                {DURATION_OPTIONS.map((d) => (
+                  <option key={d} value={d}>{d} min</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="dsh-label" htmlFor="svcPrice">Prix (€)</label>
+              <input
+                id="svcPrice"
+                className="dsh-input"
                 type="number"
                 min={0}
                 step={0.01}
@@ -204,29 +231,30 @@ export default function MyServices() {
                 placeholder="50"
               />
             </div>
-            {/* Type de session */}
-            <div>
-              <label className="block text-sm font-medium text-gray-900 mb-1">Type de session</label>
-              <div className="flex gap-2">
-                {SESSION_TYPE_OPTIONS.map((opt) => (
-                  <button
-                    key={opt.value}
-                    type="button"
-                    onClick={() => setServiceForm({ ...serviceForm, sessionType: opt.value, ...(opt.value === 'SOLO' ? { maxParticipants: '' } : {}) })}
-                    className={`px-4 py-2 rounded-full text-sm font-medium border transition-all ${
-                      serviceForm.sessionType === opt.value
-                        ? 'bg-primary-600 text-white border-primary-600'
-                        : 'bg-surface text-gray-600 border-gray-200 hover:border-primary-300 hover:text-primary-600'
-                    }`}
-                  >
-                    {opt.label}
-                  </button>
-                ))}
-              </div>
+          </div>
+
+          <div>
+            <span className="dsh-label">Type de session</span>
+            <div className="dsh-chips">
+              {SESSION_TYPE_OPTIONS.map((opt) => (
+                <button
+                  key={opt.value}
+                  type="button"
+                  onClick={() => setServiceForm({ ...serviceForm, sessionType: opt.value, ...(opt.value === 'SOLO' ? { maxParticipants: '' } : {}) })}
+                  className={`dsh-chip${serviceForm.sessionType === opt.value ? ' is-active' : ''}`}
+                >
+                  {opt.label}
+                </button>
+              ))}
             </div>
-            {serviceForm.sessionType !== 'SOLO' && (
-              <Input
-                label="Nombre max de participants"
+          </div>
+
+          {serviceForm.sessionType !== 'SOLO' && (
+            <div>
+              <label className="dsh-label" htmlFor="svcMax">Nombre max de participants</label>
+              <input
+                id="svcMax"
+                className="dsh-input"
                 type="number"
                 min={2}
                 max={50}
@@ -234,85 +262,77 @@ export default function MyServices() {
                 onChange={(e) => setServiceForm({ ...serviceForm, maxParticipants: e.target.value })}
                 placeholder="10"
               />
-            )}
-            <div className="flex items-center gap-2 pt-1">
-              <Button onClick={handleSaveService} loading={savingService} size="sm">
-                {editingServiceId ? 'Mettre à jour' : 'Créer le service'}
-              </Button>
-              <Button variant="ghost" size="sm" onClick={cancelServiceForm}>
-                Annuler
-              </Button>
             </div>
-          </div>
-        )}
+          )}
 
-        {/* Services grid */}
-        {coachServices.length === 0 && !showServiceForm ? (
-          <p className="text-sm text-gray-400">Aucun service configuré pour le moment.</p>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            {coachServices.map((svc) => {
-              const Icon = CATEGORY_ICONS[svc.category] || Zap;
-              const badgeColors = {
-                SPORT: 'bg-primary-50 text-primary-700',
-                NUTRITION: 'bg-green-50 text-green-700',
-                MENTAL: 'bg-purple-50 text-purple-700',
-                BIENETRE: 'bg-orange-50 text-orange-700',
-              };
-              const colorClass = badgeColors[svc.category] || 'bg-gray-50 text-gray-700';
-              return (
-                <div
-                  key={svc.id}
-                  className={`relative p-4 rounded-xl border transition-colors ${svc.active ? 'border-gray-200 bg-surface' : 'border-gray-100 bg-gray-50 opacity-60'}`}
-                >
-                  <div className="flex items-start justify-between mb-2">
-                    <span className={`inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full ${colorClass}`}>
-                      <Icon className="w-3 h-3" />
-                      {CATEGORY_LABELS[svc.category] || svc.category}
-                    </span>
-                    <div className="flex items-center gap-1">
+          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+            <button type="button" onClick={handleSaveService} disabled={savingService} className="dsh-btn dsh-btn--orange">
+              {savingService ? 'Enregistrement…' : editingServiceId ? 'Mettre à jour' : 'Créer le service'}
+            </button>
+            <button type="button" onClick={cancelServiceForm} className="dsh-btn dsh-btn--ghost">
+              Annuler
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Grille des services */}
+      {coachServices.length === 0 && !showServiceForm ? (
+        <div className="dsh-empty">
+          <Package size={26} />
+          Aucun service configuré pour le moment.
+        </div>
+      ) : (
+        <div className="sv-grid">
+          {coachServices.map((svc) => {
+            const Icon = CATEGORY_ICONS[svc.category] || Zap;
+            return (
+              <div key={svc.id} className={`sv-card${svc.active ? '' : ' is-off'}`}>
+                <div className="sv-card-top">
+                  <span className="sv-cat">
+                    <Icon size={12} />
+                    {CATEGORY_LABELS[svc.category] || svc.category}
+                  </span>
+                  <div className="sv-actions">
+                    <button
+                      type="button"
+                      onClick={() => openEditServiceForm(svc)}
+                      className="sv-icon-btn"
+                      title="Modifier"
+                    >
+                      <Pencil size={13} />
+                    </button>
+                    {svc.active && (
                       <button
                         type="button"
-                        onClick={() => openEditServiceForm(svc)}
-                        className="p-1 rounded hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors"
-                        title="Modifier"
+                        onClick={() => handleDeleteService(svc.id)}
+                        className="sv-icon-btn is-danger"
+                        title="Désactiver"
                       >
-                        <Pencil className="w-3.5 h-3.5" />
+                        <X size={13} />
                       </button>
-                      {svc.active && (
-                        <button
-                          type="button"
-                          onClick={() => handleDeleteService(svc.id)}
-                          className="p-1 rounded hover:bg-red-50 text-gray-400 hover:text-red-500 transition-colors"
-                          title="Désactiver"
-                        >
-                          <X className="w-3.5 h-3.5" />
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                  <p className="font-semibold text-gray-900 text-sm">{svc.name}</p>
-                  {svc.description && (
-                    <p className="text-xs text-gray-500 mt-0.5 line-clamp-2">{svc.description}</p>
-                  )}
-                  <div className="flex items-center gap-3 mt-2 text-xs text-gray-500">
-                    <span className="flex items-center gap-1">
-                      <Clock className="w-3 h-3" />
-                      {svc.durationMinutes} min
-                    </span>
-                    <span className="font-semibold text-gray-900">{Number(svc.price).toFixed(2)} €</span>
-                    {svc.sessionType && svc.sessionType !== 'SOLO' && (
-                      <span className="text-xs bg-blue-50 text-blue-700 px-2 py-0.5 rounded-full">
-                        {svc.sessionType === 'DUO' ? 'Duo' : `Collectif${svc.maxParticipants ? ` (${svc.maxParticipants} max)` : ''}`}
-                      </span>
                     )}
                   </div>
                 </div>
-              );
-            })}
-          </div>
-        )}
-      </Card>
+
+                <p className="sv-name">{svc.name}</p>
+                {svc.description && <p className="sv-desc">{svc.description}</p>}
+
+                <div className="sv-meta">
+                  <span className="sv-dur"><Clock size={13} /> {svc.durationMinutes} min</span>
+                  {svc.sessionType && svc.sessionType !== 'SOLO' && (
+                    <span className="dsh-badge dsh-badge--neutral">
+                      {svc.sessionType === 'DUO' ? 'Duo' : `Collectif${svc.maxParticipants ? ` (${svc.maxParticipants} max)` : ''}`}
+                    </span>
+                  )}
+                  {!svc.active && <span className="dsh-badge dsh-badge--err"><i />Désactivé</span>}
+                  <span className="sv-price">{Number(svc.price).toFixed(2)} €</span>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }

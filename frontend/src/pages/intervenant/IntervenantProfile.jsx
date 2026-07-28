@@ -1,30 +1,51 @@
 import { useState, useEffect, useRef } from 'react';
+import { useLocation } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { userApi } from '../../services/user.api';
-import Card from '../../components/ui/Card';
-import Input from '../../components/ui/Input';
-import Button from '../../components/ui/Button';
-import Badge from '../../components/ui/Badge';
 import Spinner from '../../components/ui/Spinner';
-import { Camera } from 'lucide-react';
+import { Camera, X, ImagePlus } from 'lucide-react';
 import AvatarFallback from '../../components/ui/AvatarFallback';
-import ThemeSelector from '../../components/ThemeSelector';
 import toast from 'react-hot-toast';
 import DeleteAccountSection from '../../components/profile/DeleteAccountSection';
 import PasskeyManager from '../../components/PasskeyManager';
 import UploadDocuments from '../shared/UploadDocuments';
-import { useTheme } from '../../context/ThemeContext';
 import { COURSE_LOCATION_OPTIONS } from '../../utils/constants';
 
-const THEME_MODE_HINT = {
-  light: 'Toujours en mode clair',
-  dark: 'Toujours en mode sombre',
-  system: 'Suit le thème de votre appareil',
-};
+const IP_CSS = `
+  .ip-identity{display:flex;align-items:center;gap:18px;flex-wrap:wrap}
+  .ip-avatar-wrap{position:relative;flex-shrink:0}
+  .ip-avatar-btn{position:absolute;bottom:-2px;right:-2px;width:28px;height:28px;border-radius:50%;background:var(--orange);border:2px solid #fff;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#fff;padding:0}
+  .ip-avatar-btn:disabled{opacity:.6;cursor:not-allowed}
+  .ip-identity-name{font-size:17px;font-weight:700;letter-spacing:-.015em;color:var(--ink);margin:0}
+  .ip-identity-mail{font-size:13px;color:var(--ink-3);margin:3px 0 0}
+  .ip-identity-role{font-size:12.5px;font-weight:600;color:var(--orange);margin:5px 0 0}
+  .ip-form{display:flex;flex-direction:column;gap:18px}
+  .ip-tag-row{display:flex;gap:8px}
+  .ip-tag-row .dsh-input{flex:1}
+  .ip-tag{display:inline-flex;align-items:center;gap:7px;background:var(--orange-soft);color:var(--orange);border-radius:999px;padding:7px 14px;font-size:12.5px;font-weight:600}
+  .ip-tag--neutral{background:#F2F1ED;color:var(--ink-2)}
+  .ip-tag button{background:none;border:none;cursor:pointer;color:inherit;display:flex;padding:0;opacity:.7}
+  .ip-tag button:hover{opacity:1}
+  .ip-count{font-size:12px;color:var(--ink-3);text-align:right;margin:6px 0 0}
+
+  .ip-gallery{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:18px}
+  @media(max-width:900px){.ip-gallery{grid-template-columns:repeat(3,1fr)}}
+  @media(max-width:560px){.ip-gallery{grid-template-columns:repeat(2,1fr)}}
+  .ip-photo{position:relative;aspect-ratio:1/1;border-radius:14px;overflow:hidden;background:#F2F1ED;border:1px solid var(--line)}
+  .ip-photo img{width:100%;height:100%;object-fit:cover}
+  .ip-photo-del{position:absolute;top:8px;right:8px;width:28px;height:28px;border-radius:50%;background:rgba(15,15,15,.6);color:#fff;border:none;display:flex;align-items:center;justify-content:center;cursor:pointer;opacity:0;transition:opacity .2s,background .2s}
+  .ip-photo:hover .ip-photo-del{opacity:1}
+  .ip-photo-del:hover{background:#C0392B}
+
+  .ip-check{display:flex;align-items:flex-start;gap:11px}
+  .ip-check input{margin-top:3px;width:16px;height:16px;accent-color:var(--orange);flex-shrink:0}
+  .ip-check label{font-size:13.5px;font-weight:600;color:var(--ink);cursor:pointer}
+  @keyframes ip-spin{to{transform:rotate(360deg)}}
+`;
 
 export default function IntervenantProfile() {
   const { user: authUser, refreshUser } = useAuth();
-  const { mode } = useTheme();
+  const { hash } = useLocation();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState(null);
@@ -82,6 +103,13 @@ export default function IntervenantProfile() {
       })
       .finally(() => setLoading(false));
   }, []);
+
+  // Défilement vers la section documents quand on arrive avec #documents
+  useEffect(() => {
+    if (loading || hash !== '#documents') return;
+    const el = document.getElementById('documents');
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, [loading, hash]);
 
   useEffect(() => {
     if (!authUser?.id) return;
@@ -182,16 +210,20 @@ export default function IntervenantProfile() {
   if (loading) return <Spinner />;
 
   return (
-    <div className="space-y-6 max-w-2xl">
-      <div>
-        <h1 className="text-2xl font-semibold text-gray-900">Mon profil</h1>
-        <p className="text-gray-500 mt-1">Gérez votre profil professionnel et votre expertise</p>
+    <div className="dsh-page" style={{ maxWidth: 860 }}>
+      <style>{IP_CSS}</style>
+
+      <div className="dsh-page-head">
+        <div>
+          <h1 className="dsh-h1">Mon profil</h1>
+          <p className="dsh-sub">Gérez votre profil professionnel et votre expertise</p>
+        </div>
       </div>
 
-      {/* Avatar & identity */}
-      <Card>
-        <div className="flex items-center gap-4">
-          <div className="relative shrink-0">
+      {/* Avatar & identité */}
+      <div className="dsh-card">
+        <div className="ip-identity">
+          <div className="ip-avatar-wrap">
             <AvatarFallback
               user={{
                 firstName: form.firstName,
@@ -203,210 +235,206 @@ export default function IntervenantProfile() {
               title={`${form.firstName || ''} ${form.lastName || ''}`.trim() || 'Avatar'}
             />
             <button
+              type="button"
               onClick={() => fileInputRef.current?.click()}
               disabled={avatarUploading}
-              className="absolute -bottom-1 -right-1 w-6 h-6 bg-primary-600 hover:bg-primary-500 rounded-full flex items-center justify-center shadow transition-colors"
+              className="ip-avatar-btn"
               title="Changer la photo"
             >
               {avatarUploading ? (
-                <span className="w-3 h-3 border border-white border-t-transparent rounded-full animate-spin" />
+                <span style={{ width: 12, height: 12, border: '1.5px solid #fff', borderTopColor: 'transparent', borderRadius: '50%', animation: 'ip-spin .8s linear infinite' }} />
               ) : (
-                <Camera className="w-3 h-3 text-white" />
+                <Camera size={13} />
               )}
             </button>
-            <input ref={fileInputRef} type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={handleAvatarChange} />
+            <input ref={fileInputRef} type="file" accept="image/jpeg,image/png,image/webp" style={{ display: 'none' }} onChange={handleAvatarChange} />
           </div>
           <div>
-            <p className="font-semibold text-gray-900">{form.firstName} {form.lastName}</p>
-            <p className="text-sm text-gray-500">{authUser?.email}</p>
-            <p className="text-sm text-primary-600 font-medium mt-0.5">Coach professionnel</p>
+            <p className="ip-identity-name">{form.firstName} {form.lastName}</p>
+            <p className="ip-identity-mail">{authUser?.email}</p>
+            <p className="ip-identity-role">Coach professionnel</p>
           </div>
         </div>
-      </Card>
+      </div>
 
-      <form onSubmit={handleSave} className="space-y-5">
+      <form onSubmit={handleSave} className="dsh-page">
         {/* Informations */}
-        <Card>
-          <h2 className="text-base font-semibold text-gray-900 mb-4">Informations</h2>
-          <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-3">
-              <Input
-                label="Prénom"
-                value={form.firstName}
-                onChange={(e) => setField('firstName', e.target.value)}
-              />
-              <Input
-                label="Nom"
-                value={form.lastName}
-                onChange={(e) => setField('lastName', e.target.value)}
-              />
+        <div className="dsh-card">
+          <div className="ip-form">
+            <h2 className="dsh-card-title">Informations</h2>
+
+            <div className="dsh-row">
+              <div>
+                <label className="dsh-label" htmlFor="firstName">Prénom</label>
+                <input id="firstName" className="dsh-input" value={form.firstName} onChange={(e) => setField('firstName', e.target.value)} />
+              </div>
+              <div>
+                <label className="dsh-label" htmlFor="lastName">Nom</label>
+                <input id="lastName" className="dsh-input" value={form.lastName} onChange={(e) => setField('lastName', e.target.value)} />
+              </div>
             </div>
-            <Input
-              label="Téléphone"
-              value={form.phone}
-              onChange={(e) => setField('phone', e.target.value)}
-              placeholder="+33 6 xx xx xx xx"
-            />
+
             <div>
-              <label className="text-sm font-medium text-gray-700 block mb-1.5">Genre</label>
-              <div className="flex gap-2">
+              <label className="dsh-label" htmlFor="phone">Téléphone</label>
+              <input id="phone" className="dsh-input" value={form.phone} onChange={(e) => setField('phone', e.target.value)} placeholder="+33 6 xx xx xx xx" />
+            </div>
+
+            <div>
+              <span className="dsh-label">Genre</span>
+              <div className="dsh-chips">
                 {[{ value: 'HOMME', label: 'Homme' }, { value: 'FEMME', label: 'Femme' }].map(({ value, label }) => (
                   <button
                     key={value}
                     type="button"
                     onClick={() => setField('gender', form.gender === value ? null : value)}
-                    className={`px-4 py-2 rounded-lg text-sm font-medium border transition-colors ${
-                      form.gender === value
-                        ? 'bg-primary-600 text-white border-primary-600'
-                        : 'bg-surface text-gray-600 border-gray-200 hover:border-primary-400'
-                    }`}
+                    className={`dsh-chip${form.gender === value ? ' is-active' : ''}`}
                   >
                     {label}
                   </button>
                 ))}
               </div>
             </div>
-            <Input
-              label="Ville"
-              value={form.profile.city}
-              onChange={(e) => setProfileField('city', e.target.value)}
-              placeholder="Paris"
-            />
+
+            <div>
+              <label className="dsh-label" htmlFor="city">Ville</label>
+              <input id="city" className="dsh-input" value={form.profile.city} onChange={(e) => setProfileField('city', e.target.value)} placeholder="Paris" />
+            </div>
           </div>
-        </Card>
+        </div>
 
         {/* Présentation */}
-        <Card>
-          <h2 className="text-base font-semibold text-gray-900 mb-4">Présentation</h2>
-          <div className="space-y-1">
-            <label className="block text-sm font-medium text-gray-900">Bio</label>
-            <textarea
-              value={form.profile.bio}
-              onChange={(e) => setProfileField('bio', e.target.value)}
-              placeholder="Décrivez votre parcours et votre approche..."
-              rows={5}
-              maxLength={500}
-              className="w-full px-3 py-2 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-primary-400 resize-none"
-            />
-            <p className="text-xs text-gray-400 text-right">
-              {form.profile.bio.length} / 500
-            </p>
+        <div className="dsh-card">
+          <div className="ip-form">
+            <h2 className="dsh-card-title">Présentation</h2>
+            <div>
+              <label className="dsh-label" htmlFor="bio">Bio</label>
+              <textarea
+                id="bio"
+                className="dsh-textarea"
+                value={form.profile.bio}
+                onChange={(e) => setProfileField('bio', e.target.value)}
+                placeholder="Décrivez votre parcours et votre approche..."
+                rows={5}
+                maxLength={500}
+              />
+              <p className="ip-count">{form.profile.bio.length} / 500</p>
+            </div>
           </div>
-        </Card>
+        </div>
 
         {/* Expérience */}
-        <Card>
-          <h2 className="text-base font-semibold text-gray-900 mb-4">Expérience</h2>
-          <Input
-            label="Années d'expérience"
-            type="number"
-            min={0}
-            value={form.profile.experience}
-            onChange={(e) => setProfileField('experience', e.target.value)}
-            placeholder="5"
-          />
-        </Card>
+        <div className="dsh-card">
+          <div className="ip-form">
+            <h2 className="dsh-card-title">Expérience</h2>
+            <div>
+              <label className="dsh-label" htmlFor="experience">Années d'expérience</label>
+              <input
+                id="experience"
+                className="dsh-input"
+                type="number"
+                min={0}
+                value={form.profile.experience}
+                onChange={(e) => setProfileField('experience', e.target.value)}
+                placeholder="5"
+              />
+            </div>
+          </div>
+        </div>
 
         {/* Spécialités */}
-        <Card>
-          <h2 className="text-base font-semibold text-gray-900 mb-1">Spécialités</h2>
-          <p className="text-sm text-gray-500 mb-4">Les disciplines que vous pratiquez et enseignez.</p>
-          <div className="space-y-2">
-            <div className="flex gap-2">
-              <input
-                type="text"
-                value={specialtyInput}
-                onChange={(e) => setSpecialtyInput(e.target.value)}
-                onKeyDown={(e) =>
-                  e.key === 'Enter' &&
-                  (e.preventDefault(), addTag('specialties', specialtyInput, setSpecialtyInput))
-                }
-                placeholder="Musculation, Yoga, Running..."
-                className="flex-1 h-9 px-3 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-primary-400"
-              />
-              <button
-                type="button"
-                onClick={() => addTag('specialties', specialtyInput, setSpecialtyInput)}
-                className="px-4 py-1.5 text-sm font-medium bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
-              >
-                Ajouter
-              </button>
+        <div className="dsh-card">
+          <div className="ip-form">
+            <div>
+              <h2 className="dsh-card-title">Spécialités</h2>
+              <p className="dsh-card-sub">Les disciplines que vous pratiquez et enseignez.</p>
             </div>
-            {form.profile.specialties.length > 0 && (
-              <div className="flex flex-wrap gap-2 pt-1">
-                {form.profile.specialties.map((s, i) => (
-                  <span
-                    key={i}
-                    className="bg-primary-50 text-primary-700 border border-primary-200 rounded-full px-3 py-1 text-sm flex items-center gap-1.5"
-                  >
-                    {s}
-                    <button
-                      type="button"
-                      onClick={() => removeTag('specialties', i)}
-                      className="hover:text-primary-900 leading-none"
-                    >
-                      ×
-                    </button>
-                  </span>
-                ))}
+            <div>
+              <div className="ip-tag-row">
+                <input
+                  type="text"
+                  className="dsh-input"
+                  value={specialtyInput}
+                  onChange={(e) => setSpecialtyInput(e.target.value)}
+                  onKeyDown={(e) =>
+                    e.key === 'Enter' &&
+                    (e.preventDefault(), addTag('specialties', specialtyInput, setSpecialtyInput))
+                  }
+                  placeholder="Musculation, Yoga, Running..."
+                />
+                <button
+                  type="button"
+                  onClick={() => addTag('specialties', specialtyInput, setSpecialtyInput)}
+                  className="dsh-btn dsh-btn--orange"
+                >
+                  Ajouter
+                </button>
               </div>
-            )}
+              {form.profile.specialties.length > 0 && (
+                <div className="dsh-chips" style={{ marginTop: 12 }}>
+                  {form.profile.specialties.map((s, i) => (
+                    <span key={i} className="ip-tag">
+                      {s}
+                      <button type="button" onClick={() => removeTag('specialties', i)} aria-label={`Retirer ${s}`}>
+                        <X size={13} />
+                      </button>
+                    </span>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
-        </Card>
+        </div>
 
         {/* Diplômes & certifications */}
-        <Card>
-          <h2 className="text-base font-semibold text-gray-900 mb-1">Diplômes & certifications</h2>
-          <p className="text-sm text-gray-500 mb-4">Vos diplômes et qualifications professionnelles.</p>
-          <div className="space-y-2">
-            <div className="flex gap-2">
-              <input
-                type="text"
-                value={diplomaInput}
-                onChange={(e) => setDiplomaInput(e.target.value)}
-                onKeyDown={(e) =>
-                  e.key === 'Enter' &&
-                  (e.preventDefault(), addTag('diplomas', diplomaInput, setDiplomaInput))
-                }
-                placeholder="BPJEPS, Master STAPS, CQP..."
-                className="flex-1 h-9 px-3 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-primary-400"
-              />
-              <button
-                type="button"
-                onClick={() => addTag('diplomas', diplomaInput, setDiplomaInput)}
-                className="px-4 py-1.5 text-sm font-medium bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
-              >
-                Ajouter
-              </button>
+        <div className="dsh-card">
+          <div className="ip-form">
+            <div>
+              <h2 className="dsh-card-title">Diplômes &amp; certifications</h2>
+              <p className="dsh-card-sub">Vos diplômes et qualifications professionnelles.</p>
             </div>
-            {form.profile.diplomas.length > 0 && (
-              <div className="flex flex-wrap gap-2 pt-1">
-                {form.profile.diplomas.map((d, i) => (
-                  <span
-                    key={i}
-                    className="bg-gray-100 text-gray-700 rounded-full px-3 py-1 text-sm flex items-center gap-1.5"
-                  >
-                    {d}
-                    <button
-                      type="button"
-                      onClick={() => removeTag('diplomas', i)}
-                      className="hover:text-gray-900 leading-none"
-                    >
-                      ×
-                    </button>
-                  </span>
-                ))}
+            <div>
+              <div className="ip-tag-row">
+                <input
+                  type="text"
+                  className="dsh-input"
+                  value={diplomaInput}
+                  onChange={(e) => setDiplomaInput(e.target.value)}
+                  onKeyDown={(e) =>
+                    e.key === 'Enter' &&
+                    (e.preventDefault(), addTag('diplomas', diplomaInput, setDiplomaInput))
+                  }
+                  placeholder="BPJEPS, Master STAPS, CQP..."
+                />
+                <button
+                  type="button"
+                  onClick={() => addTag('diplomas', diplomaInput, setDiplomaInput)}
+                  className="dsh-btn dsh-btn--orange"
+                >
+                  Ajouter
+                </button>
               </div>
-            )}
+              {form.profile.diplomas.length > 0 && (
+                <div className="dsh-chips" style={{ marginTop: 12 }}>
+                  {form.profile.diplomas.map((d, i) => (
+                    <span key={i} className="ip-tag ip-tag--neutral">
+                      {d}
+                      <button type="button" onClick={() => removeTag('diplomas', i)} aria-label={`Retirer ${d}`}>
+                        <X size={13} />
+                      </button>
+                    </span>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
-        </Card>
+        </div>
 
         {/* Galerie photos */}
-        <Card>
-          <div className="flex items-start justify-between gap-3 mb-1">
+        <div className="dsh-card">
+          <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap' }}>
             <div>
-              <h2 className="text-base font-semibold text-gray-900 mb-1">Galerie photos</h2>
-              <p className="text-sm text-gray-500">
+              <h2 className="dsh-card-title">Galerie photos</h2>
+              <p className="dsh-card-sub" style={{ maxWidth: 480, lineHeight: 1.5 }}>
                 Montrez vos séances, votre matériel, vos lieux d'entraînement — visible sur votre profil public ({photos.length}/12).
               </p>
             </div>
@@ -414,8 +442,9 @@ export default function IntervenantProfile() {
               type="button"
               onClick={() => galleryInputRef.current?.click()}
               disabled={photoUploading || photos.length >= 12}
-              className="shrink-0 px-4 py-1.5 text-sm font-medium bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors disabled:opacity-50"
+              className="dsh-btn dsh-btn--orange dsh-btn--sm"
             >
+              <ImagePlus size={14} />
               {photoUploading ? 'Envoi…' : 'Ajouter des photos'}
             </button>
             <input
@@ -423,41 +452,42 @@ export default function IntervenantProfile() {
               type="file"
               accept="image/jpeg,image/png,image/webp"
               multiple
-              className="hidden"
+              style={{ display: 'none' }}
               onChange={handleAddPhotos}
             />
           </div>
+
           {photos.length === 0 ? (
-            <p className="text-sm text-gray-400 italic mt-3">
+            <p className="dsh-card-sub" style={{ marginTop: 14, fontStyle: 'italic' }}>
               Aucune photo pour le moment. JPG, PNG ou WebP, 5 Mo max par photo.
             </p>
           ) : (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 mt-4">
+            <div className="ip-gallery">
               {photos.map((photo) => (
-                <div key={photo.id} className="relative group aspect-square rounded-xl overflow-hidden bg-gray-100">
-                  <img src={photo.url} alt="Photo de la galerie" className="w-full h-full object-cover" />
+                <div key={photo.id} className="ip-photo">
+                  <img src={photo.url} alt="Photo de la galerie" />
                   <button
                     type="button"
                     onClick={() => handleDeletePhoto(photo.id)}
-                    className="absolute top-1.5 right-1.5 w-7 h-7 rounded-full bg-black/60 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600"
+                    className="ip-photo-del"
                     title="Supprimer cette photo"
                   >
-                    ×
+                    <X size={14} />
                   </button>
                 </div>
               ))}
             </div>
           )}
-        </Card>
+        </div>
 
         {/* Caractéristiques & séance type */}
-        <Card>
-          <h2 className="text-base font-semibold text-gray-900 mb-4">Caractéristiques & séance type</h2>
-          <div className="space-y-4">
-            {/* Lieu du cours */}
-            <div className="space-y-2">
-              <label className="block text-sm font-medium text-gray-900">Lieu du cours</label>
-              <div className="flex flex-wrap gap-2">
+        <div className="dsh-card">
+          <div className="ip-form">
+            <h2 className="dsh-card-title">Caractéristiques &amp; séance type</h2>
+
+            <div>
+              <span className="dsh-label">Lieu du cours</span>
+              <div className="dsh-chips">
                 {COURSE_LOCATION_OPTIONS.map((loc) => {
                   const selected = form.profile.courseLocations.includes(loc);
                   return (
@@ -472,11 +502,7 @@ export default function IntervenantProfile() {
                             : [...form.profile.courseLocations, loc]
                         );
                       }}
-                      className={`px-4 py-2 rounded-full text-sm font-medium border transition-all ${
-                        selected
-                          ? 'bg-primary-600 text-white border-primary-600'
-                          : 'bg-surface text-gray-600 border-gray-200 hover:border-primary-300'
-                      }`}
+                      className={`dsh-chip${selected ? ' is-active' : ''}`}
                     >
                       {loc}
                     </button>
@@ -485,68 +511,53 @@ export default function IntervenantProfile() {
               </div>
             </div>
 
-            {/* Ma seance type */}
-            <div className="space-y-1">
-              <label className="block text-sm font-medium text-gray-900">Décrivez le déroulement d'une séance typique</label>
+            <div>
+              <label className="dsh-label" htmlFor="typicalSession">
+                Décrivez le déroulement d'une séance typique
+              </label>
               <textarea
+                id="typicalSession"
+                className="dsh-textarea"
                 value={form.profile.typicalSession}
                 onChange={(e) => setProfileField('typicalSession', e.target.value)}
                 placeholder="Ex : Échauffement 10min → travail technique 30min → cardio 15min → étirements 5min"
                 rows={4}
                 maxLength={800}
-                className="w-full px-3 py-2 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-primary-400 resize-none"
               />
-              <p className="text-xs text-gray-400 text-right">
-                {form.profile.typicalSession.length} / 800
-              </p>
+              <p className="ip-count">{form.profile.typicalSession.length} / 800</p>
             </div>
 
-            {/* Agrement service a la personne */}
-            <div className="flex items-start gap-3">
+            <div className="ip-check">
               <input
                 type="checkbox"
                 id="serviceAgreement"
                 checked={form.profile.serviceAgreement}
                 onChange={(e) => setProfileField('serviceAgreement', e.target.checked)}
-                className="mt-1 h-4 w-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500"
               />
               <div>
-                <label htmlFor="serviceAgreement" className="text-sm font-medium text-gray-900 cursor-pointer">
-                  Agree service a la personne
-                </label>
-                <p className="text-xs text-gray-400 mt-0.5">
-                  Permet aux clients de beneficier d'une reduction d'impot de 50%
+                <label htmlFor="serviceAgreement">Agréé service à la personne</label>
+                <p className="dsh-card-sub">
+                  Permet aux clients de bénéficier d'une réduction d'impôt de 50 %
                 </p>
               </div>
             </div>
           </div>
-        </Card>
+        </div>
 
-        <Button type="submit" loading={saving}>
-          Sauvegarder
-        </Button>
+        <div>
+          <button type="submit" className="dsh-btn dsh-btn--orange" disabled={saving}>
+            {saving ? 'Enregistrement…' : 'Sauvegarder'}
+          </button>
+        </div>
       </form>
 
-      {/* Documents (verification du compte) */}
-      <UploadDocuments />
-
-      <div>
-        <h2 className="text-lg font-semibold text-gray-900 mb-3">Sécurité</h2>
-        <PasskeyManager />
+      {/* Documents (vérification du compte) */}
+      <div id="documents" style={{ scrollMarginTop: 90 }}>
+        <UploadDocuments />
       </div>
 
-      <div>
-        <h2 className="text-lg font-semibold text-gray-900 mb-3">Préférences</h2>
-        <Card>
-          <div className="flex items-center justify-between gap-4 flex-wrap">
-            <div>
-              <p className="text-sm font-medium text-gray-900">Thème de l'interface</p>
-              <p className="text-xs text-gray-500">{THEME_MODE_HINT[mode]}</p>
-            </div>
-            <ThemeSelector />
-          </div>
-        </Card>
-      </div>
+      {/* Sécurité */}
+      <PasskeyManager />
 
       <DeleteAccountSection />
     </div>

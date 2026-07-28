@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { documentApi } from '../../services/document.api';
 import Spinner from '../../components/ui/Spinner';
-import Button from '../../components/ui/Button';
 import toast from 'react-hot-toast';
 import { Upload, FileText, Trash2, CheckCircle, Clock, ShieldCheck, XCircle, AlertTriangle } from 'lucide-react';
 
@@ -17,11 +16,46 @@ const TYPE_LABELS = { ID_CARD: "Pièce d'identité", DIPLOMA: 'Diplôme', OTHER:
 
 // Statut de chaque document, tel que décidé par l'admin
 const DOC_STATUS_BADGE = {
-  PENDING:   { cls: 'bg-amber-100 text-amber-700', label: 'En attente de validation', Icon: Clock },
-  VALIDATED: { cls: 'bg-green-100 text-green-700', label: 'Validé', Icon: CheckCircle },
-  REJECTED:  { cls: 'bg-red-100 text-red-700', label: 'Refusé', Icon: XCircle },
-  EXPIRED:   { cls: 'bg-gray-100 text-gray-500', label: 'Expiré', Icon: AlertTriangle },
+  PENDING:   { cls: 'dsh-badge--wait', label: 'En attente de validation', Icon: Clock },
+  VALIDATED: { cls: 'dsh-badge--ok', label: 'Validé', Icon: CheckCircle },
+  REJECTED:  { cls: 'dsh-badge--err', label: 'Refusé', Icon: XCircle },
+  EXPIRED:   { cls: 'dsh-badge--neutral', label: 'Expiré', Icon: AlertTriangle },
 };
+
+const UD_CSS = `
+  .ud-banner{border-radius:16px;padding:16px 20px;display:flex;align-items:flex-start;gap:13px;margin-bottom:18px}
+  .ud-banner p{margin:0}
+  .ud-banner-title{font-size:14px;font-weight:700}
+  .ud-banner-text{font-size:13px;line-height:1.55;margin-top:5px!important}
+
+  .ud-type{border:1px solid var(--line);border-radius:16px;padding:20px 22px;background:#fff}
+  .ud-type + .ud-type{margin-top:12px}
+  .ud-type-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:14px}
+  .ud-type-name{font-size:14.5px;font-weight:600;color:var(--ink);margin:0;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .ud-req{font-size:11.5px;font-weight:600;color:#C0392B}
+  .ud-type-desc{font-size:12.5px;color:var(--ink-3);margin:4px 0 0}
+  .ud-upload{display:inline-flex;align-items:center;gap:8px;height:36px;padding:0 16px;border-radius:999px;background:var(--orange);color:#fff;font-size:12.5px;font-weight:600;cursor:pointer;flex-shrink:0;transition:transform .15s ease,opacity .2s}
+  .ud-upload:hover{transform:translateY(-1px)}
+  .ud-upload.is-off{background:#F2F1ED;color:var(--ink-3);cursor:not-allowed;transform:none}
+
+  .ud-file{display:flex;align-items:center;gap:12px;border-radius:12px;padding:12px 14px;border:1px solid var(--line);background:#FAF9F7}
+  .ud-file + .ud-file{margin-top:8px}
+  .ud-file--pending{background:#FEF1EA;border-color:#F7D3C0}
+  .ud-file-name{font-size:13.5px;font-weight:500;color:var(--ink);margin:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .ud-file-meta{font-size:11.5px;color:var(--ink-3);margin:2px 0 0}
+  .ud-icon-btn{width:30px;height:30px;border-radius:50%;border:1px solid var(--line);background:#fff;color:var(--ink-3);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;transition:border-color .15s,color .15s,background .15s}
+  .ud-icon-btn:hover:not(:disabled){border-color:#EFC7BE;color:#C0392B;background:#FBEAE7}
+  .ud-icon-btn:disabled{opacity:.5;cursor:not-allowed}
+  .ud-note{font-size:12px;line-height:1.5;border-radius:10px;padding:9px 12px;margin:8px 0 0}
+  .ud-note--err{color:#A5342A;background:#FBEAE7;border:1px solid #EFC7BE}
+  .ud-note--info{color:var(--ink-3);font-style:italic;padding-left:0}
+  .ud-hint{font-size:12px;color:var(--ink-3);font-style:italic;margin:0}
+
+  .ud-summary{border-radius:16px;padding:16px 20px;display:flex;align-items:center;gap:12px;font-size:13.5px;font-weight:600}
+  .ud-summary--ok{background:#EAF3EC;border:1px solid #CDE4D3;color:#28643B}
+  .ud-summary--warn{background:#FBF3E2;border:1px solid #EBD9B4;color:#8A6212}
+  .ud-summary--neutral{background:#FAF9F7;border:1px solid var(--line);color:var(--ink-2)}
+`;
 
 function formatSize(bytes) {
   if (bytes < 1024) return `${bytes} o`;
@@ -133,75 +167,75 @@ export default function UploadDocuments() {
   // Dossier complet = pièce d'identité + au moins un diplôme
   const dossierComplet = hasIdCard && hasDiploma;
 
+  const summaryClass = dossierComplet
+    ? 'ud-summary--ok'
+    : documents.length > 0
+      ? 'ud-summary--warn'
+      : 'ud-summary--neutral';
+
   return (
-    <div className="max-w-2xl mx-auto">
-      {/* Banner verification rejected */}
+    <div className="dsh-card">
+      <style>{UD_CSS}</style>
+
+      {/* Vérification refusée */}
       {user?.verificationStatus === 'REJECTED' && (
-        <div className="bg-red-50 border border-red-200 rounded-2xl p-5 mb-8 flex items-start gap-4">
-          <ShieldCheck className="w-5 h-5 text-red-500 shrink-0 mt-0.5" />
+        <div className="ud-banner" style={{ background: '#FBEAE7', border: '1px solid #EFC7BE', color: '#A5342A' }}>
+          <ShieldCheck size={18} style={{ flexShrink: 0, marginTop: 1 }} />
           <div>
-            <p className="font-semibold text-red-800">Vérification refusée</p>
-            <p className="text-sm text-red-700 mt-1">
-              Vos documents n'ont pas pu être validés pour la raison suivante :
-              <br/>
-              <span className="font-medium">"{user.verificationNote || 'Documents non conformes'}"</span>
+            <p className="ud-banner-title">Vérification refusée</p>
+            <p className="ud-banner-text">
+              Vos documents n'ont pas pu être validés pour la raison suivante :<br />
+              <strong>"{user.verificationNote || 'Documents non conformes'}"</strong>
             </p>
-            <p className="text-sm text-red-700 mt-2 font-medium">
+            <p className="ud-banner-text" style={{ fontWeight: 600 }}>
               Veuillez renvoyer vos documents pour soumettre une nouvelle demande.
             </p>
           </div>
         </div>
       )}
 
-      {/* Banner verification pending */}
+      {/* Vérification en attente */}
       {user?.verificationStatus === 'PENDING' && (
-        <div className="bg-amber-50 border border-amber-200 rounded-2xl p-5 mb-8 flex items-start gap-4">
-          <Clock className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
+        <div className="ud-banner" style={{ background: '#FBF3E2', border: '1px solid #EBD9B4', color: '#8A6212' }}>
+          <Clock size={18} style={{ flexShrink: 0, marginTop: 1 }} />
           <div>
-            <p className="font-semibold text-amber-800">Compte en attente de vérification</p>
-            <p className="text-sm text-amber-700 mt-1">
-              Votre compte sera activé après vérification de vos documents par notre équipe (généralement sous 24h).
-              Vous pouvez accéder à votre tableau de bord en attendant.
+            <p className="ud-banner-title">Compte en attente de vérification</p>
+            <p className="ud-banner-text">
+              Votre compte sera activé après vérification de vos documents par notre équipe
+              (généralement sous 24 h). Vous pouvez accéder à votre tableau de bord en attendant.
             </p>
           </div>
         </div>
       )}
 
-      <div className="mb-8">
-        <h1 className="text-2xl font-extrabold text-gray-900 flex items-center gap-2">
-          <ShieldCheck className="w-6 h-6 text-primary-600" />
-          Vérification de votre compte
-        </h1>
-        <p className="text-gray-500 mt-1 text-sm">
+      <div style={{ marginBottom: 20 }}>
+        <h2 className="dsh-card-title">Vérification de votre compte</h2>
+        <p className="dsh-card-sub" style={{ lineHeight: 1.55, maxWidth: 560 }}>
           Déposez vos documents pour accélérer la validation de votre profil.
           {user?.role === 'INTERVENANT' && " Une pièce d'identité et au moins un diplôme sont obligatoires."}
         </p>
       </div>
 
-      {/* Document types */}
-      <div className="space-y-4 mb-8">
+      {/* Types de documents */}
+      <div style={{ marginBottom: 20 }}>
         {DOC_TYPES.map(({ value, label, desc, required }) => {
           const existing = documents.filter((d) => d.type === value);
           return (
-            <div key={value} className="bg-surface border border-gray-200 rounded-2xl p-5">
-              <div className="flex items-start justify-between gap-4 mb-3">
+            <div key={value} className="ud-type">
+              <div className="ud-type-head">
                 <div>
-                  <p className="font-semibold text-gray-900 flex items-center gap-1.5">
+                  <p className="ud-type-name">
                     {label}
-                    {required && <span className="text-xs text-red-500 font-normal">* obligatoire</span>}
+                    {required && <span className="ud-req">* obligatoire</span>}
                   </p>
-                  <p className="text-xs text-gray-400 mt-0.5">{desc}</p>
+                  <p className="ud-type-desc">{desc}</p>
                 </div>
-                <label className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium cursor-pointer transition-colors shrink-0 ${
-                  uploading
-                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                    : 'bg-primary-600 hover:bg-primary-700 text-white'
-                }`}>
-                  <Upload className="w-4 h-4" />
+                <label className={`ud-upload${uploading ? ' is-off' : ''}`}>
+                  <Upload size={14} />
                   Ajouter
                   <input
                     type="file"
-                    className="hidden"
+                    style={{ display: 'none' }}
                     accept=".pdf,.jpg,.jpeg,.png"
                     multiple
                     disabled={uploading}
@@ -211,20 +245,22 @@ export default function UploadDocuments() {
               </div>
 
               {pendingFiles[value]?.length > 0 && (
-                <div className="mb-3 space-y-2">
+                <div style={{ marginBottom: 12 }}>
                   {pendingFiles[value].map((file, index) => (
-                    <div key={`${file.name}-${index}`} className="flex items-center gap-3 bg-blue-50 border border-blue-200 rounded-xl p-3">
-                      <FileText className="w-4 h-4 text-blue-400 shrink-0" />
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm text-blue-800 truncate">{file.name}</p>
-                        <p className="text-xs text-blue-500">{formatSize(file.size)} (en attente d'envoi)</p>
+                    <div key={`${file.name}-${index}`} className="ud-file ud-file--pending">
+                      <FileText size={15} style={{ color: '#F4530F', flexShrink: 0 }} />
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <p className="ud-file-name">{file.name}</p>
+                        <p className="ud-file-meta">{formatSize(file.size)} · en attente d'envoi</p>
                       </div>
                       <button
+                        type="button"
                         onClick={() => handleRemovePending(value, index)}
                         disabled={uploading}
-                        className="text-blue-400 hover:text-red-500 transition-colors shrink-0"
+                        className="ud-icon-btn"
+                        title="Retirer"
                       >
-                        <Trash2 className="w-4 h-4" />
+                        <Trash2 size={13} />
                       </button>
                     </div>
                   ))}
@@ -232,42 +268,43 @@ export default function UploadDocuments() {
               )}
 
               {existing.length > 0 && (
-                <div className="space-y-2">
+                <div>
                   {existing.map((doc) => {
                     const badge = DOC_STATUS_BADGE[doc.status] || DOC_STATUS_BADGE.PENDING;
                     const BadgeIcon = badge.Icon;
                     return (
-                      <div key={doc.id} className="bg-gray-50 rounded-xl p-3 space-y-1.5">
-                        <div className="flex items-center gap-3">
-                          <FileText className="w-4 h-4 text-gray-400 shrink-0" />
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm text-gray-700 truncate">{doc.originalName}</p>
-                            <p className="text-xs text-gray-400">
-                              {formatSize(doc.sizeBytes)}
-                              {doc.expiresAt && ` · expire le ${new Date(doc.expiresAt).toLocaleDateString('fr-FR')}`}
-                            </p>
-                          </div>
-                          <span className={`inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full shrink-0 ${badge.cls}`}>
-                            <BadgeIcon className="w-3 h-3" />{badge.label}
-                          </span>
-                          {doc.status !== 'VALIDATED' && (
-                            <button
-                              onClick={() => handleDelete(doc.id)}
-                              disabled={deleting === doc.id || uploading}
-                              className="text-gray-400 hover:text-red-500 transition-colors shrink-0"
-                              title="Supprimer ce document"
-                            >
-                              {deleting === doc.id ? <Spinner size="sm" /> : <Trash2 className="w-4 h-4" />}
-                            </button>
-                          )}
+                      <div key={doc.id} className="ud-file" style={{ flexWrap: 'wrap' }}>
+                        <FileText size={15} style={{ color: '#8a8781', flexShrink: 0 }} />
+                        <div style={{ flex: 1, minWidth: 140 }}>
+                          <p className="ud-file-name">{doc.originalName}</p>
+                          <p className="ud-file-meta">
+                            {formatSize(doc.sizeBytes)}
+                            {doc.expiresAt && ` · expire le ${new Date(doc.expiresAt).toLocaleDateString('fr-FR')}`}
+                          </p>
                         </div>
+                        <span className={`dsh-badge ${badge.cls}`}>
+                          <BadgeIcon size={12} />{badge.label}
+                        </span>
+                        {doc.status !== 'VALIDATED' && (
+                          <button
+                            type="button"
+                            onClick={() => handleDelete(doc.id)}
+                            disabled={deleting === doc.id || uploading}
+                            className="ud-icon-btn"
+                            title="Supprimer ce document"
+                          >
+                            {deleting === doc.id ? <Spinner size="sm" /> : <Trash2 size={13} />}
+                          </button>
+                        )}
                         {doc.status === 'REJECTED' && doc.adminNote && (
-                          <p className="text-xs text-red-600 bg-red-50 border border-red-100 rounded-lg px-2.5 py-1.5">
-                            <span className="font-semibold">Motif du refus :</span> {doc.adminNote}
+                          <p className="ud-note ud-note--err" style={{ width: '100%' }}>
+                            <strong>Motif du refus :</strong> {doc.adminNote}
                           </p>
                         )}
                         {doc.status !== 'REJECTED' && doc.adminNote && (
-                          <p className="text-xs text-gray-500 italic pl-7">Note : {doc.adminNote}</p>
+                          <p className="ud-note ud-note--info" style={{ width: '100%' }}>
+                            Note : {doc.adminNote}
+                          </p>
                         )}
                       </div>
                     );
@@ -276,7 +313,7 @@ export default function UploadDocuments() {
               )}
 
               {existing.length === 0 && !pendingFiles[value]?.length && (
-                <p className="text-xs text-gray-400 italic">
+                <p className="ud-hint">
                   Aucun document envoyé — PDF, JPG ou PNG, max 5 Mo. Vous pouvez sélectionner plusieurs fichiers.
                 </p>
               )}
@@ -286,33 +323,30 @@ export default function UploadDocuments() {
       </div>
 
       {loadingDocs && (
-        <div className="flex justify-center py-4"><Spinner /></div>
+        <div style={{ display: 'flex', justifyContent: 'center', padding: '16px 0' }}><Spinner /></div>
       )}
 
-      {/* Submit Button */}
+      {/* Envoi */}
       {pendingCount > 0 && (
-        <div className="mb-6">
-          <Button
-            onClick={handleSubmit}
-            loading={uploading}
-            className="w-full text-base py-3"
-            variant="primary"
-          >
-            {pendingCount > 1 ? `Envoyer les ${pendingCount} documents sélectionnés` : 'Envoyer le document sélectionné'}
-          </Button>
-        </div>
+        <button
+          type="button"
+          onClick={handleSubmit}
+          disabled={uploading}
+          className="dsh-btn dsh-btn--orange"
+          style={{ width: '100%', marginBottom: 18 }}
+        >
+          {uploading
+            ? 'Envoi…'
+            : pendingCount > 1
+              ? `Envoyer les ${pendingCount} documents sélectionnés`
+              : 'Envoyer le document sélectionné'}
+        </button>
       )}
 
-      {/* Summary + CTA */}
-      <div className={`rounded-2xl p-5 mb-6 flex items-center gap-3 ${
-        dossierComplet
-          ? 'bg-green-50 border border-green-200'
-          : documents.length > 0
-            ? 'bg-amber-50 border border-amber-200'
-            : 'bg-gray-50 border border-gray-200'
-      }`}>
-        <CheckCircle className={`w-5 h-5 shrink-0 ${dossierComplet ? 'text-green-500' : documents.length > 0 ? 'text-amber-500' : 'text-gray-400'}`} />
-        <p className={`text-sm font-medium ${dossierComplet ? 'text-green-800' : documents.length > 0 ? 'text-amber-800' : 'text-gray-500'}`}>
+      {/* Résumé */}
+      <div className={`ud-summary ${summaryClass}`} style={{ marginBottom: 16 }}>
+        <CheckCircle size={17} style={{ flexShrink: 0 }} />
+        <span>
           {dossierComplet
             ? `${documents.length} document${documents.length > 1 ? 's' : ''} envoyé${documents.length > 1 ? 's' : ''} — votre dossier est complet`
             : !hasIdCard && !hasDiploma
@@ -320,16 +354,17 @@ export default function UploadDocuments() {
               : !hasIdCard
                 ? "Dossier incomplet — il manque votre pièce d'identité"
                 : 'Dossier incomplet — il manque au moins un diplôme ou une certification'}
-        </p>
+        </span>
       </div>
 
-      <Button
+      <button
+        type="button"
         onClick={() => navigate(dashPath)}
-        className="w-full"
-        variant={dossierComplet ? 'primary' : 'outline'}
+        className={`dsh-btn ${dossierComplet ? 'dsh-btn--orange' : 'dsh-btn--ghost'}`}
+        style={{ width: '100%' }}
       >
-        {dossierComplet ? 'Accéder à mon tableau de bord' : 'Passer cette étape pour l\'instant'}
-      </Button>
+        {dossierComplet ? 'Accéder à mon tableau de bord' : "Passer cette étape pour l'instant"}
+      </button>
     </div>
   );
 }

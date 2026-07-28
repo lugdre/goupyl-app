@@ -1,6 +1,5 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
-import { ThemeProvider } from './context/ThemeContext';
 import { AuthProvider } from './context/AuthContext';
 import { useAuth } from './hooks/useAuth';
 
@@ -55,7 +54,6 @@ function DashboardRedirect() {
 
 export default function App() {
   return (
-    <ThemeProvider>
     <BrowserRouter>
       <AuthProvider>
         <Toaster
@@ -171,6 +169,5 @@ export default function App() {
         </Routes>
       </AuthProvider>
     </BrowserRouter>
-    </ThemeProvider>
   );
 }

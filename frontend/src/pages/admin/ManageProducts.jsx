@@ -1,14 +1,30 @@
 import { useState, useEffect } from 'react';
 import { productApi } from '../../services/product.api';
-import Card from '../../components/ui/Card';
-import Badge from '../../components/ui/Badge';
-import Button from '../../components/ui/Button';
-import Input from '../../components/ui/Input';
 import Spinner from '../../components/ui/Spinner';
-import { Package, Plus, Pencil, Trash2, X } from 'lucide-react';
+import { MODAL_CSS } from '../../components/ui/modalStyles';
+import { Package, Plus, Pencil, Trash2, X, RotateCcw } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 const EMPTY_FORM = { name: '', description: '', price: '', brand: '', category: '', imageUrl: '', externalProviderUrl: '' };
+
+const MP_CSS = `
+  .mp-list{display:flex;flex-direction:column;gap:10px}
+  .mp-item{border:1px solid var(--line);border-radius:16px;padding:18px 20px;background:#fff;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;transition:border-color .2s}
+  .mp-item:hover{border-color:#c9c7c1}
+  .mp-item.is-off{opacity:.65;background:#FAF9F7}
+  .mp-thumb{width:52px;height:52px;border-radius:12px;background:linear-gradient(145deg,#EFEDE8,#DCDAD4);display:flex;align-items:center;justify-content:center;color:#8a8781;flex-shrink:0;overflow:hidden}
+  .mp-thumb img{width:100%;height:100%;object-fit:cover}
+  .mp-info{flex:1;min-width:180px;display:flex;align-items:center;gap:14px}
+  .mp-name-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .mp-name{font-size:14.5px;font-weight:600;color:var(--ink);margin:0}
+  .mp-meta{font-size:12.5px;color:var(--ink-3);margin:4px 0 0}
+  .mp-price{font-size:17px;font-weight:700;letter-spacing:-.02em;color:var(--ink)}
+  .mp-actions{display:flex;align-items:center;gap:8px;flex-shrink:0}
+  .mp-icon-btn{width:36px;height:36px;border-radius:50%;border:1px solid var(--line);background:#fff;color:var(--ink-3);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:border-color .15s,color .15s,background .15s}
+  .mp-icon-btn:hover:not(:disabled){border-color:var(--orange);color:var(--orange)}
+  .mp-icon-btn.is-danger:hover:not(:disabled){border-color:#EFC7BE;color:#C0392B;background:#FBEAE7}
+  .mp-icon-btn:disabled{opacity:.5;cursor:not-allowed}
+`;
 
 function ProductFormModal({ product, onClose, onSaved }) {
   const [form, setForm] = useState(
@@ -63,43 +79,64 @@ function ProductFormModal({ product, onClose, onSaved }) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative w-full max-w-md bg-surface rounded-2xl border border-surface-border overflow-hidden max-h-[90vh] overflow-y-auto" style={{ boxShadow: 'var(--shadow-modal)' }}>
-        <div className="flex items-center justify-between p-5 border-b border-surface-border">
-          <h2 className="text-lg font-semibold text-gray-900">
-            {product ? 'Modifier le produit' : 'Nouveau produit'}
-          </h2>
-          <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-white/[0.05]">
-            <X className="w-5 h-5 text-gray-500" />
+    <div className="gm-back" onClick={onClose}>
+      <style>{MODAL_CSS}</style>
+
+      <div className="gm" onClick={(e) => e.stopPropagation()}>
+        <div className="gm-head">
+          <div className="gm-head-left">
+            <div className="gm-head-icon"><Package size={17} /></div>
+            <h2 className="gm-title">{product ? 'Modifier le produit' : 'Nouveau produit'}</h2>
+          </div>
+          <button type="button" onClick={onClose} className="gm-close" aria-label="Fermer">
+            <X size={16} />
           </button>
         </div>
-        <form onSubmit={handleSubmit} className="p-5 space-y-3">
-          <Input label="Nom *" value={form.name} onChange={set('name')} required minLength={2} maxLength={120} />
+
+        <form onSubmit={handleSubmit} className="gm-body">
           <div>
-            <label className="block text-sm font-medium text-gray-900 mb-1">Description</label>
-            <textarea
-              value={form.description}
-              onChange={set('description')}
-              rows={3}
-              maxLength={2000}
-              className="w-full px-3 py-2 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-brand-400 resize-none"
-            />
+            <label className="gm-label" htmlFor="pName">Nom *</label>
+            <input id="pName" className="dsh-input" value={form.name} onChange={set('name')} required minLength={2} maxLength={120} />
           </div>
-          <div className="grid grid-cols-2 gap-3">
-            <Input label="Prix (€) *" type="number" step="0.01" min="0.01" value={form.price} onChange={set('price')} required />
-            <Input label="Marque" value={form.brand} onChange={set('brand')} maxLength={80} />
+
+          <div>
+            <label className="gm-label" htmlFor="pDesc">Description</label>
+            <textarea id="pDesc" className="gm-textarea" value={form.description} onChange={set('description')} rows={3} maxLength={2000} />
           </div>
-          <Input label="Catégorie" value={form.category} onChange={set('category')} maxLength={80} placeholder="Équipement, Nutrition…" />
-          <Input label="URL image" type="url" value={form.imageUrl} onChange={set('imageUrl')} placeholder="https://…" />
-          <Input label="URL fournisseur (dropshipping)" type="url" value={form.externalProviderUrl} onChange={set('externalProviderUrl')} placeholder="https://…" />
-          <div className="flex gap-3 pt-2">
-            <Button type="button" variant="secondary" className="flex-1" onClick={onClose} disabled={saving}>
+
+          <div className="dsh-row">
+            <div>
+              <label className="gm-label" htmlFor="pPrice">Prix (€) *</label>
+              <input id="pPrice" className="dsh-input" type="number" step="0.01" min="0.01" value={form.price} onChange={set('price')} required />
+            </div>
+            <div>
+              <label className="gm-label" htmlFor="pBrand">Marque</label>
+              <input id="pBrand" className="dsh-input" value={form.brand} onChange={set('brand')} maxLength={80} />
+            </div>
+          </div>
+
+          <div>
+            <label className="gm-label" htmlFor="pCat">Catégorie</label>
+            <input id="pCat" className="dsh-input" value={form.category} onChange={set('category')} maxLength={80} placeholder="Équipement, Nutrition…" />
+          </div>
+
+          <div>
+            <label className="gm-label" htmlFor="pImg">URL image</label>
+            <input id="pImg" className="dsh-input" type="url" value={form.imageUrl} onChange={set('imageUrl')} placeholder="https://…" />
+          </div>
+
+          <div>
+            <label className="gm-label" htmlFor="pProv">URL fournisseur (dropshipping)</label>
+            <input id="pProv" className="dsh-input" type="url" value={form.externalProviderUrl} onChange={set('externalProviderUrl')} placeholder="https://…" />
+          </div>
+
+          <div style={{ display: 'flex', gap: 10 }}>
+            <button type="button" className="gm-btn gm-btn--ghost" style={{ flex: 1 }} onClick={onClose} disabled={saving}>
               Annuler
-            </Button>
-            <Button type="submit" className="flex-1" loading={saving}>
-              {product ? 'Enregistrer' : 'Créer'}
-            </Button>
+            </button>
+            <button type="submit" className="gm-btn gm-btn--orange" style={{ flex: 1 }} disabled={saving}>
+              {saving ? 'Enregistrement…' : product ? 'Enregistrer' : 'Créer'}
+            </button>
           </div>
         </form>
       </div>
@@ -144,59 +181,74 @@ export default function ManageProducts() {
   if (loading) return <Spinner />;
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-start justify-between flex-wrap gap-3">
+    <div className="dsh-page" style={{ maxWidth: 900 }}>
+      <style>{MP_CSS}</style>
+
+      <div className="dsh-page-head">
         <div>
-          <h1 className="text-2xl font-semibold text-gray-900 flex items-center gap-2">
-            <Package className="w-6 h-6 text-primary-600" />
-            Produits marketplace
-          </h1>
-          <p className="text-gray-500 mt-1">Catalogue de la boutique (dropshipping partenaires)</p>
+          <h1 className="dsh-h1">Produits marketplace</h1>
+          <p className="dsh-sub">Catalogue de la boutique (dropshipping partenaires)</p>
         </div>
-        <Button size="sm" onClick={() => setEditing('new')}>
-          <Plus className="w-4 h-4 mr-1.5" />Nouveau produit
-        </Button>
+        <button type="button" className="dsh-btn dsh-btn--orange" onClick={() => setEditing('new')}>
+          <Plus size={15} />Nouveau produit
+        </button>
       </div>
 
       {products.length === 0 ? (
-        <Card>
-          <div className="text-center py-8">
-            <Package className="w-10 h-10 text-gray-400 mx-auto mb-3" />
-            <p className="text-gray-500">Aucun produit — créez le premier</p>
-          </div>
-        </Card>
+        <div className="dsh-empty">
+          <Package size={26} />
+          Aucun produit — créez le premier
+        </div>
       ) : (
-        <div className="space-y-2 max-w-3xl">
+        <div className="mp-list">
           {products.map((product) => (
-            <Card key={product.id}>
-              <div className="flex items-center justify-between gap-3">
-                <div className="min-w-0">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <p className="font-medium text-gray-900 truncate">{product.name}</p>
-                    {product.brand && <Badge variant="secondary">{product.brand}</Badge>}
-                    {!product.active && <Badge variant="CANCELLED">Retiré</Badge>}
+            <div key={product.id} className={`mp-item${product.active ? '' : ' is-off'}`}>
+              <div className="mp-info">
+                <div className="mp-thumb">
+                  {product.imageUrl
+                    ? <img src={product.imageUrl} alt={product.name} />
+                    : <Package size={20} />}
+                </div>
+                <div style={{ minWidth: 0 }}>
+                  <div className="mp-name-row">
+                    <p className="mp-name">{product.name}</p>
+                    {product.brand && <span className="dsh-badge dsh-badge--orange">{product.brand}</span>}
+                    {!product.active && <span className="dsh-badge dsh-badge--err"><i />Retiré</span>}
                   </div>
-                  <p className="text-sm text-gray-500">
-                    {(product.priceCents / 100).toFixed(2)} € · {product._count?.orders ?? 0} commande(s)
+                  <p className="mp-meta">
+                    {product._count?.orders ?? 0} commande{(product._count?.orders ?? 0) > 1 ? 's' : ''}
                     {product.category && ` · ${product.category}`}
                   </p>
                 </div>
-                <div className="flex items-center gap-1.5 shrink-0">
-                  <Button size="sm" variant="secondary" onClick={() => setEditing(product)}>
-                    <Pencil className="w-3.5 h-3.5" />
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant={product.active ? 'danger' : 'success'}
-                    loading={togglingId === product.id}
-                    onClick={() => handleToggleActive(product)}
-                    title={product.active ? 'Retirer de la boutique' : 'Republier'}
-                  >
-                    {product.active ? <Trash2 className="w-3.5 h-3.5" /> : 'Republier'}
-                  </Button>
-                </div>
               </div>
-            </Card>
+
+              <div className="mp-actions">
+                <span className="mp-price">{(product.priceCents / 100).toFixed(2)} €</span>
+                <button type="button" className="mp-icon-btn" onClick={() => setEditing(product)} title="Modifier">
+                  <Pencil size={15} />
+                </button>
+                {product.active ? (
+                  <button
+                    type="button"
+                    className="mp-icon-btn is-danger"
+                    disabled={togglingId === product.id}
+                    onClick={() => handleToggleActive(product)}
+                    title="Retirer de la boutique"
+                  >
+                    <Trash2 size={15} />
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    className="dsh-btn dsh-btn--ghost dsh-btn--sm"
+                    disabled={togglingId === product.id}
+                    onClick={() => handleToggleActive(product)}
+                  >
+                    <RotateCcw size={13} />Republier
+                  </button>
+                )}
+              </div>
+            </div>
           ))}
         </div>
       )}

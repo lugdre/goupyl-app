@@ -1,42 +1,43 @@
-import { NavLink } from 'react-router-dom';
+import { NavLink, Link } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import {
   LayoutDashboard, Calendar, Search, CreditCard, User,
   Users, Package, Building2, ShieldCheck,
   BarChart2, Star, ShoppingBag, Scale,
 } from 'lucide-react';
+import logo from '../../assets/logo-goupyl-sport.png';
 
 const BASE_CLIENT_ITEMS = [
-  { to: '/dashboard/client', icon: LayoutDashboard, label: 'Accueil' },
-  { to: '/dashboard/client/search', icon: Search, label: 'Trouver' },
-  { to: '/dashboard/client/appointments', icon: Calendar, label: 'Rendez-vous' },
-  { to: '/dashboard/client/marketplace', icon: ShoppingBag, label: 'Boutique' },
-  { to: '/dashboard/client/profile', icon: User, label: 'Profil' },
+  { to: '/dashboard/client', icon: LayoutDashboard, label: 'Tableau de bord', short: 'Accueil' },
+  { to: '/dashboard/client/search', icon: Search, label: 'Rechercher un coach', short: 'Trouver' },
+  { to: '/dashboard/client/appointments', icon: Calendar, label: 'Mes rendez-vous', short: 'RDV' },
+  { to: '/dashboard/client/marketplace', icon: ShoppingBag, label: 'Boutique', short: 'Boutique' },
+  { to: '/dashboard/client/profile', icon: User, label: 'Mon profil', short: 'Profil' },
 ];
 
 const menuItems = {
   INTERVENANT: [
-    { to: '/dashboard/intervenant', icon: LayoutDashboard, label: 'Accueil' },
-    { to: '/dashboard/intervenant/agenda', icon: Calendar, label: 'Agenda' },
-    { to: '/dashboard/intervenant/reviews', icon: Star, label: 'Avis' },
-    { to: '/dashboard/intervenant/services', icon: Package, label: 'Mes services' },
-    { to: '/dashboard/intervenant/payments', icon: CreditCard, label: 'Paiements & gains' },
-    { to: '/dashboard/intervenant/profile', icon: User, label: 'Profil' },
+    { to: '/dashboard/intervenant', icon: LayoutDashboard, label: 'Tableau de bord', short: 'Accueil' },
+    { to: '/dashboard/intervenant/agenda', icon: Calendar, label: 'Agenda', short: 'Agenda' },
+    { to: '/dashboard/intervenant/reviews', icon: Star, label: 'Avis', short: 'Avis' },
+    { to: '/dashboard/intervenant/services', icon: Package, label: 'Mes services', short: 'Services' },
+    { to: '/dashboard/intervenant/payments', icon: CreditCard, label: 'Paiements & gains', short: 'Gains' },
+    { to: '/dashboard/intervenant/profile', icon: User, label: 'Mon profil', short: 'Profil' },
   ],
   ENTREPRISE: [
-    { to: '/dashboard/entreprise', icon: LayoutDashboard, label: 'Accueil' },
-    { to: '/dashboard/entreprise/employees', icon: Users, label: 'Collaborateurs' },
-    { to: '/dashboard/entreprise/search', icon: Search, label: 'Coachs' },
-    { to: '/dashboard/entreprise/analytics', icon: BarChart2, label: 'Stats' },
-    { to: '/dashboard/entreprise/subscription', icon: CreditCard, label: 'Abonnement' },
-    { to: '/dashboard/entreprise/profile', icon: Building2, label: 'Profil' },
+    { to: '/dashboard/entreprise', icon: LayoutDashboard, label: 'Tableau de bord', short: 'Accueil' },
+    { to: '/dashboard/entreprise/employees', icon: Users, label: 'Collaborateurs', short: 'Équipe' },
+    { to: '/dashboard/entreprise/search', icon: Search, label: 'Rechercher un coach', short: 'Coachs' },
+    { to: '/dashboard/entreprise/analytics', icon: BarChart2, label: 'Statistiques', short: 'Stats' },
+    { to: '/dashboard/entreprise/subscription', icon: CreditCard, label: 'Abonnement', short: 'Abo' },
+    { to: '/dashboard/entreprise/profile', icon: Building2, label: 'Mon profil', short: 'Profil' },
   ],
   ADMIN: [
-    { to: '/dashboard/admin', icon: LayoutDashboard, label: 'Dashboard' },
-    { to: '/dashboard/admin/users', icon: Users, label: 'Utilisateurs' },
-    { to: '/dashboard/admin/verifications', icon: ShieldCheck, label: 'Vérifs' },
-    { to: '/dashboard/admin/disputes', icon: Scale, label: 'Litiges' },
-    { to: '/dashboard/admin/products', icon: Package, label: 'Produits' },
+    { to: '/dashboard/admin', icon: LayoutDashboard, label: 'Tableau de bord', short: 'Accueil' },
+    { to: '/dashboard/admin/users', icon: Users, label: 'Utilisateurs', short: 'Users' },
+    { to: '/dashboard/admin/verifications', icon: ShieldCheck, label: 'Vérifications', short: 'Vérifs' },
+    { to: '/dashboard/admin/disputes', icon: Scale, label: 'Litiges', short: 'Litiges' },
+    { to: '/dashboard/admin/products', icon: Package, label: 'Produits', short: 'Produits' },
   ],
 };
 
@@ -45,11 +46,17 @@ const END_ROUTES = new Set([
   '/dashboard/admin', '/dashboard/intervenant',
 ]);
 
+const ROLE_LABELS = {
+  INTERVENANT: 'Professionnel',
+  ENTREPRISE: 'Entreprise',
+  ADMIN: 'Admin',
+};
+
 function useNavItems() {
   const { user } = useAuth();
   if (user?.role === 'CLIENT') {
     if (user.employerCompanyId) {
-      const planItem = { to: '/dashboard/client/employer-plan', icon: Building2, label: 'Forfait' };
+      const planItem = { to: '/dashboard/client/employer-plan', icon: Building2, label: 'Mon forfait', short: 'Forfait' };
       return [...BASE_CLIENT_ITEMS.slice(0, 3), planItem, ...BASE_CLIENT_ITEMS.slice(3)];
     }
     return [...BASE_CLIENT_ITEMS];
@@ -57,95 +64,67 @@ function useNavItems() {
   return menuItems[user?.role] || [];
 }
 
+function roleLabel(user) {
+  if (!user) return '';
+  if (user.role === 'CLIENT') return user.employerCompanyId ? 'Collaborateur' : 'Particulier';
+  return ROLE_LABELS[user.role] || user.role;
+}
+
 export default function Sidebar() {
+  const { user } = useAuth();
   const items = useNavItems();
+
+  const displayName = user?.role === 'ENTREPRISE' && user?.companyName
+    ? user.companyName
+    : `${user?.firstName || ''} ${user?.lastName || ''}`.trim();
+  const initials = (
+    (user?.firstName?.[0] || user?.companyName?.[0] || '') + (user?.lastName?.[0] || '')
+  ).toUpperCase() || '?';
 
   return (
     <>
-      {/* Desktop sidebar */}
-      <aside
-        className="hidden lg:block shrink-0"
-        style={{
-          width: 216, minHeight: '100vh',
-          background: 'var(--color-sidebar)',
-          borderRight: '1px solid var(--border-sidebar)',
-        }}
-      >
-        <nav style={{ padding: '12px 10px', position: 'sticky', top: 56 }}>
-          {items.map((item) => (
-            <NavLink
-              key={item.to}
-              to={item.to}
-              end={END_ROUTES.has(item.to)}
-            >
-              {({ isActive }) => (
-                <div
-                  style={{
-                    display: 'flex', alignItems: 'center', gap: 10,
-                    padding: '8px 12px', marginBottom: 2,
-                    borderRadius: 4,
-                    fontSize: 13, fontWeight: 500, letterSpacing: '.01em',
-                    background: isActive ? '#252d62' : 'transparent',
-                    color: isActive ? '#ffffff' : 'var(--color-gray-500)',
-                    cursor: 'pointer',
-                    transition: 'background .15s, color .15s',
-                  }}
-                  onMouseOver={e => {
-                    if (!isActive) {
-                      e.currentTarget.style.background = 'var(--color-gray-100)';
-                      e.currentTarget.style.color = 'var(--color-gray-900)';
-                    }
-                  }}
-                  onMouseOut={e => {
-                    if (!isActive) {
-                      e.currentTarget.style.background = 'transparent';
-                      e.currentTarget.style.color = 'var(--color-gray-500)';
-                    }
-                  }}
-                >
-                  <item.icon style={{ width: 15, height: 15, flexShrink: 0, opacity: 0.85 }} />
-                  {item.label}
-                </div>
-              )}
-            </NavLink>
-          ))}
-        </nav>
+      {/* Sidebar desktop */}
+      <aside className="dbl-side">
+        <div className="dbl-side-card">
+          <Link to="/dashboard" className="dbl-brand">
+            <img src={logo} alt="Goupyl Sport" />
+          </Link>
+
+          <nav className="dbl-nav">
+            {items.map((item) => (
+              <NavLink
+                key={item.to}
+                to={item.to}
+                end={END_ROUTES.has(item.to)}
+                className={({ isActive }) => `dbl-nav-item${isActive ? ' is-active' : ''}`}
+              >
+                <item.icon style={{ width: 16, height: 16, flexShrink: 0 }} />
+                {item.label}
+              </NavLink>
+            ))}
+          </nav>
+
+          <div className="dbl-side-user">
+            <div className="dbl-side-avatar">{initials}</div>
+            <div style={{ minWidth: 0 }}>
+              <div className="dbl-side-user-name">{displayName}</div>
+              <div className="dbl-side-user-role">{roleLabel(user)}</div>
+            </div>
+          </div>
+        </div>
       </aside>
 
-      {/* Mobile bottom nav */}
-      <nav
-        className="lg:hidden fixed bottom-0 left-0 right-0 z-50 flex items-stretch"
-        style={{
-          background: 'var(--color-sidebar)',
-          borderTop: '1px solid var(--border-sidebar)',
-          height: 60,
-        }}
-      >
+      {/* Nav mobile (bas d'écran) */}
+      <nav className="dbl-mobile-nav">
         {items.map((item) => (
           <NavLink
             key={item.to}
             to={item.to}
             end={END_ROUTES.has(item.to)}
-            style={({ isActive }) => ({
-              display: 'flex', flex: 1, flexDirection: 'column',
-              alignItems: 'center', justifyContent: 'center',
-              gap: 3, textDecoration: 'none', fontWeight: 500,
-              color: isActive ? 'var(--color-primary-500)' : 'var(--color-gray-400)',
-              transition: 'color .15s',
-            })}
+            className={({ isActive }) => `dbl-mobile-item${isActive ? ' is-active' : ''}`}
           >
-            {({ isActive }) => (
-              <>
-                <item.icon style={{
-                  width: items.length > 5 ? 17 : 20,
-                  height: items.length > 5 ? 17 : 20,
-                  flexShrink: 0, opacity: isActive ? 1 : 0.6,
-                }} />
-                {items.length <= 5 && (
-                  <span style={{ fontSize: 10, letterSpacing: '.02em' }}>{item.label}</span>
-                )}
-              </>
-            )}
+            <item.icon style={{ width: items.length > 5 ? 17 : 19, height: items.length > 5 ? 17 : 19, flexShrink: 0 }} />
+            {items.length <= 5 && <span>{item.short}</span>}
           </NavLink>
         ))}
       </nav>

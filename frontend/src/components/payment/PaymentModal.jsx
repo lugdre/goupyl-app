@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import { stripePromise, paymentApi } from '../../services/payment.api';
-import Button from '../ui/Button';
+import { MODAL_CSS, STRIPE_APPEARANCE } from '../ui/modalStyles';
 import { X, CreditCard, AlertCircle, CheckCircle } from 'lucide-react';
 
 function CheckoutForm({ appointment, onSuccess }) {
@@ -60,31 +60,31 @@ function CheckoutForm({ appointment, onSuccess }) {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
       <PaymentElement />
 
       {error && (
-        <div className="flex items-center gap-2 p-3 bg-red-500/10 text-red-600 rounded-xl text-sm">
-          <AlertCircle className="w-4 h-4 shrink-0" />
+        <div className="gm-alert gm-alert--err">
+          <AlertCircle size={15} />
           {error}
         </div>
       )}
 
       {import.meta.env.DEV && (
-        <div className="p-3 bg-amber-500/10 text-amber-700 rounded-xl text-sm">
+        <div className="gm-alert gm-alert--warn">
+          <AlertCircle size={15} />
           Mode test — utilisez la carte 4242 4242 4242 4242
         </div>
       )}
 
-      <Button
+      <button
         type="submit"
-        disabled={!stripe || !elements}
-        loading={loading}
-        className="w-full"
+        disabled={!stripe || !elements || loading}
+        className="gm-btn gm-btn--orange gm-btn--block"
       >
-        <CreditCard className="w-4 h-4 mr-2" />
-        Payer
-      </Button>
+        <CreditCard size={16} />
+        {loading ? 'Paiement en cours…' : 'Payer'}
+      </button>
     </form>
   );
 }
@@ -107,30 +107,30 @@ export default function PaymentModal({ appointment, onClose, onSuccess }) {
   const priceInCents = Math.round(price * 100);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
+    <div className="gm-back" onClick={onClose}>
+      <style>{MODAL_CSS}</style>
 
-      <div className="relative w-full max-w-md bg-surface rounded-2xl border border-surface-border flex flex-col max-h-[90vh]" style={{ boxShadow: 'var(--shadow-modal)' }}>
+      <div className="gm" onClick={(e) => e.stopPropagation()}>
         {/* Header */}
-        <div className="flex items-center justify-between p-5 border-b border-surface-border shrink-0">
-          <h2 className="text-lg font-semibold text-gray-900">Paiement</h2>
-          <button
-            onClick={onClose}
-            className="p-1.5 rounded-lg hover:bg-white/[0.05] transition-colors"
-          >
-            <X className="w-5 h-5 text-gray-500" />
+        <div className="gm-head">
+          <div className="gm-head-left">
+            <div className="gm-head-icon"><CreditCard size={17} /></div>
+            <h2 className="gm-title">Paiement</h2>
+          </div>
+          <button type="button" onClick={onClose} className="gm-close" aria-label="Fermer">
+            <X size={16} />
           </button>
         </div>
 
         {/* Body */}
-        <div className="p-5 space-y-5 overflow-y-auto">
-          {/* Appointment summary */}
-          <div className="space-y-2">
-            <p className="font-medium text-gray-900">{serviceName}</p>
-            <p className="text-sm text-gray-500">
+        <div className="gm-body">
+          {/* Récapitulatif */}
+          <div className="gm-summary">
+            <p className="gm-summary-name">{serviceName}</p>
+            <p className="gm-summary-line">
               Avec {appointment.intervenant?.firstName} {appointment.intervenant?.lastName}
             </p>
-            <p className="text-sm text-gray-500">
+            <p className="gm-summary-line">
               {new Date(appointment.scheduledAt).toLocaleDateString('fr-FR', {
                 weekday: 'long',
                 day: 'numeric',
@@ -140,30 +140,30 @@ export default function PaymentModal({ appointment, onClose, onSuccess }) {
                 minute: '2-digit',
               })}
             </p>
-            <div className="flex items-baseline justify-between pt-2 border-t border-surface-border">
-              <span className="text-sm text-gray-500">Total</span>
-              <span className="text-xl font-semibold text-gray-900">{price.toFixed(2)} &euro;</span>
+            <div className="gm-total">
+              <span className="gm-total-label">Total</span>
+              <span className="gm-total-value">{price.toFixed(2)} &euro;</span>
             </div>
           </div>
 
-          {/* Fee breakdown */}
-          <div className="p-3 bg-white/[0.03] rounded-xl space-y-1">
-            <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Répartition</p>
-            <div className="flex justify-between text-sm">
-              <span className="text-gray-500">70% au professionnel</span>
-              <span className="font-medium text-gray-900">{intervenantShare} &euro;</span>
+          {/* Répartition */}
+          <div>
+            <p className="gm-eyebrow">Répartition</p>
+            <div className="gm-row">
+              <span>70 % au professionnel</span>
+              <span>{intervenantShare} &euro;</span>
             </div>
-            <div className="flex justify-between text-sm">
-              <span className="text-gray-500">30% plateforme</span>
-              <span className="font-medium text-gray-900">{platformFee} &euro;</span>
+            <div className="gm-row">
+              <span>30 % plateforme</span>
+              <span>{platformFee} &euro;</span>
             </div>
           </div>
 
-          {/* Payment form / success */}
+          {/* Formulaire de paiement / succès */}
           {paid ? (
-            <div className="flex flex-col items-center gap-3 py-6">
-              <CheckCircle className="w-12 h-12 text-green-400" />
-              <p className="font-medium text-gray-900">Paiement réussi !</p>
+            <div className="gm-success">
+              <div className="gm-success-icon"><CheckCircle size={28} /></div>
+              <p>Paiement réussi !</p>
             </div>
           ) : (
             <Elements
@@ -173,13 +173,7 @@ export default function PaymentModal({ appointment, onClose, onSuccess }) {
                 currency: 'eur',
                 amount: priceInCents,
                 paymentMethodTypes: ['card', 'klarna'],
-                appearance: {
-                  theme: 'stripe',
-                  variables: {
-                    borderRadius: '12px',
-                    colorPrimary: '#252d62',
-                  },
-                },
+                appearance: STRIPE_APPEARANCE,
               }}
             >
               <CheckoutForm appointment={appointment} onSuccess={handleSuccess} />

@@ -1,9 +1,8 @@
 import { useState } from 'react';
 import { X, AlertTriangle, RefreshCw, Check } from 'lucide-react';
 import { appointmentApi } from '../../services/appointment.api';
-import Button from '../ui/Button';
+import { MODAL_CSS } from '../ui/modalStyles';
 import toast from 'react-hot-toast';
-import { cn } from '../../utils/cn';
 
 const HOUR_MS = 60 * 60 * 1000;
 
@@ -43,29 +42,30 @@ export default function CancellationModal({ appointment, onClose, onSuccess }) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
+    <div className="gm-back" onClick={onClose}>
+      <style>{MODAL_CSS}</style>
 
-      <div className="relative w-full max-w-md bg-surface rounded-2xl border border-surface-border overflow-hidden" style={{ boxShadow: 'var(--shadow-modal)' }}>
-        {/* Header */}
-        <div className="flex items-center justify-between p-5 border-b border-surface-border">
-          <div className="flex items-center gap-2.5">
-            <AlertTriangle className="w-5 h-5 text-amber-400" />
-            <h2 className="text-lg font-semibold text-gray-900">Annuler le rendez-vous</h2>
+      <div className="gm" onClick={(e) => e.stopPropagation()}>
+        <div className="gm-head">
+          <div className="gm-head-left">
+            <div className="gm-head-icon" style={{ background: '#FBF3E2', color: '#A87616' }}>
+              <AlertTriangle size={17} />
+            </div>
+            <h2 className="gm-title">Annuler le rendez-vous</h2>
           </div>
-          <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-white/[0.05] transition-colors">
-            <X className="w-5 h-5 text-gray-500" />
+          <button type="button" onClick={onClose} className="gm-close" aria-label="Fermer">
+            <X size={16} />
           </button>
         </div>
 
-        <div className="p-5 space-y-4">
-          {/* Appointment summary */}
-          <div className="p-4 bg-white/[0.03] rounded-xl space-y-1 border border-white/[0.06]">
-            <p className="font-medium text-gray-900">{serviceName}</p>
-            <p className="text-sm text-gray-500">
+        <div className="gm-body">
+          {/* Récapitulatif */}
+          <div className="gm-summary">
+            <p className="gm-summary-name">{serviceName}</p>
+            <p className="gm-summary-line">
               Avec {appointment.intervenant?.firstName} {appointment.intervenant?.lastName}
             </p>
-            <p className="text-sm text-gray-500">
+            <p className="gm-summary-line">
               {new Date(appointment.scheduledAt).toLocaleDateString('fr-FR', {
                 weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
                 hour: '2-digit', minute: '2-digit',
@@ -74,34 +74,33 @@ export default function CancellationModal({ appointment, onClose, onSuccess }) {
           </div>
 
           {/* Politique dégressive — palier applicable surligné */}
-          <div className="p-4 bg-white/[0.03] rounded-xl border border-white/[0.06] space-y-3">
-            <div className="flex items-center gap-2">
-              <RefreshCw className="w-4 h-4 text-primary-400" />
-              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">
-                Politique d'annulation
-              </p>
-            </div>
-            <div className="space-y-2">
+          <div>
+            <p className="gm-eyebrow"><RefreshCw size={13} /> Politique d'annulation</p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               {TIERS.map((tier) => {
                 const isActive = tier.id === activeTierId;
                 return (
                   <div
                     key={tier.id}
-                    className={cn(
-                      'flex items-start gap-2 p-2.5 rounded-lg text-sm border',
-                      isActive
-                        ? 'border-primary-300 bg-primary-50 text-primary-800'
-                        : 'border-transparent text-gray-500'
-                    )}
+                    style={{
+                      display: 'flex', alignItems: 'flex-start', gap: 9,
+                      padding: '11px 14px', borderRadius: 12,
+                      border: `1px solid ${isActive ? '#F7D3C0' : '#E4E2DC'}`,
+                      background: isActive ? '#FEF1EA' : '#fff',
+                    }}
                   >
                     {isActive ? (
-                      <Check className="w-4 h-4 shrink-0 mt-0.5 text-primary-600" />
+                      <Check size={15} style={{ color: '#F4530F', flexShrink: 0, marginTop: 1 }} />
                     ) : (
-                      <span className="w-4 shrink-0" />
+                      <span style={{ width: 15, flexShrink: 0 }} />
                     )}
                     <div>
-                      <p className={cn('font-medium', isActive && 'text-primary-800')}>{tier.label}</p>
-                      <p className="text-xs opacity-80">{tier.detail}</p>
+                      <p style={{ fontSize: 13.5, fontWeight: 600, margin: 0, color: isActive ? '#B33D0A' : '#171614' }}>
+                        {tier.label}
+                      </p>
+                      <p style={{ fontSize: 12, margin: '3px 0 0', color: isActive ? '#B33D0A' : '#8a8781', opacity: isActive ? .85 : 1 }}>
+                        {tier.detail}
+                      </p>
                     </div>
                   </div>
                 );
@@ -109,19 +108,19 @@ export default function CancellationModal({ appointment, onClose, onSuccess }) {
             </div>
 
             {isPaid && price > 0 && (
-              <div className="border-t border-white/[0.06] pt-3 space-y-1">
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-500">Total payé</span>
-                  <span className="text-gray-900">{price.toFixed(2)} €</span>
+              <div style={{ borderTop: '1px solid #E4E2DC', paddingTop: 14, marginTop: 14 }}>
+                <div className="gm-row">
+                  <span>Total payé</span>
+                  <span>{price.toFixed(2)} €</span>
                 </div>
-                <div className="flex justify-between text-sm">
-                  <span className={cn('font-medium', activeTier.rate > 0 ? 'text-green-500' : 'text-red-400')}>
+                <div className="gm-row">
+                  <span style={{ color: activeTier.rate > 0 ? '#2F7A47' : '#C0392B', fontWeight: 600 }}>
                     Remboursement ({Math.round(activeTier.rate * 100)}%)
                   </span>
-                  <span className="text-gray-900 font-semibold">{refundAmount} €</span>
+                  <span>{refundAmount} €</span>
                 </div>
                 {activeTier.rate > 0 && (
-                  <p className="text-xs text-gray-500 pt-1">
+                  <p className="gm-hint" style={{ marginTop: 10 }}>
                     Le remboursement sera crédité sur votre moyen de paiement sous 5-10 jours ouvrés.
                   </p>
                 )}
@@ -129,35 +128,35 @@ export default function CancellationModal({ appointment, onClose, onSuccess }) {
             )}
 
             {!isPaid && (
-              <p className="text-xs text-gray-500 border-t border-white/[0.06] pt-3">
+              <p className="gm-hint" style={{ borderTop: '1px solid #E4E2DC', paddingTop: 14, marginTop: 14 }}>
                 Ce rendez-vous n'a pas encore été payé : l'annulation est sans frais.
               </p>
             )}
           </div>
 
-          {/* Optional reason */}
+          {/* Motif optionnel */}
           <div>
-            <label className="block text-xs font-medium text-gray-500 mb-1.5">
-              Motif d'annulation <span className="text-gray-600">(optionnel)</span>
+            <label className="gm-label" htmlFor="cancelReason">
+              Motif d'annulation <em>(optionnel)</em>
             </label>
             <textarea
+              id="cancelReason"
+              className="gm-textarea"
               value={reason}
               onChange={(e) => setReason(e.target.value)}
               placeholder="Indiquez un motif si vous le souhaitez..."
               rows={2}
-              className="w-full bg-white/[0.04] border border-white/[0.08] rounded-xl px-3 py-2 text-sm text-gray-900 placeholder-gray-400 resize-none focus:outline-none focus:border-primary-500/50 focus:ring-1 focus:ring-primary-500/20 transition-colors"
             />
           </div>
         </div>
 
-        {/* Footer */}
-        <div className="flex gap-3 px-5 pb-5">
-          <Button variant="secondary" className="flex-1" onClick={onClose} disabled={loading}>
+        <div className="gm-foot">
+          <button type="button" className="gm-btn gm-btn--ghost" onClick={onClose} disabled={loading}>
             Retour
-          </Button>
-          <Button variant="danger" className="flex-1" onClick={handleConfirm} loading={loading}>
-            Confirmer l'annulation
-          </Button>
+          </button>
+          <button type="button" className="gm-btn gm-btn--danger" onClick={handleConfirm} disabled={loading}>
+            {loading ? 'Annulation…' : "Confirmer l'annulation"}
+          </button>
         </div>
       </div>
     </div>
