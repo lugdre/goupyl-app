@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 
 // IMAGES — importez ici chaque photo du dossier src/assets/
@@ -105,10 +105,13 @@ const COACHES = [
   { name: 'Bastien Laurent', role: 'Basketball', offset: 90, tone: 'd', img: coach4 },
 ];
 
+// Tarifs par collaborateur : `monthly` = mensuel, `yearly` = mensuel remisé −20 %
+// facturé en une fois (yearly × 12). Doit rester aligné sur PLAN_PRICES
+// (backend/src/services/payment.service.js).
 const PLANS = [
   {
     name: 'Formule Essentiel',
-    price: '43', old: '54',
+    monthly: 54, yearly: 43,
     desc: 'Remise en activité, contenus santé & bien-être et suivi d’engagement. Jusqu’à 10 collaborateurs, 4 séances par collaborateur chaque mois.',
     cta: 'Commencer', to: '/register',
     image: cardGoupylB,
@@ -116,7 +119,7 @@ const PLANS = [
   },
   {
     name: 'Formule Boost',
-    price: '98', old: '122',
+    monthly: 122, yearly: 98,
     desc: 'Coaching sportif structuré, plans personnalisés et suivi nutritionnel. Jusqu’à 50 collaborateurs, 8 séances par collaborateur chaque mois.',
     cta: 'Commencer', to: '/register',
     image: cardGoupylW, // IMAGE — fond de la carte « Formule Boost »
@@ -124,7 +127,7 @@ const PLANS = [
   },
   {
     name: 'Formule Ultra',
-    price: null, old: null,
+    monthly: null, yearly: null,
     desc: 'Nutrition individualisée, préparation mentale, tests à l’effort et biomarqueurs. Jusqu’à 200 collaborateurs, 16 séances par collaborateur chaque mois.',
     cta: 'Parler à un expert', to: null,
     image: cardGoupylB,
@@ -134,6 +137,9 @@ const PLANS = [
 
 // ─── Page ──────────────────────────────────────────────────────────
 export default function Landing() {
+  // Affichage des tarifs : mensuel par défaut, bascule vers l'annuel (−20 %)
+  const [yearly, setYearly] = useState(false);
+
   useEffect(() => {
     const link = document.createElement('link');
     link.rel = 'stylesheet';
@@ -321,16 +327,45 @@ export default function Landing() {
             Vous êtes un particulier ? Vous payez simplement à la séance, au tarif du coach.
           </p>
 
+          <div className="cycle-switch" role="group" aria-label="Périodicité de facturation">
+            <button
+              type="button"
+              className={`cycle-opt${!yearly ? ' is-active' : ''}`}
+              aria-pressed={!yearly}
+              onClick={() => setYearly(false)}
+            >
+              Mensuel
+            </button>
+            <button
+              type="button"
+              className={`cycle-opt${yearly ? ' is-active' : ''}`}
+              aria-pressed={yearly}
+              onClick={() => setYearly(true)}
+            >
+              Annuel <span className="cycle-save">−20 %</span>
+            </button>
+          </div>
+
           <div className="plans">
             {PLANS.map((p) => (
               <article key={p.name} className={`plan ${p.image ? 'plan--image' : ''}`}>
                 {p.image && <img className="plan-bg" src={p.image} alt="" />}
                 <div className="plan-avatars"><AvatarStack count={2} size={34} light photos={p.avatars} /></div>
                 <div className="plan-body">
-                  {p.price
-                    ? <div className="plan-price">{p.price} € / <s>{p.old}</s></div>
+                  {p.monthly
+                    ? (
+                      <div className="plan-price">
+                        {yearly ? p.yearly : p.monthly} €
+                        {yearly && <> / <s>{p.monthly}</s></>}
+                      </div>
+                    )
                     : <div className="plan-price">Sur devis</div>}
-                  <div className="plan-cycle">Par collaborateur / mois</div>
+                  <div className="plan-cycle">
+                    Par collaborateur / mois
+                    {p.monthly && yearly && (
+                      <span className="plan-billed">facturé {p.yearly * 12} € / collaborateur / an</span>
+                    )}
+                  </div>
                   <h3 className="plan-name">{p.name}</h3>
                   {p.to ? (
                     <Link to={p.to} className="btn-pill btn-pill--orange">
@@ -590,6 +625,12 @@ html{scroll-behavior:smooth}
 .coach-label span{font-size:11.5px;opacity:.85}
 
 /* ═══ TARIFS ═══════════════════════════════ */
+.cycle-switch{margin-top:34px;display:inline-flex;align-items:center;gap:4px;padding:4px;border:1px solid var(--line);border-radius:999px;background:var(--tint)}
+.cycle-opt{display:inline-flex;align-items:center;gap:8px;border-radius:999px;padding:9px 20px;font-size:13.5px;font-weight:600;color:var(--ink-3);white-space:nowrap;transition:background-color .2s ease,color .2s ease}
+.cycle-opt:hover{color:var(--ink)}
+.cycle-opt.is-active{background:var(--dark);color:#fff}
+.cycle-save{font-size:11px;font-weight:700;letter-spacing:.02em;color:#fff;background:var(--orange);border-radius:999px;padding:2px 7px}
+.cycle-opt:not(.is-active) .cycle-save{background:rgba(244,83,15,.12);color:var(--orange)}
 .plans{margin-top:52px;display:grid;grid-template-columns:repeat(3,1fr);gap:20px;width:100%}
 .plan{position:relative;border-radius:20px;overflow:hidden;background:var(--dark);color:#fff;padding:26px 26px 34px;min-height:430px;display:flex;flex-direction:column}
 .plan-bg{position:absolute;inset:0;border-radius:0}
@@ -602,6 +643,7 @@ html{scroll-behavior:smooth}
 .plan-price{font-size:30px;font-weight:600;letter-spacing:-.02em}
 .plan-price s{font-size:18px;color:rgba(255,255,255,.5);font-weight:500;margin-left:2px}
 .plan-cycle{margin-top:24px;font-size:12.5px;font-weight:500;color:#FF9C6B}
+.plan-billed{display:block;margin-top:5px;font-size:11.5px;color:rgba(255,255,255,.7)}
 .plan-name{margin-top:8px;font-size:27px;font-weight:600;letter-spacing:-.02em}
 .plan .btn-pill{margin-top:22px;padding:5px 5px 5px 20px;font-size:14px}
 .plan .btn-circle{width:34px;height:34px}
