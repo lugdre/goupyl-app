@@ -574,14 +574,15 @@ html{scroll-behavior:smooth}
 .focus-card--small{height:170px}
 .focus-card--big{grid-column:3;grid-row:1 / span 2;height:100%;min-height:330px}
 .focus-card-bg{position:absolute;inset:0;border-radius:0}
-/* Voile sombre : garde les légendes blanches lisibles */
-.focus-card::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(15,15,15,0) 40%,rgba(15,15,15,.62) 100%);pointer-events:none;z-index:1}
+/* Voile sombre : garde les légendes blanches lisibles, y compris quand elles
+   passent sur plusieurs lignes (mobile) — le dégradé démarre donc très haut. */
+.focus-card::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(15,15,15,0) 0%,rgba(15,15,15,.22) 28%,rgba(15,15,15,.55) 55%,rgba(15,15,15,.82) 100%);pointer-events:none;z-index:1}
 .lp .card-arrow{position:absolute;top:12px;right:12px;width:32px;height:32px;border-radius:50%;background:#fff;color:var(--ink);display:flex;align-items:center;justify-content:center;z-index:2;text-decoration:none;transition:transform .15s ease,background-color .2s ease,color .2s ease}
 .lp .card-arrow:hover{background:var(--orange);color:#fff;transform:scale(1.08)}
 .lp .card-arrow:active{transform:scale(.94)}
-.focus-card-caption{position:absolute;left:16px;right:52px;bottom:14px;color:#fff;z-index:2}
+.focus-card-caption{position:absolute;left:16px;right:52px;bottom:14px;color:#fff;z-index:2;text-shadow:0 1px 3px rgba(0,0,0,.5)}
 .focus-card-caption h3{font-size:15.5px;font-weight:600;letter-spacing:-.01em}
-.focus-card-caption p{font-size:11px;margin-top:4px;opacity:.85;line-height:1.4}
+.focus-card-caption p{font-size:11px;margin-top:4px;opacity:.92;line-height:1.4}
 .focus-card-caption--big h3{font-size:26px}
 .focus-card-caption--big p{font-size:12.5px;margin-top:6px}
 .focus-proof{grid-column:1 / span 2;display:flex;align-items:center;gap:16px;padding-top:8px}
@@ -713,6 +714,10 @@ html{scroll-behavior:smooth}
   .coaches-head{flex-direction:column;align-items:flex-start;gap:24px}
   .coaches-grid{grid-template-columns:1fr}
   .focus-head{flex-direction:column}
+  /* Légendes plus hautes sur petit écran : on agrandit la carte et on assombrit
+     davantage le voile pour que le titre reste lisible sur les photos claires. */
+  .focus-card--small{height:215px}
+  .focus-card::after{background:linear-gradient(180deg,rgba(15,15,15,.12) 0%,rgba(15,15,15,.42) 32%,rgba(15,15,15,.72) 66%,rgba(15,15,15,.88) 100%)}
   .how-step{flex-direction:column;gap:16px}
   .footer-giant{white-space:normal;line-height:.9}
 }
