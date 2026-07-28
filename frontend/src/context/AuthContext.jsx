@@ -1,25 +1,75 @@
-import { createContext, useState, useEffect, useCallback } from 'react';
+import { createContext, useState, useEffect, useCallback, useRef } from 'react';
+import toast from 'react-hot-toast';
 import { authApi } from '../services/auth.api';
 import { userApi } from '../services/user.api';
 import { passkeyApi } from '../services/passkey.api';
+import { clearSession, isDeadSession, onSessionExpired, refreshAccessToken } from '../services/api';
+import { isTokenExpired } from '../utils/token';
 
 export const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const wasAuthenticated = useRef(false);
+
+  useEffect(() => {
+    wasAuthenticated.current = !!user;
+  }, [user]);
+
+  // Session invalidee par l'API (refresh refuse) : on repasse en deconnecte
+  // sans rechargement complet de la page.
+  useEffect(() => {
+    onSessionExpired(() => {
+      if (wasAuthenticated.current) {
+        toast.error('Session expiree, merci de vous reconnecter.');
+      }
+      setUser(null);
+    });
+  }, []);
 
   useEffect(() => {
     const storedUser = localStorage.getItem('user');
     const accessToken = localStorage.getItem('accessToken');
-    if (storedUser && accessToken) {
-      try {
-        setUser(JSON.parse(storedUser));
-      } catch {
-        localStorage.clear();
-      }
+    const refreshToken = localStorage.getItem('refreshToken');
+
+    // Session morte (refresh token absent ou perime) : on nettoie tout de
+    // suite, sans reseau. La navbar affiche "Connexion" au lieu d'un
+    // "Mon espace" qui menerait a une page bloquee.
+    if (!storedUser || !accessToken || !refreshToken || isTokenExpired(refreshToken)) {
+      clearSession();
+      setLoading(false);
+      return;
     }
-    setLoading(false);
+
+    let parsed;
+    try {
+      parsed = JSON.parse(storedUser);
+    } catch {
+      clearSession();
+      setLoading(false);
+      return;
+    }
+    setUser(parsed);
+
+    // Access token encore valide : rien a faire.
+    if (!isTokenExpired(accessToken, 30)) {
+      setLoading(false);
+      return;
+    }
+
+    // Session dormante : on renouvelle une seule fois au demarrage (ce qui
+    // reveille aussi le backend Render) au lieu de laisser chaque page du
+    // dashboard se prendre un 401.
+    refreshAccessToken()
+      .catch((err) => {
+        // Un backend endormi ou une coupure reseau ne doit pas deconnecter.
+        if (isDeadSession(err)) {
+          clearSession();
+          setUser(null);
+        }
+      })
+      .finally(() => setLoading(false));
   }, []);
 
   const register = useCallback(async (formData) => {
@@ -60,9 +110,7 @@ export function AuthProvider({ children }) {
 
   const logout = useCallback(async () => {
     try { await authApi.logout(); } catch {}
-    localStorage.removeItem('accessToken');
-    localStorage.removeItem('refreshToken');
-    localStorage.removeItem('user');
+    clearSession();
     setUser(null);
   }, []);
 
