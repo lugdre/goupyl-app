@@ -3,7 +3,6 @@ import { Link } from 'react-router-dom';
 
 // IMAGES — importez ici chaque photo du dossier src/assets/
 // puis utilisez la variable dans src={...} (sans guillemets).
-import couvertureHome from '../../assets/couverture-home.jpg';
 import santeMentale from '../../assets/friendly-couple-posing-her-home.jpg';
 import nutrition from '../../assets/nutritionist.jpg';
 import coachingSportif from '../../assets/coachingSportif.jpg';
@@ -14,12 +13,12 @@ import coach3 from '../../assets/coach-3.jpg';
 import coach4 from '../../assets/coach-4.jpg';
 import coach5 from '../../assets/coach-5.jpg';
 import coach6 from '../../assets/coach-6.jpg';
-import equipementSportif from '../../assets/equipement-sportif.jpg';
 import bilanSportif from '../../assets/bilan-sportif.jpg';
 import coachingBienEtre from '../../assets/coaching-bien-etre.jpg';
 import sportive from '../../assets/sportive.jpg';
 import cardGoupylW from '../../assets/card-goupyl-white.png';
 import cardGoupylB from '../../assets/card-goupyl-black.png';
+import heroRun from '../../assets/hero-run.jpg'
 
 const PLACEHOLDER = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='800' height='600'%3E%3Crect width='800' height='600' fill='%23DFDDD7'/%3E%3Cg stroke='%237a7873' stroke-width='3' fill='none' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='352' y='262' width='96' height='76' rx='10'/%3E%3Ccircle cx='380' cy='290' r='9'/%3E%3Cpath d='M448 322l-34-30-62 46'/%3E%3C/g%3E%3C/svg%3E";
 const PLACEHOLDER_DARK = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='800' height='600'%3E%3Crect width='800' height='600' fill='%236d6b66'/%3E%3Cg stroke='%23d8d6d1' stroke-width='3' fill='none' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='352' y='262' width='96' height='76' rx='10'/%3E%3Ccircle cx='380' cy='290' r='9'/%3E%3Cpath d='M448 322l-34-30-62 46'/%3E%3C/g%3E%3C/svg%3E";
@@ -156,7 +155,7 @@ export default function Landing() {
       <section className="lp-block hero-block" id="hero">
         <div className="hero">
           {/* IMAGE — grande photo plein écran du haut de page */}
-          <img className="hero-bg" src={couvertureHome} alt="Sportifà l'entraînement" />
+          <img className="hero-bg" src={heroRun} alt="Sportifà l'entraînement" />
           <div className="hero-inner">
 
             <header className="hero-nav">
