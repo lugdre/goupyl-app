@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { CONTACT, CONTACT_MAP_URL } from '../../utils/constants';
 
 // IMAGES — importez ici chaque photo du dossier src/assets/
 // puis utilisez la variable dans src={...} (sans guillemets).
@@ -372,7 +373,7 @@ export default function Landing() {
                       <span className="btn-circle btn-circle--white"><ArrowUpRight size={15} color="#F4530F" /></span>
                     </Link>
                   ) : (
-                    <a href="mailto:support@goupylsport.fr" className="btn-pill btn-pill--orange">
+                    <a href={`mailto:${CONTACT.emailSupport}`} className="btn-pill btn-pill--orange">
                       {p.cta}
                       <span className="btn-circle btn-circle--white"><ArrowUpRight size={15} color="#F4530F" /></span>
                     </a>
@@ -435,16 +436,29 @@ export default function Landing() {
                 <a href="#domaines">Domaines</a>
                 <a href="#coaches">Coachs</a>
                 <a href="#pricing">Tarifs</a>
-                <a href="mailto:support@goupylsport.fr">Contact</a>
+                <a href={`mailto:${CONTACT.email}`}>Contact</a>
               </nav>
               <div className="footer-cols">
                 <div>
                   <h4>Contactez-nous</h4>
-                  <p>+33 1 23 45 67 89<br />support@goupylsport.fr</p>
+                  <p className="footer-contact">
+                    <a href={`tel:${CONTACT.phoneHref}`}>{CONTACT.phone}</a>
+                    <a href={`mailto:${CONTACT.email}`}>{CONTACT.email}</a>
+                  </p>
                 </div>
                 <div>
                   <h4>Localisation</h4>
-                  <p>10A rue prémartine<br />72000 Le Mans, France</p>
+                  <p className="footer-contact">
+                    <a
+                      href={CONTACT_MAP_URL}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      {CONTACT.addressLines.map((line) => (
+                        <span key={line}>{line}</span>
+                      ))}
+                    </a>
+                  </p>
                 </div>
                 <div className="footer-socials">
                   <a href="#" aria-label="Facebook"><SocialIcon path={<path d="M14 13.5h2.5l1-4H14v-2c0-1.03 0-2 2-2h1.5V2.14C17.17 2.1 15.95 2 14.66 2 11.97 2 10 3.66 10 6.7v2.8H7v4h3V22h4v-8.5z" />} /></a>
@@ -680,6 +694,10 @@ html{scroll-behavior:smooth}
 .footer-cols{margin-top:54px;display:flex;justify-content:flex-end;gap:56px;flex-wrap:wrap;align-items:flex-start}
 .footer-cols h4{font-size:13.5px;font-weight:600;margin-bottom:10px}
 .footer-cols p{font-size:13px;color:var(--ink-2);line-height:1.6}
+/* Coordonnées cliquables : une ligne par lien, cible tactile confortable */
+.footer-contact{display:flex;flex-direction:column;align-items:flex-start}
+.lp .footer-contact a{color:var(--ink-2);display:flex;flex-direction:column;padding:2px 0;transition:color .2s ease}
+.lp .footer-contact a:hover,.lp .footer-contact a:focus-visible{color:var(--orange);text-decoration:underline}
 .footer-socials{display:flex;gap:8px}
 .footer-socials a{width:32px;height:32px;border-radius:50%;border:1px solid var(--line);display:flex;align-items:center;justify-content:center;color:var(--ink)}
 .footer-socials a:hover{background:var(--ink);color:#fff;border-color:var(--ink)}

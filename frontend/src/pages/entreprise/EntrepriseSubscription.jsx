@@ -6,7 +6,7 @@ import { paymentApi } from '../../services/payment.api';
 import Spinner from '../../components/ui/Spinner';
 import { MODAL_CSS } from '../../components/ui/modalStyles';
 import { CreditCard, Users, Activity, CheckCircle, TrendingUp, AlertTriangle, X } from 'lucide-react';
-import { PLAN_LABELS } from '../../utils/constants';
+import { PLAN_LABELS, CONTACT } from '../../utils/constants';
 import toast from 'react-hot-toast';
 
 const ENTERPRISE_PLANS = [
@@ -298,7 +298,7 @@ export default function EntrepriseSubscription() {
                   ))}
                 </ul>
                 {plan.quote ? (
-                  <a href="mailto:entreprises@goupylsport.fr" className="dsh-btn dsh-btn--ghost" style={{ width: '100%' }}>
+                  <a href={`mailto:${CONTACT.emailEntreprises}`} className="dsh-btn dsh-btn--ghost" style={{ width: '100%' }}>
                     Demander un devis
                   </a>
                 ) : (

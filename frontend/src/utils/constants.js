@@ -52,3 +52,24 @@ export const ORDER_STATUS_LABELS = {
 
 // Valeurs exactes attendues par le filtre backend (profile.courseLocations has)
 export const COURSE_LOCATION_OPTIONS = ['A domicile', 'En salle', "A l'exterieur", 'En entreprise'];
+
+// ─── Coordonnées publiques ────────────────────────────────────────────
+// Source unique pour le footer, les CTA « nous contacter » et les mentions
+// légales. Ce sont des informations publiques : aucune raison de les sortir
+// dans une variable d'env (les VITE_* sont de toute façon inlinées dans le
+// bundle au build, donc lisibles par tous).
+// `phoneHref` doit rester au format E.164 (indicatif, sans espace) pour que
+// tel: fonctionne à l'étranger ; `phone` est la version affichée.
+export const CONTACT = {
+  phone: '06 77 12 12 12',
+  phoneHref: '+33677121212',
+  email: 'ayvon@gryngroup.com',
+  emailSupport: 'support@goupylsport.fr',
+  emailEntreprises: 'entreprises@goupylsport.fr',
+  emailDpo: 'dpo@goupylsport.fr',
+  addressLines: ['10A rue prémartine', '72000 Le Mans, France'],
+};
+
+// Lien carte : ouvre l'app Maps sur mobile, la version web sinon
+export const CONTACT_MAP_URL =
+  `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(CONTACT.addressLines.join(' '))}`;

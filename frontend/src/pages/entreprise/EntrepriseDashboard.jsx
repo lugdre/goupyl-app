@@ -7,7 +7,7 @@ import { CreditCard, Search, ArrowRight, Phone, CheckCircle, BarChart2, Users } 
 import OnboardingChecklist from '../../components/onboarding/OnboardingChecklist';
 import { userApi } from '../../services/user.api';
 import { companyApi } from '../../services/company.api';
-import { PLAN_LABELS, BILLING_CYCLE_LABELS } from '../../utils/constants';
+import { PLAN_LABELS, BILLING_CYCLE_LABELS, CONTACT } from '../../utils/constants';
 
 const PLAN_FEATURES = {
   ESSENTIEL_ENTREPRISE: { employees: '10',  sessions: '4/mois', domains: 'Sport + Bien-être' },
@@ -228,7 +228,7 @@ export default function EntrepriseDashboard() {
             <h2 className="dsh-card-title">Votre account manager</h2>
             <p className="dsh-card-sub">Une question ? Besoin d'ajuster votre formule ? Contactez-nous.</p>
           </div>
-          <a href="mailto:entreprises@goupylsport.fr" className="dsh-btn dsh-btn--ghost dsh-btn--sm">
+          <a href={`mailto:${CONTACT.emailEntreprises}`} className="dsh-btn dsh-btn--ghost dsh-btn--sm">
             Nous écrire
           </a>
         </div>
