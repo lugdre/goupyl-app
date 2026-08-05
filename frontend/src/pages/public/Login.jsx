@@ -5,7 +5,7 @@ import toast from 'react-hot-toast';
 import { KeyRound } from 'lucide-react';
 import { isPasskeySupported } from '../../services/passkey.api';
 import GoogleAuthButton from '../../components/GoogleAuthButton';
-import logo from '../../assets/logo-goupyl-white.png';
+import logo from '../../assets/logo-goupyl-sport-white.png';
 import loginPhoto from '../../assets/loginPhoto.jpg';
 
 const ArrowUpRight = ({ size = 15, color = 'currentColor' }) => (
@@ -14,9 +14,6 @@ const ArrowUpRight = ({ size = 15, color = 'currentColor' }) => (
   </svg>
 );
 
-// IMAGE — visuel du panneau gauche. Remplacez PLACEHOLDER_DARK dans le
-// <img className="auth-panel-img"> par le chemin de votre photo,
-// par exemple  src="/images/login.jpg"  (fichier dans frontend/public/images/).
 const PLACEHOLDER_DARK = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='800' height='1000'%3E%3Crect width='800' height='1000' fill='%236d6b66'/%3E%3Cg stroke='%23d8d6d1' stroke-width='3' fill='none' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='352' y='462' width='96' height='76' rx='10'/%3E%3Ccircle cx='380' cy='490' r='9'/%3E%3Cpath d='M448 522l-34-30-62 46'/%3E%3C/g%3E%3C/svg%3E";
 
 const CSS = `

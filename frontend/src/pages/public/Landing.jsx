@@ -19,6 +19,7 @@ import coachingBienEtre from '../../assets/coaching-bien-etre.jpg';
 import sportive from '../../assets/sportive.jpg';
 import cardGoupylW from '../../assets/card-goupyl-white.png';
 import cardGoupylB from '../../assets/card-goupyl-black.png';
+import logoGoupylSport from '../../assets/logo-goupyl-sport.png';
 import heroRun from '../../assets/hero-run.jpg'
 
 const PLACEHOLDER = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='800' height='600'%3E%3Crect width='800' height='600' fill='%23DFDDD7'/%3E%3Cg stroke='%237a7873' stroke-width='3' fill='none' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='352' y='262' width='96' height='76' rx='10'/%3E%3Ccircle cx='380' cy='290' r='9'/%3E%3Cpath d='M448 322l-34-30-62 46'/%3E%3C/g%3E%3C/svg%3E";
@@ -475,7 +476,9 @@ export default function Landing() {
           </div>
         </div>
 
-        <div className="footer-giant" aria-hidden="true">Goupyl Sport</div>
+        <div className="footer-giant" aria-hidden="true">
+          <img src={logoGoupylSport} alt="" />
+        </div>
       </footer>
     </div>
   );
@@ -703,7 +706,17 @@ html{scroll-behavior:smooth}
 .footer-socials a:hover{background:var(--ink);color:#fff;border-color:var(--ink)}
 .footer-brand-row{margin-top:70px;padding:26px 0;border-top:1px solid var(--line)}
 .footer-brand{font-size:22px;font-weight:800;letter-spacing:-.02em}
-.footer-giant{font-size:clamp(60px,12.6vw,210px);font-weight:900;letter-spacing:-.05em;line-height:.82;text-align:center;white-space:nowrap;color:var(--ink);padding:10px 0 0;transform:translateY(6%)}
+/* Logo géant coupé par le bas de page.
+   Le PNG source (3000×1500) contient de larges marges transparentes : le logo
+   visible occupe x 317→2438 et y 432→1041. La boîte ci-dessous a exactement la
+   taille du logo visible, et l'image est agrandie/décalée pour que ses marges
+   tombent hors cadre — d'où les pourcentages :
+     largeur  3000/2122 = 141.4 %      décalage gauche  −317/2122 = −14.9 %
+     décalage haut = 432/1500 de la hauteur d'image, ramené en % de la boîte
+   La boîte est volontairement plus courte que le logo (531 au lieu de 610,
+   soit 87 %) : c'est ce qui produit la coupe en bas. */
+.footer-giant{position:relative;width:92%;max-width:1100px;margin:10px auto 0;aspect-ratio:2122/531;overflow:hidden}
+.footer-giant img{position:absolute;width:141.4%;left:-14.9%;top:-81.4%;max-width:none}
 
 /* ═══ RESPONSIVE ═══════════════════════════ */
 @media (max-width:1024px){
@@ -736,6 +749,6 @@ html{scroll-behavior:smooth}
   .focus-card--small{height:215px}
   .focus-card::after{background:linear-gradient(180deg,rgba(15,15,15,.12) 0%,rgba(15,15,15,.42) 32%,rgba(15,15,15,.72) 66%,rgba(15,15,15,.88) 100%)}
   .how-step{flex-direction:column;gap:16px}
-  .footer-giant{white-space:normal;line-height:.9}
+  .footer-giant{width:100%}
 }
 `;

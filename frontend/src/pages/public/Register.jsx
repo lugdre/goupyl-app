@@ -4,7 +4,7 @@ import { useAuth } from '../../hooks/useAuth';
 import toast from 'react-hot-toast';
 import { Building2, Briefcase, Users, User, Mail } from 'lucide-react';
 import GoogleAuthButton from '../../components/GoogleAuthButton';
-import logo from '../../assets/logo-goupyl-white.png';
+import logo from '../../assets/logo-goupyl-sport-white.png';
 import registerPhoto from '../../assets/registerPhoto.jpg';
 
 const ArrowUpRight = ({ size = 15, color = 'currentColor' }) => (
