@@ -1,9 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { CONTACT, CONTACT_MAP_URL } from '../../utils/constants';
-
-// IMAGES — importez ici chaque photo du dossier src/assets/
-// puis utilisez la variable dans src={...} (sans guillemets).
 import santeMentale from '../../assets/friendly-couple-posing-her-home.jpg';
 import nutrition from '../../assets/nutritionist.jpg';
 import coachingSportif from '../../assets/coachingSportif.jpg';
@@ -20,6 +17,7 @@ import sportive from '../../assets/sportive.jpg';
 import cardGoupylW from '../../assets/card-goupyl-white.png';
 import cardGoupylB from '../../assets/card-goupyl-black.png';
 import heroRun from '../../assets/hero-run.jpg'
+import logo from '../../assets/logo-goupyl-sport.png';
 
 const PLACEHOLDER = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='800' height='600'%3E%3Crect width='800' height='600' fill='%23DFDDD7'/%3E%3Cg stroke='%237a7873' stroke-width='3' fill='none' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='352' y='262' width='96' height='76' rx='10'/%3E%3Ccircle cx='380' cy='290' r='9'/%3E%3Cpath d='M448 322l-34-30-62 46'/%3E%3C/g%3E%3C/svg%3E";
 const PLACEHOLDER_DARK = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='800' height='600'%3E%3Crect width='800' height='600' fill='%236d6b66'/%3E%3Cg stroke='%23d8d6d1' stroke-width='3' fill='none' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='352' y='262' width='96' height='76' rx='10'/%3E%3Ccircle cx='380' cy='290' r='9'/%3E%3Cpath d='M448 322l-34-30-62 46'/%3E%3C/g%3E%3C/svg%3E";
@@ -471,7 +469,7 @@ export default function Landing() {
           </div>
 
           <div className="footer-brand-row">
-            <span className="footer-brand">Goupyl Sport</span>
+            <span className="footer-brand"><img src={logo} alt="Goupyl Sport" /></span>
           </div>
         </div>
 
@@ -702,7 +700,13 @@ html{scroll-behavior:smooth}
 .footer-socials a{width:32px;height:32px;border-radius:50%;border:1px solid var(--line);display:flex;align-items:center;justify-content:center;color:var(--ink)}
 .footer-socials a:hover{background:var(--ink);color:#fff;border-color:var(--ink)}
 .footer-brand-row{margin-top:70px;padding:26px 0;border-top:1px solid var(--line)}
-.footer-brand{font-size:22px;font-weight:800;letter-spacing:-.02em}
+/* Le PNG du logo (3000×1500) contient de larges marges transparentes : le logo
+   visible occupe x 317→2438 et y 432→1041. La boîte reprend le ratio du logo
+   visible et l'image est agrandie/décalée pour rejeter ses marges hors cadre :
+     largeur 3000/2122 = 141.4 %   décalage gauche −317/2122 = −14.9 %
+     décalage haut = 432/1500 de la hauteur d'image, ramené en % de la boîte */
+.footer-brand{position:relative;display:block;width:190px;aspect-ratio:2122/610;overflow:hidden}
+.footer-brand img{position:absolute;width:141.4%;left:-14.9%;top:-70.8%;max-width:none}
 .footer-giant{font-size:clamp(60px,12.6vw,210px);font-weight:900;letter-spacing:-.05em;line-height:.82;text-align:center;white-space:nowrap;color:var(--ink);padding:10px 0 0;transform:translateY(6%)}
 
 /* ═══ RESPONSIVE ═══════════════════════════ */
