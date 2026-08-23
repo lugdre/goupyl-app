@@ -10,20 +10,18 @@
     "db:seed": "node src/prisma/seed.js",
     "db:studio": "npx prisma studio --schema=src/prisma/schema.prisma",
     "db:generate": "npx prisma generate --schema=src/prisma/schema.prisma",
-    "test": "jest --verbose",
-    "lint": "eslint src/"
+    "test": "jest --selectProjects unit api",
+    "lint": "eslint src/",
+    "test:unit": "jest --selectProjects unit",
+    "test:api": "jest --selectProjects api",
+    "test:integration": "jest --selectProjects integration --runInBand",
+    "test:all": "jest --selectProjects unit api && jest --selectProjects integration --runInBand",
+    "test:watch": "jest --selectProjects unit --watch",
+    "test:coverage": "jest --selectProjects unit api --coverage",
+    "test:db:setup": "node tests/setup/create-test-db.js"
   },
   "prisma": {
     "schema": "src/prisma/schema.prisma"
-  },
-  "jest": {
-    "testEnvironment": "node",
-    "setupFiles": [
-      "dotenv/config"
-    ],
-    "testMatch": [
-      "**/tests/**/*.test.js"
-    ]
   },
   "dependencies": {
     "@prisma/client": "^5.22.0",

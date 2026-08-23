@@ -45,3 +45,12 @@ CLAUDE.md
 .claude/
 
 docs/
+# Tests
+backend/coverage/
+frontend/coverage/
+backend/.env.test
+e2e/.env.e2e
+e2e/.auth/
+e2e/test-results/
+e2e/playwright-report/
+playwright/.cache/

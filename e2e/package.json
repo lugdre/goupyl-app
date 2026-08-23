@@ -1,0 +1,19 @@
+{
+  "name": "goupyl-sport-e2e",
+  "version": "1.0.0",
+  "description": "Tests fonctionnels (Playwright) — parcours utilisateurs de bout en bout",
+  "scripts": {
+    "setup": "node setup-db.js && npx playwright install chromium",
+    "seed": "node seed.js",
+    "test": "playwright test",
+    "test:headed": "playwright test --headed",
+    "test:ui": "playwright test --ui",
+    "report": "playwright show-report"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.62.1"
+  },
+  "dependencies": {
+    "dotenv": "^17.4.2"
+  }
+}

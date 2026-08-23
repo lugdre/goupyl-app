@@ -8,7 +8,10 @@ export default defineConfig({
     port: 5173,
     proxy: {
       '/api': {
-        target: 'http://localhost:3000',
+        // Cible surchargeable pour les tests fonctionnels, qui lancent une
+        // API dédiée sur un autre port et une base séparée. Comportement
+        // inchangé en développement.
+        target: process.env.VITE_API_PROXY_TARGET || 'http://localhost:3000',
         changeOrigin: true,
       },
     },

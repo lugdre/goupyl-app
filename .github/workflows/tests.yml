@@ -1,0 +1,177 @@
+name: Tests
+
+# Trois niveaux exécutés à chaque poussée : unitaire + API (sans dépendance),
+# intégration (PostgreSQL réel) et fonctionnel (navigateur, application
+# complète). Un échec à n'importe quel niveau bloque la fusion.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  backend-unit:
+    name: Backend — tests unitaires et API
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+
+      - name: Installer les dépendances
+        working-directory: backend
+        run: npm ci
+
+      - name: Générer le client Prisma
+        working-directory: backend
+        run: npx prisma generate --schema=src/prisma/schema.prisma
+
+      - name: Lancer les tests avec couverture
+        working-directory: backend
+        run: npm run test:coverage
+
+      - name: Publier le rapport de couverture
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: couverture-backend
+          path: backend/coverage/
+          retention-days: 7
+
+  backend-integration:
+    name: Backend — tests d'intégration (PostgreSQL)
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: goupyl_sport_test
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/goupyl_sport_test
+      JWT_SECRET: ci_jwt_secret_32_chars_minimum_ok_1234
+      JWT_REFRESH_SECRET: ci_refresh_secret_32_chars_minimum_ok
+      PARQ_ENCRYPTION_KEY: ci_parq_encryption_key_32_chars_ok_abc
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+
+      - name: Installer les dépendances
+        working-directory: backend
+        run: npm ci
+
+      - name: Appliquer le schéma sur la base de test
+        working-directory: backend
+        run: npx prisma db push --schema=src/prisma/schema.prisma --accept-data-loss
+
+      - name: Lancer les tests d'intégration
+        working-directory: backend
+        run: npm run test:integration
+
+  frontend:
+    name: Frontend — tests unitaires et composants
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Installer les dépendances
+        working-directory: frontend
+        run: npm ci
+
+      - name: Lancer les tests avec couverture
+        working-directory: frontend
+        run: npm run test:coverage
+
+      - name: Vérifier que le bundle se construit
+        working-directory: frontend
+        run: npm run build
+
+  e2e:
+    name: Tests fonctionnels (Playwright)
+    runs-on: ubuntu-latest
+    needs: [backend-unit, frontend]
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: goupyl_sport_e2e
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+
+      - name: Installer les dépendances
+        run: |
+          npm ci --prefix backend
+          npm ci --prefix frontend
+          npm ci --prefix e2e
+
+      - name: Préparer l'environnement E2E
+        run: |
+          cat > e2e/.env.e2e <<'ENV'
+          NODE_ENV=test
+          PORT=3100
+          DATABASE_URL="postgresql://postgres:postgres@localhost:5432/goupyl_sport_e2e"
+          JWT_SECRET="e2e_jwt_secret_32_chars_minimum_okay_12"
+          JWT_REFRESH_SECRET="e2e_refresh_secret_32_chars_minimum_ok"
+          PARQ_ENCRYPTION_KEY="e2e_parq_encryption_key_32_chars_ok_ab"
+          FRONTEND_URL="http://localhost:5199"
+          CORS_ORIGIN="http://localhost:5199"
+          STRIPE_SECRET_KEY="sk_test_e2e_placeholder"
+          STRIPE_WEBHOOK_SECRET="whsec_e2e_placeholder"
+          RESEND_API_KEY=
+          REDIS_URL=
+          GOOGLE_CLIENT_ID=
+          ENV
+          npx prisma db push --schema=backend/src/prisma/schema.prisma --accept-data-loss
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/goupyl_sport_e2e
+
+      - name: Installer le navigateur
+        working-directory: e2e
+        run: npx playwright install --with-deps chromium
+
+      - name: Lancer les parcours fonctionnels
+        working-directory: e2e
+        run: npx playwright test
+
+      - name: Publier le rapport Playwright
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: rapport-playwright
+          path: e2e/playwright-report/
+          retention-days: 7
