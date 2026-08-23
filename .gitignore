@@ -40,11 +40,9 @@ backend/node_modules/.prisma/
 # Coverage
 coverage/
 
-CLAUDE.md
-
+# Outils locaux Claude Code (non versionnes)
 .claude/
 
-docs/
 # Tests
 backend/coverage/
 frontend/coverage/
