@@ -29,6 +29,7 @@ All Prisma commands need the explicit schema path (non-standard location `src/pr
 # backend/
 npm run db:generate   # regenerate Prisma client after schema changes
 npm run db:seed       # ⚠️ DESTRUCTIVE: truncates every table, reseeds demo data
+npm run db:avatars    # placeholder avatars for coaches missing one (non-destructive)
 npm run db:studio     # Prisma Studio GUI
 npm run lint          # eslint src/
 
@@ -189,7 +190,7 @@ No availability model — scheduling works on **busy intervals + business hours*
 
 ### Auth
 
-- Register: role CLIENT/INTERVENANT/ENTREPRISE. ENTREPRISE gets an auto-generated unique 8-hex `joinCode` and is auto-VERIFIED when a SIRET is provided (Pappers validation planned, not implemented). CLIENT may pass a `joinCode` — either a `CompanyInvite` token or a company's permanent code — to be attached as employee. CLIENT may also pass optional onboarding-questionnaire fields (`level`, `sportType`, `objectives[]`) which nested-create the `Profile` (Register.jsx step 2 for Particulier/Collaborateur, skippable). INTERVENANT starts PENDING until admin validates documents.
+- Register: role CLIENT/INTERVENANT/ENTREPRISE. ENTREPRISE gets an auto-generated unique 8-hex `joinCode` and is auto-VERIFIED when a SIRET is provided (Pappers validation planned, not implemented). CLIENT may pass a `joinCode` — either a `CompanyInvite` token or a company's permanent code — to be attached as employee. CLIENT may also pass optional onboarding-questionnaire fields (`level`, `sportType`, `objectives[]`) which nested-create the `Profile` (Register.jsx step 2 for Particulier/Collaborateur, skippable). INTERVENANT starts PENDING until admin validates documents, and **must supply a profile photo** — Register.jsx step 2 for that role is a required file picker, uploaded to `POST /users/me/avatar` right after `register()` returns the token pair (a failed upload only warns: the account already exists). Not enforced server-side — a coach created outside the signup form still has no avatar.
 - Login returns `{ user, accessToken, refreshToken }`; refresh token stored in Redis (7-day TTL). Email verification token (`email_verify:<token>`, 24 h) sent via Resend; `POST /auth/verify-email` sets `emailVerifiedAt`.
 - **Passkeys/WebAuthn** (`/api/passkeys`, `@simplewebauthn/server`): challenges in Redis (5 min TTL, keys `passkey_challenge:<scope>:<id>`); authentication returns the same JWT pair as password login. `PASSKEY_RP_ID`/`PASSKEY_ORIGIN` must match the serving domain.
 - Redis `set` failures during login/register are caught and logged — a Redis hiccup must not fail an otherwise successful auth.
@@ -252,6 +253,6 @@ Each backend domain has a matching thin API module in `src/services/*.api.js`.
 - `marvin.dupont@email.com`, `sarah.benali@email.com` (+ others) — CLIENT
 - `rh@acmecorp.fr` (ESSENTIEL), `wellness@techstart.fr` (BOOST), `sport@industria.fr` (ULTRA) — ENTREPRISE
 
-The seed also creates CoachServices for the 3 named coaches (B2C flow demoable), `courseLocations` on several coach profiles (search filter demoable), 5 marketplace products, and `qrToken`s on CONFIRMED appointments.
+The seed also fills coach avatars with AI-generated faces (`src/prisma/seed-avatars.js` → thispersondoesnotexist.com, downscaled to 400 px JPEG via the `jpeg-js` devDependency, stored in `avatarData` like a real upload). Network failure is non-fatal — the seed continues and the UI falls back to the silhouette SVGs. `npm run db:avatars` runs it standalone on an existing database (only users with no avatar; `--all` overwrites, `--role=`, `--limit=`). Faces are random: they ignore the profile's gender, so they are demo placeholders to drop once real photos arrive. The seed also creates CoachServices for the 3 named coaches (B2C flow demoable), `courseLocations` on several coach profiles (search filter demoable), 5 marketplace products, and `qrToken`s on CONFIRMED appointments.
 
 When changing the seed cleanup order: `payment`, `review`, and `appointmentStatusHistory` must be deleted before `appointment`; `productOrder` before `product` (FK constraints).

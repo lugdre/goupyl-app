@@ -2,8 +2,9 @@ import { useState, useEffect } from 'react';
 import { Link, useSearchParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import toast from 'react-hot-toast';
-import { Building2, Briefcase, Users, User, Mail } from 'lucide-react';
+import { Building2, Briefcase, Users, User, Mail, Camera } from 'lucide-react';
 import GoogleAuthButton from '../../components/GoogleAuthButton';
+import { userApi } from '../../services/user.api';
 import logo from '../../assets/logo-goupyl-sport-white.png';
 import registerPhoto from '../../assets/registerPhoto.jpg';
 
@@ -78,6 +79,10 @@ const CSS = `
   .auth-chip.selected{background:var(--orange);border-color:var(--orange);color:#fff}
   .auth-skip{background:none;border:none;font-family:inherit;font-size:12.5px;font-weight:500;color:var(--ink-3);cursor:pointer;text-decoration:underline;text-underline-offset:3px;margin:6px auto 0;display:block}
   .auth-skip:hover{color:var(--ink)}
+  .auth-photo{display:flex;align-items:center;gap:18px}
+  .auth-photo-preview{width:92px;height:92px;border-radius:50%;object-fit:cover;flex-shrink:0;border:1px solid var(--line);background:#F5F4F1;display:flex;align-items:center;justify-content:center;color:var(--ink-3)}
+  .auth-photo-btn{display:inline-flex;align-items:center;justify-content:center;height:42px;padding:0 18px;border:1px solid var(--line);background:#fff;border-radius:999px;font-family:inherit;font-size:13.5px;font-weight:600;color:var(--ink);cursor:pointer;transition:border-color .15s,color .15s}
+  .auth-photo-btn:hover{border-color:var(--orange);color:var(--orange)}
 `;
 
 const OBJECTIVE_OPTIONS = [
@@ -102,6 +107,10 @@ const PASSWORD_RULES = [
   { test: (v) => /[A-Z]/.test(v), label: 'une majuscule' },
   { test: (v) => /[0-9]/.test(v), label: 'un chiffre' },
 ];
+
+// Photo de profil coach — miroir de avatar-upload.middleware.js côté backend
+const AVATAR_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
+const AVATAR_MAX_BYTES = 2 * 1024 * 1024;
 
 const ROLES = [
   { value: 'PARTICULIER', label: 'Particulier', desc: 'Je réserve pour moi', icon: User },
@@ -151,14 +160,45 @@ export default function Register() {
   const isClientRole = selected === 'PARTICULIER' || selected === 'SALARIE';
   const needsSpecific = SPECIFIC_NEED_LEVELS.includes(profileForm.level);
 
+  // Étape 2 (photo de profil) pour INTERVENANT — obligatoire : le visage du coach
+  // est le premier élément de décision dans les résultats de recherche.
+  const [avatarFile, setAvatarFile] = useState(null);
+  const [avatarPreview, setAvatarPreview] = useState('');
+  const isIntervenantRole = selected === 'INTERVENANT';
+
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
     setErrors({ ...errors, [e.target.name]: '' });
   };
 
+  const clearAvatar = () => {
+    if (avatarPreview) URL.revokeObjectURL(avatarPreview);
+    setAvatarFile(null);
+    setAvatarPreview('');
+  };
+
+  const handleAvatarChange = (e) => {
+    const file = e.target.files?.[0];
+    e.target.value = ''; // autorise la re-sélection du même fichier après une erreur
+    if (!file) return;
+    if (!AVATAR_TYPES.includes(file.type)) {
+      setErrors((prev) => ({ ...prev, avatar: 'Format non supporté — JPG, PNG ou WebP.' }));
+      return;
+    }
+    if (file.size > AVATAR_MAX_BYTES) {
+      setErrors((prev) => ({ ...prev, avatar: 'Photo trop lourde — 2 Mo maximum.' }));
+      return;
+    }
+    if (avatarPreview) URL.revokeObjectURL(avatarPreview);
+    setAvatarFile(file);
+    setAvatarPreview(URL.createObjectURL(file));
+    setErrors((prev) => ({ ...prev, avatar: '' }));
+  };
+
   const selectRole = (value) => {
     setSelected(value);
     setStep(1);
+    clearAvatar();
   };
 
   const toggleObjective = (obj) => {
@@ -211,6 +251,19 @@ export default function Register() {
       }
 
       await register(payload);
+
+      // L'upload d'avatar exige un token : il n'est possible qu'une fois le compte
+      // créé. Un échec ici ne doit pas masquer la réussite de l'inscription.
+      if (avatarFile) {
+        try {
+          const formData = new FormData();
+          formData.append('avatar', avatarFile);
+          await userApi.uploadAvatar(formData);
+        } catch {
+          toast.error("Compte créé, mais l'envoi de la photo a échoué. Ajoutez-la depuis votre profil.");
+        }
+      }
+
       toast.success('Compte créé avec succès !');
       setEmailSent(true);
     } catch (err) {
@@ -237,8 +290,13 @@ export default function Register() {
       return;
     }
     // Particulier / collaborateur : le questionnaire sportif s'affiche en étape 2
-    if (isClientRole && step === 1) {
+    // Intervenant : la photo de profil s'affiche en étape 2
+    if ((isClientRole || isIntervenantRole) && step === 1) {
       setStep(2);
+      return;
+    }
+    if (isIntervenantRole && !avatarFile) {
+      setErrors((prev) => ({ ...prev, avatar: 'Une photo de profil est obligatoire.' }));
       return;
     }
     await doRegister(isClientRole);
@@ -402,6 +460,54 @@ export default function Register() {
                   ← Retour
                 </button>
               </>
+            ) : isIntervenantRole && step === 2 ? (
+              <>
+                <div className="auth-section-label">Votre photo de profil — étape 2/2</div>
+
+                <div className="auth-photo">
+                  {avatarPreview ? (
+                    <img src={avatarPreview} alt="Aperçu de votre photo de profil" className="auth-photo-preview" />
+                  ) : (
+                    <div className="auth-photo-preview"><Camera size={26} /></div>
+                  )}
+                  <div>
+                    <label className="auth-photo-btn">
+                      {avatarFile ? 'Changer la photo' : 'Choisir une photo'}
+                      <input
+                        type="file"
+                        accept="image/jpeg,image/png,image/webp"
+                        onChange={handleAvatarChange}
+                        style={{ display: 'none' }}
+                      />
+                    </label>
+                    <p className="auth-field-hint">JPG, PNG ou WebP — 2 Mo maximum.</p>
+                  </div>
+                </div>
+
+                {errors.avatar && <p className="auth-field-error">{errors.avatar}</p>}
+
+                <p className="auth-field-hint" style={{ marginTop: 0 }}>
+                  Une photo nette, de face et récente est obligatoire : c'est elle qui apparaît
+                  dans les résultats de recherche et sur votre profil public.
+                </p>
+
+                <button type="submit" disabled={loading || !avatarFile} className="auth-submit">
+                  {loading ? 'Création du compte…' : (
+                    <>
+                      Créer mon compte
+                      <span className="auth-submit-circle"><ArrowUpRight /></span>
+                    </>
+                  )}
+                </button>
+                <button
+                  type="button"
+                  className="auth-skip"
+                  onClick={() => setStep(1)}
+                  disabled={loading}
+                >
+                  ← Retour
+                </button>
+              </>
             ) : (
               <>
                 {/* Google — inscription rapide (crée un compte particulier / collaborateur) */}
@@ -521,7 +627,7 @@ export default function Register() {
                     ? 'Création du compte…'
                     : (
                       <>
-                        {isClientRole ? 'Continuer' : 'Créer mon compte'}
+                        {isClientRole || isIntervenantRole ? 'Continuer' : 'Créer mon compte'}
                         <span className="auth-submit-circle"><ArrowUpRight /></span>
                       </>
                     )}

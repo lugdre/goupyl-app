@@ -3,6 +3,7 @@ const { PrismaClient } = require('@prisma/client');
 const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
 const zlib = require('zlib');
+const { assignAvatars } = require('./seed-avatars');
 
 const prisma = new PrismaClient();
 
@@ -735,6 +736,16 @@ async function main() {
       },
     ],
   });
+
+  // Avatars de démo (visages générés) pour les intervenants — nécessite le réseau,
+  // le seed reste valide hors ligne : les silhouettes par défaut prennent le relais.
+  console.log('\nAvatars de demo (thispersondoesnotexist.com)...');
+  try {
+    const { updated, total } = await assignAvatars({ prisma, role: 'INTERVENANT' });
+    console.log(`Avatars poses : ${updated}/${total}`);
+  } catch (e) {
+    console.warn('Avatars ignores (hors ligne ?) :', e.message);
+  }
 
   console.log('Produits marketplace crees');
   console.log('RDV et comptes-rendus crees');
