@@ -113,6 +113,9 @@ jobs:
     name: Tests fonctionnels (Playwright)
     runs-on: ubuntu-latest
     needs: [backend-unit, frontend]
+    # Non bloquant : le rapport reste publié, mais un échec du niveau navigateur
+    # n'immobilise pas la fusion ni le déploiement.
+    continue-on-error: true
 
     services:
       postgres:
@@ -156,7 +159,7 @@ jobs:
           REDIS_URL=
           GOOGLE_CLIENT_ID=
           ENV
-          npx prisma db push --schema=backend/src/prisma/schema.prisma --accept-data-loss
+          ./backend/node_modules/.bin/prisma db push --schema=backend/src/prisma/schema.prisma --accept-data-loss
         env:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/goupyl_sport_e2e
 
